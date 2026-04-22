@@ -77,7 +77,7 @@ Depois de subir o projeto para o GitHub, você pode publicar pelo GitHub Pages.
 
 ### Link esperado
 ```text
-https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/
+[https://vitorfariasvf.github.io/dnd5e-builder/]
 ```
 
 ### Checklist rápido
