@@ -6,15 +6,8 @@ Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com pers
 
 ## Demonstração
 
-<<<<<<< HEAD
 - **GitHub Pages:** `https://vitorfariasvf.github.io/dnd5e-builder/`
 - **Repositório:** `https://github.com/VitorFariasVF/dnd5e-builder`
-=======
-- **GitHub Pages:** ``
-- **Repositório:** ``
-
-> Substitua os links acima pelos links finais do seu repositório e da publicação no GitHub Pages.
->>>>>>> b33ea736069c7bb098c5aa6769955e18455d6c3b
 
 ## Principais recursos
 
@@ -279,3 +272,31 @@ Sugestão:
 - novas escolhas internas para subclasses de Xanathar
 - tela de magia mostrando referência rápida das magias bônus da subclasse
 - refinamento dos resumos derivados para subclasses de Xanathar
+
+
+## Foundry JSON: modo modelo-first
+
+Nesta versão, a exportação Foundry foi reaproximada do JSON modelo real usado como referência para a importação. A prioridade agora é compatibilidade de importação; expansões adicionais de conteúdo devem vir depois dessa base estabilizada.
+
+
+## Expansão retomada após estabilização do Foundry JSON
+
+Depois do ajuste para espelhar a estrutura do JSON modelo do Foundry, a expansão voltou a ser aplicada por cima dessa base estável.
+
+Nesta fase, a aplicação já inclui:
+- conteúdo de subclasses e magias de **Xanathar's Guide to Everything** na base de regras
+- exibição de **detalhes rápidos das magias** na etapa de magia
+- exportação Foundry com **descrições resumidas**, indicação de **fonte** e metadados de ritual/concentração para magias
+
+A ordem de trabalho continua sendo:
+1. manter a compatibilidade do JSON de importação
+2. expandir conteúdo por cima da base estável
+3. depois aprofundar descrições e listas adicionais de magias
+
+
+## Ajuste recente de exportação Foundry
+
+- IDs de documentos e itens agora usam formato curto compatível com o padrão do Foundry.
+- A exportação de `details.race`, `details.background` e `details.originalClass` foi alinhada aos IDs reais dos itens embutidos.
+- Magias, armas, armaduras, feats e loot passaram a usar estruturas mais próximas do JSON funcional de Actor.
+- Esta etapa prioriza clonagem estrutural do actor antes de nova expansão de conteúdo.

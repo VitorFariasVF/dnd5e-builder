@@ -65,3 +65,11 @@ function ensureStateShape(){
   state.personagem.progressao = Object.assign({}, fresh.personagem.progressao, state.personagem.progressao || {});
   delete state.personagem.caracteristicas;
 }
+
+
+function resetStateToInitial(){
+  const fresh = createInitialState();
+  Object.keys(state).forEach(key => delete state[key]);
+  Object.assign(state, fresh);
+  ensureStateShape();
+}

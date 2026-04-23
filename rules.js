@@ -985,3 +985,100 @@ function getDerivedEffects(personagem){
   if(p.classe === 'bruxo' && p.subclasse === 'hexblade' && n >= 1) out.push({id:'hex_warrior', titulo:'Guerreiro Hex', valor:'Carisma com a arma favorecida', detalhe:'A arma escolhida pode usar Carisma em ataque e dano, além das proficiências marciais adicionais.'});
   return out;
 }
+
+
+const SPELL_SHORT_DESCRIPTIONS = {
+  "Absorver Elementos":"Reduz dano elemental recebido e fortalece seu próximo ataque corpo a corpo com o mesmo elemento.",
+  "Catapulta":"Arremessa um objeto com força mágica para atingir uma criatura à distância.",
+  "Causar Medo":"Projeta terror sobrenatural que força o alvo a fugir ou hesitar.",
+  "Raio do Caos":"Disparo instável de energia que pode saltar entre tipos de dano aleatórios.",
+  "Faca de Gelo":"Projétil congelante que fere um alvo e explode em estilhaços gelados.",
+  "Lâmina Sombria":"Cria uma arma de sombras concentradas, forte em pouca luz ou escuridão.",
+  "Passo Trovejante":"Teleporte curto acompanhado por uma explosão de trovão ao redor do ponto de partida.",
+  "Espírito Curativo":"Invoca energia restauradora móvel que cura aliados por curtos períodos.",
+  "Ataque Zéfiro":"Aumenta mobilidade e reforça um ataque com impulso de vento sobrenatural.",
+  "Dobre dos Mortos":"Cantrip necrótico especialmente eficaz contra inimigos já feridos.",
+  "Criar Fogueira":"Conjura uma chama controlada útil para dano leve e utilidade de cenário.",
+  "Moldar Terra":"Move e remodela pequenas porções de solo e pedra para utilidade criativa.",
+  "Controlar Chamas":"Altera forma, alcance ou brilho de fontes de fogo não mágicas.",
+  "Rajada Trovejante":"Descarga sonora curta que empurra e pune alvos próximos.",
+  "Mordida Gélida":"Ataque gélido que enfraquece o próximo golpe do inimigo.",
+  "Esfera Aquosa":"Prende e desloca criaturas dentro de uma massa de água mágica.",
+  "Esfera Tempestuosa":"Orbe de vento e relâmpago que danifica e controla espaço no campo de batalha.",
+  "Estática Sináptica":"Explosão psíquica poderosa que enfraquece ofensiva e concentração dos inimigos.",
+  "Distante Passo":"Teleporte repetido por vários turnos, excelente para reposicionamento.",
+  "Transmutar Rocha":"Converte pedra em lama ou lama em pedra para controlar terreno.",
+  "Golpe do Vento Cortante":"Rajada de vento afiado que causa dano em área e exige resistência física.",
+  "Pirotecnia":"Transforma fogo existente em explosão ofuscante ou cortina de fumaça.",
+  "Vento Protetor":"Muralha giratória de vento que desvia projéteis e protege o conjurador.",
+  "Sopro do Dragão":"Concede a uma criatura um cone elemental repetível por alguns turnos.",
+  "Espinho Mental":"Dor psíquica que reduz reações e pune escolhas do alvo.",
+  "Onda de Maré":"Onda de água que derruba e desloca criaturas em linha.",
+  "Nevasca de Snilloc":"Rajada congelante em área que dificulta avanço inimigo.",
+  "Chamuscar de Aganazzar":"Linha de fogo concentrada útil para corredores e grupos alinhados.",
+  "Palavra de Poder Dor":"Golpe verbal absoluto que sobrecarrega um alvo com sofrimento intenso.",
+  "Metamorfose Verdadeira":"Transformação suprema e duradoura em criatura ou objeto poderoso.",
+  "Curar Ferimentos":"Restaura pontos de vida com toque mágico direto.",
+  "Palavra Curativa":"Cura rápida à distância, ideal para levantar aliados em perigo.",
+  "Bênção":"Melhora ataques e testes de resistência de vários aliados por concentração.",
+  "Escudo":"Reação defensiva que eleva a CA e nega Mísseis Mágicos.",
+  "Mísseis Mágicos":"Projéteis certeiros de energia arcana que não exigem ataque.",
+  "Passo Nebuloso":"Teleporte curto extremamente versátil para escapar ou reposicionar.",
+  "Invisibilidade":"Oculta uma criatura até que ataque, conjure ou a magia termine.",
+  "Bola de Fogo":"Explosão clássica em área com alto dano de fogo.",
+  "Contramágica":"Interrompe ou dissipa magias no momento da conjuração.",
+  "Arma Espiritual":"Invoca arma flutuante que ataca sem exigir concentração.",
+  "Marca do Caçador":"Marca um alvo para causar dano extra repetido em ataques.",
+  "Hex":"Amaldiçoa um alvo para dano extra e desvantagem em uma habilidade escolhida."
+};
+
+function inferSpellSourceBook(name, classe){
+  return spellIsFromXanathar(name, classe) ? 'XGtE' : 'PHB';
+}
+
+function buildSpellAutoSummary(name, detail, classe){
+  const tags = [];
+  if(detail?.ritual) tags.push('ritual');
+  if(detail?.concentracao) tags.push('concentração');
+  if(detail?.duracao) tags.push(`duração ${String(detail.duracao).toLowerCase()}`);
+  const source = inferSpellSourceBook(name, classe);
+  const src = source === 'XGtE' ? 'Xanathar' : 'PHB';
+  return `Magia da lista de ${classe || 'conjurador'}; ${tags.join(', ') || 'uso padrão'}; fonte ${src}.`;
+}
+
+function getSpellDetailForCharacter(classe, name, subclasse=null, nivel=1){
+  const clean = String(name || '').replace(/\s*\((\d)º? círculo\)/i, '').trim();
+  const byClass = (SPELL_DETAILS[classe] || {});
+  let found = null;
+  Object.values(byClass).some(bucket => {
+    if(bucket && bucket[clean]){
+      found = { ...bucket[clean] };
+      return true;
+    }
+    return false;
+  });
+  if(!found){
+    Object.values(SPELL_DETAILS).some(classBuckets => Object.values(classBuckets || {}).some(bucket => {
+      if(bucket && bucket[clean]){
+        found = { ...bucket[clean] };
+        return true;
+      }
+      return false;
+    }));
+  }
+  const source = inferSpellSourceBook(clean, classe);
+  const circleMatch = String(name || '').match(/\((\d)º? círculo\)/i);
+  const circle = circleMatch ? Number(circleMatch[1]) : (found?.circulo ?? null);
+  const summary = SPELL_SHORT_DESCRIPTIONS[clean] || buildSpellAutoSummary(clean, found, classe);
+  return {
+    nome: clean,
+    circulo: circle,
+    escola: found?.escola || 'Variada',
+    ritual: !!found?.ritual,
+    concentracao: !!found?.concentracao,
+    duracao: found?.duracao || 'Conforme magia',
+    fonte: source,
+    resumo: summary,
+    classesRelacionadas: [classe].filter(Boolean)
+  };
+}
