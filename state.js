@@ -2,6 +2,7 @@ function createInitialState(){
   return {
     modo:null,
     etapa:1,
+    currentHistoryId:null,
     personagem:{
       nome:"",
       jogador:"",
@@ -56,6 +57,7 @@ function ensureStateShape(){
   const fresh = createInitialState();
   state.modo ??= fresh.modo;
   state.etapa ??= fresh.etapa;
+  state.currentHistoryId ??= fresh.currentHistoryId;
   state.personagem = Object.assign({}, fresh.personagem, state.personagem || {});
   state.personagem.combate = Object.assign({}, fresh.personagem.combate, state.personagem.combate || {});
   state.personagem.inventario = Object.assign({}, fresh.personagem.inventario, state.personagem.inventario || {});

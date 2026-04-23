@@ -300,3 +300,15 @@ A ordem de trabalho continua sendo:
 - A exportação de `details.race`, `details.background` e `details.originalClass` foi alinhada aos IDs reais dos itens embutidos.
 - Magias, armas, armaduras, feats e loot passaram a usar estruturas mais próximas do JSON funcional de Actor.
 - Esta etapa prioriza clonagem estrutural do actor antes de nova expansão de conteúdo.
+
+## Histórico, tela inicial e importação para edição
+
+A interface agora separa melhor as ações principais do navegador:
+
+- **Tela inicial**: volta para a etapa inicial sem apagar a ficha atual.
+- **Salvar no histórico**: grava a ficha atual no navegador para continuar depois.
+- **Editar ficha**: abre uma ficha salva do histórico e continua a edição.
+- **Importar JSON**: aceita JSON de backup do projeto e também o JSON de ator gerado pelo próprio export do app para recarregar a ficha em modo de edição.
+- **Limpar banco**: apaga a ficha atual e todo o histórico salvo localmente.
+
+O histórico fica disponível já na tela inicial, facilitando abrir, duplicar e excluir personagens salvos.

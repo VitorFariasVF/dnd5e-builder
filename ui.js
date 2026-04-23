@@ -226,3 +226,343 @@ function renderPainelDetalheMagiaSelecionadaAtual(){
   return `<div class="info-box"><p><strong>${detalhe.nome}</strong> <span class="muted">• ${detalhe.fonte}</span></p><p>${detalhe.resumo}</p><p class="muted">${[detalhe.escola, detalhe.ritual ? 'Ritual' : '', detalhe.concentracao ? 'Concentração' : '', detalhe.duracao ? `Duração: ${detalhe.duracao}` : ''].filter(Boolean).join(' • ')}</p></div>`;
 }
 function renderMagia(){ const magia=state.personagem.magia; if(!magia.ehConjurador){ return renderPassoBase("Magia",`<div class="info-box"><p>Classe sem magia.</p></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`);} const listas=listarMagiasDisponiveisPorCirculo(); const bonusSpells=(typeof getCharacterBonusSpellSummary==='function'?getCharacterBonusSpellSummary(state.personagem):[]); const circulosDisponiveis=Object.keys(listas).filter(k=>k!=="truques" && Number(k)<=obterMaiorCirculoDisponivel()); const truquesRestantes=Math.max(0,(magia.cantripsConhecidos||0)-(magia.listaTruques||[]).length); const limiteMagias=magia.tipo==="conhecidas" ? (magia.magiasConhecidas||0) : (magia.magiasPreparadas||0); const magiasRestantes=Math.max(0, limiteMagias-(magia.listaMagias||[]).length); const truqueSelecionado=(window.__spellPreview?.tipo==='truque' ? window.__spellPreview.nome : ''); const circuloSelecionado=String(window.__spellPreview?.tipo==='magia' && window.__spellPreview.circulo ? window.__spellPreview.circulo : (circulosDisponiveis[0] || '1')); const truqueOptions=(listas.truques||[]).filter(nome=>!(magia.listaTruques||[]).includes(nome)).map(nome=>`<option value="${nome}" ${truqueSelecionado===nome?'selected':''}>${nome}</option>`).join(""); const circleOptions=circulosDisponiveis.map(k=>`<option value="${k}" ${circuloSelecionado===String(k)?'selected':''}>${k}º círculo</option>`).join(""); const magiaSelecionada=(window.__spellPreview?.tipo==='magia' ? window.__spellPreview.nome : ''); const magiaOptions=((listas[circuloSelecionado]||[]).filter(nome=>!(magia.listaMagias||[]).includes(`${nome} (${circuloSelecionado}º)`))).map(nome=>`<option value="${nome}" ${magiaSelecionada===nome?'selected':''}>${nome}</option>`).join(""); const truques=(magia.listaTruques||[]).map((nome,idx)=>renderLinhaMagiaDetalhada(nome, idx, 'truque')).join(""); const magias=(magia.listaMagias||[]).map((nome,idx)=>renderLinhaMagiaDetalhada(nome, idx, 'magia')).join(""); renderPassoBase("Magia",`<div class="grid grid-2"><div class="spell-card"><p><strong>Habilidade:</strong> ${ATTRIBUTE_LABELS[magia.habilidade]}</p><p><strong>CD:</strong> ${magia.cdMagia}</p><p><strong>Ataque mágico:</strong> ${valorFormatadoBonus(magia.ataqueMagia)}</p><p><strong>Espaços:</strong> ${magia.espacos.map((v,i)=>v?`${i+1}º ${magia.espacosAtuais[i]||0}/${v}`:"").filter(Boolean).join(" • ") || "Nenhum"}</p>${magia.nivelEspacosBruxo?`<p><strong>Círculo dos espaços:</strong> ${magia.nivelEspacosBruxo}º</p>`:""}</div><div class="spell-card"><p><strong>Truques:</strong> ${(magia.listaTruques||[]).length}/${magia.cantripsConhecidos}</p><p><strong>${magia.tipo==="conhecidas"?"Magias conhecidas":"Magias preparadas"}:</strong> ${(magia.listaMagias||[]).length}/${limiteMagias}</p><p><strong>Truques restantes:</strong> ${truquesRestantes}</p><p><strong>Magias restantes:</strong> ${magiasRestantes}</p></div></div>${bonusSpells.length?`<div class="info-box"><p><strong>Magias bônus da subclasse:</strong></p><p>${bonusSpells.join(' • ')}</p><p class="muted">Essas magias ficam destacadas para subclasses de Xanathar e ajudam na importação/referência do Foundry.</p></div>`:''}<div id="spellDetailPreview">${renderPainelDetalheMagiaSelecionadaAtual()}</div><div class="grid grid-2"><div><h3>Truques</h3><div class="inline-row"><div style="flex:1"><select id="novoTruque" onchange="selecionarPreviewTruque()"><option value="">Selecione</option>${truqueOptions}</select></div><div><button onclick="adicionarMagia('truque')" ${(truquesRestantes<=0)?'disabled':''}>Adicionar</button></div></div><table class="table-like"><tbody>${truques||'<tr><td>Nenhum truque adicionado.</td><td></td></tr>'}</tbody></table></div><div><h3>Magias</h3><div class="inline-row"><div><select id="circuloMagia" onchange="atualizarOpcoesMagia(); selecionarPreviewMagia()">${circleOptions}</select></div><div style="flex:1"><select id="novaMagia" onchange="selecionarPreviewMagia()"><option value="">Selecione</option>${magiaOptions}</select></div><div><button onclick="adicionarMagia('magia')" ${(magiasRestantes<=0)?'disabled':''}>Adicionar</button></div></div><p class="muted">Mostrando apenas círculos disponíveis no nível atual.</p><table class="table-like"><tbody>${magias||'<tr><td>Nenhuma magia adicionada.</td><td></td></tr>'}</tbody></table></div></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`); }
+
+function normalizarBuscaFicha(valor){
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function encontrarChavePorNome(catalogo, nome, extraMap){
+  const alvo = normalizarBuscaFicha(nome);
+  if (!alvo) return null;
+  for (const [chave, item] of Object.entries(catalogo || {})) {
+    if (normalizarBuscaFicha(item?.nome) === alvo) return chave;
+  }
+  if (extraMap && typeof extraMap === 'object') {
+    for (const [chave, traduzido] of Object.entries(extraMap)) {
+      if (normalizarBuscaFicha(traduzido) === alvo || normalizarBuscaFicha(chave) === alvo) return chave;
+    }
+  }
+  return null;
+}
+
+function encontrarSubclassePorNome(classeKey, nome){
+  const alvo = normalizarBuscaFicha(nome);
+  if (!alvo || !classeKey) return null;
+  for (const sub of getSubclassOptions(classeKey)) {
+    if (normalizarBuscaFicha(sub.nome) === alvo || normalizarBuscaFicha(sub.key) === alvo) return sub.key;
+  }
+  return null;
+}
+
+function inferirPericiasClasse(finalSkills, origemKey, classeKey){
+  const origem = BACKGROUNDS[origemKey];
+  const classe = CLASSES[classeKey];
+  const origemSkills = new Set(origem?.pericias || []);
+  const opcoes = new Set(classe?.escolhaPericias?.opcoes || []);
+  const escolhidas = [];
+  for (const skill of finalSkills || []) {
+    if (!origemSkills.has(skill) && opcoes.has(skill)) escolhidas.push(skill);
+  }
+  return escolhidas.slice(0, classe?.escolhaPericias?.quantidade || escolhidas.length);
+}
+
+function prepararFichaImportada(){
+  const p = state.personagem;
+  if (p.origem && BACKGROUNDS[p.origem]) {
+    const o = BACKGROUNDS[p.origem];
+    p.periciasOrigem = [...o.pericias];
+    p.ferramentas = [...o.ferramentas];
+    p.idiomas = o.idiomas;
+    p.caracteristicaOrigem = o.caracteristica;
+  }
+  if (p.raca && RACES[p.raca]) {
+    const r = RACES[p.raca];
+    p.bonusRaciais = { ...r.bonusAtributos };
+    p.traitsRaciais = [...r.traits];
+    p.idiomasRaciais = [...r.idiomas];
+    p.deslocamento = r.deslocamento;
+  }
+  if (p.classe && CLASSES[p.classe]) {
+    const c = CLASSES[p.classe];
+    p.dadoVida = c.dadoVida;
+    p.savesClasse = [...c.saves];
+    p.proficienciasClasse = [...c.proficiencias];
+    p.equipamentoClasse = [...c.equipamento];
+    configurarMagiaDaClasse();
+  }
+  const attrsFinais = { ...(p.atributos || {}) };
+  ATTRIBUTE_LIST.forEach(attr => {
+    const racial = p.bonusRaciais?.[attr] || 0;
+    p.atributosBase[attr] = (attrsFinais[attr] || 10) - racial;
+  });
+  recalcularAtributosFinais();
+  if ((!p.periciasClasseSelecionadas || !p.periciasClasseSelecionadas.length) && Array.isArray(p.periciasFinais)) {
+    p.periciasClasseSelecionadas = inferirPericiasClasse(p.periciasFinais, p.origem, p.classe);
+  }
+  atualizarPericiasFinais();
+  recalcularTudo();
+}
+
+function aplicarPayloadBackupNaFicha(payload){
+  resetStateToInitial();
+  ensureStateShape();
+  state.modo = payload.modo || 'B';
+  state.etapa = 11;
+  state.currentHistoryId = null;
+  const p = state.personagem;
+  p.nome = payload.nome || '';
+  p.jogador = payload.jogador || '';
+  p.origem = encontrarChavePorNome(BACKGROUNDS, payload.origem, typeof FOUNDRY_BACKGROUND_EN_MAP !== 'undefined' ? FOUNDRY_BACKGROUND_EN_MAP : null);
+  p.raca = encontrarChavePorNome(RACES, payload.raca, typeof FOUNDRY_RACE_EN_MAP !== 'undefined' ? FOUNDRY_RACE_EN_MAP : null);
+  p.classe = encontrarChavePorNome(CLASSES, payload.classe, typeof FOUNDRY_CLASS_EN_MAP !== 'undefined' ? FOUNDRY_CLASS_EN_MAP : null);
+  p.subclasse = encontrarSubclassePorNome(p.classe, payload.subclasse);
+  p.nivel = Number(payload.nivel || 1);
+  p.xp = Number(payload.xp || 0);
+  p.atributos = { ...p.atributos, ...(payload.atributos || {}) };
+  p.periciasFinais = Object.entries(payload.pericias || {}).filter(([,v]) => Number(v) > 0).map(([k]) => k);
+  p.personalidade = Object.assign({}, p.personalidade, payload.personalidade || {});
+  p.progressao = Object.assign({}, p.progressao, payload.progressao || {});
+  p.recursosClasse = payload.recursosClasse || {};
+  p.opcoesClasse = payload.opcoesClasse || {};
+  prepararFichaImportada();
+  const combate = payload.combate || {};
+  p.combate.armadura = encontrarChavePorNome(ARMORS, combate.armadura, typeof FOUNDRY_ARMOR_EN_MAP !== 'undefined' ? FOUNDRY_ARMOR_EN_MAP : null) || p.combate.armadura;
+  p.combate.armaPrincipal = encontrarChavePorNome(WEAPONS, combate.armaPrincipal, typeof FOUNDRY_WEAPON_EN_MAP !== 'undefined' ? FOUNDRY_WEAPON_EN_MAP : null) || p.combate.armaPrincipal;
+  p.combate.armaSecundaria = encontrarChavePorNome(WEAPONS, combate.armaSecundaria, typeof FOUNDRY_WEAPON_EN_MAP !== 'undefined' ? FOUNDRY_WEAPON_EN_MAP : null) || p.combate.armaSecundaria;
+  p.combate.escudo = !!combate.escudo;
+  p.inventario.itens = Array.isArray(payload.inventario?.itens) ? payload.inventario.itens : [];
+  p.inventario.moedas = Object.assign({}, p.inventario.moedas, payload.inventario?.moedas || {});
+  p.magia.listaTruques = [...(payload.magias?.truques || [])];
+  p.magia.listaMagias = [...(payload.magias?.selecionadas || [])];
+  if (Array.isArray(payload.magias?.espacosAtuais)) p.magia.espacosAtuais = [...payload.magias.espacosAtuais];
+  p.magia.concentracaoAtiva = payload.magias?.concentracaoAtiva || '';
+  p.magia.rituaisDisponiveis = [...(payload.magias?.rituaisDisponiveis || [])];
+  recalcularTudo();
+  salvarEstado();
+}
+
+function aplicarActorFoundryNaFicha(actor){
+  resetStateToInitial();
+  ensureStateShape();
+  state.modo = 'B';
+  state.etapa = 11;
+  state.currentHistoryId = null;
+  const p = state.personagem;
+  const items = Array.isArray(actor.items) ? actor.items : [];
+  const classItem = items.find(item => item.type === 'class');
+  const subclassItem = items.find(item => item.type === 'subclass');
+  const raceItem = items.find(item => item.type === 'race');
+  const backgroundItem = items.find(item => item.type === 'background');
+  const translated = item => item?.flags?.dnd5eSheetBuilder?.translatedFrom || item?.name || '';
+  const sourceKey = item => item?.flags?.dnd5eSheetBuilder?.sourceKey || null;
+
+  p.nome = actor.name || '';
+  p.classe = sourceKey(classItem) || encontrarChavePorNome(CLASSES, translated(classItem), typeof FOUNDRY_CLASS_EN_MAP !== 'undefined' ? FOUNDRY_CLASS_EN_MAP : null);
+  p.subclasse = sourceKey(subclassItem) || encontrarSubclassePorNome(p.classe, translated(subclassItem));
+  p.raca = sourceKey(raceItem) || encontrarChavePorNome(RACES, translated(raceItem), typeof FOUNDRY_RACE_EN_MAP !== 'undefined' ? FOUNDRY_RACE_EN_MAP : null);
+  p.origem = sourceKey(backgroundItem) || encontrarChavePorNome(BACKGROUNDS, translated(backgroundItem), typeof FOUNDRY_BACKGROUND_EN_MAP !== 'undefined' ? FOUNDRY_BACKGROUND_EN_MAP : null);
+  p.nivel = Number(classItem?.system?.levels || 1);
+  p.xp = Number(actor.system?.details?.xp?.value || 0);
+
+  ATTRIBUTE_LIST.forEach(attr => {
+    const code = FOUNDRY_ABILITY_MAP[attr];
+    p.atributos[attr] = Number(actor.system?.abilities?.[code]?.value || p.atributos[attr] || 10);
+  });
+
+  p.periciasFinais = Object.entries(FOUNDRY_SKILL_MAP)
+    .filter(([,code]) => Number(actor.system?.skills?.[code]?.value || 0) > 0)
+    .map(([pt]) => pt);
+
+  p.personalidade.tracos = String(actor.system?.details?.trait || '').split('\n').map(v => v.trim()).filter(Boolean);
+  p.personalidade.ideais = String(actor.system?.details?.ideal || '').split('|').map(v => v.trim()).filter(Boolean);
+  p.personalidade.vinculos = String(actor.system?.details?.bond || '').split('|').map(v => v.trim()).filter(Boolean);
+  p.personalidade.defeitos = String(actor.system?.details?.flaw || '').split('|').map(v => v.trim()).filter(Boolean);
+  p.personalidade.descricaoGeral = actor.system?.details?.biography?.value || '';
+  p.personalidade.aparencia = actor.system?.details?.appearance || '';
+  p.personalidade.historia = actor.system?.details?.biography?.public || '';
+
+  prepararFichaImportada();
+
+  const equippedArmor = items.find(item => item.type === 'equipment' && item.system?.type?.value && ['light','medium','heavy'].includes(item.system.type.value) && item.system?.equipped);
+  const equippedShield = items.find(item => item.type === 'equipment' && item.system?.type?.baseItem === 'shield' && item.system?.equipped);
+  const equippedWeapons = items.filter(item => item.type === 'weapon' && item.system?.equipped);
+  p.combate.armadura = sourceKey(equippedArmor) || encontrarChavePorNome(ARMORS, translated(equippedArmor), typeof FOUNDRY_ARMOR_EN_MAP !== 'undefined' ? FOUNDRY_ARMOR_EN_MAP : null) || p.combate.armadura;
+  p.combate.escudo = !!equippedShield;
+  p.combate.armaPrincipal = sourceKey(equippedWeapons[0]) || encontrarChavePorNome(WEAPONS, translated(equippedWeapons[0]), typeof FOUNDRY_WEAPON_EN_MAP !== 'undefined' ? FOUNDRY_WEAPON_EN_MAP : null) || p.combate.armaPrincipal;
+  p.combate.armaSecundaria = sourceKey(equippedWeapons[1]) || encontrarChavePorNome(WEAPONS, translated(equippedWeapons[1]), typeof FOUNDRY_WEAPON_EN_MAP !== 'undefined' ? FOUNDRY_WEAPON_EN_MAP : null) || p.combate.armaSecundaria;
+
+  p.inventario.moedas = Object.assign({}, p.inventario.moedas, actor.system?.currency || {});
+  p.magia.listaTruques = items.filter(item => item.type === 'spell' && Number(item.system?.level || 0) === 0).map(item => translated(item));
+  p.magia.listaMagias = items.filter(item => item.type === 'spell' && Number(item.system?.level || 0) > 0).map(item => `${translated(item)} (${Number(item.system?.level || 0)}º)`);
+  if (Array.isArray(p.magia.espacosAtuais) && actor.system?.spells) {
+    const slots = p.magia.espacos.map((_, index) => Number(actor.system.spells?.[`spell${index+1}`]?.value ?? p.magia.espacos[index] ?? 0));
+    if (slots.length) p.magia.espacosAtuais = slots;
+  }
+
+  p.inventario.itens = items
+    .filter(item => ['loot','equipment'].includes(item.type) && !(item.system?.type?.value && ['light','medium','heavy'].includes(item.system.type.value)) && item.system?.type?.baseItem !== 'shield')
+    .map((item, index) => ({
+      key: item.flags?.dnd5eSheetBuilder?.sourceKey || `importado_${index}`,
+      nome: translated(item),
+      quantidade: Number(item.system?.quantity || 1),
+      pesoUnitario: Number(item.system?.weight?.value || 0),
+      pesoTotal: Number((Number(item.system?.weight?.value || 0) * Number(item.system?.quantity || 1)).toFixed(2))
+    }));
+
+  recalcularTudo();
+  salvarEstado();
+}
+
+function importarJsonParaEditar(obj){
+  if (obj?.schema === 'mini-foundry-offline-1') {
+    aplicarPayloadBackupNaFicha(obj);
+    return 'backup';
+  }
+  if (obj?.modo && obj?.personagem) {
+    Object.keys(state).forEach(key => delete state[key]);
+    Object.assign(state, obj);
+    state.currentHistoryId = null;
+    ensureStateShape();
+    recalcularTudo();
+    salvarEstado();
+    return 'estado';
+  }
+  if (obj?.type === 'character' && obj?.system && Array.isArray(obj?.items)) {
+    aplicarActorFoundryNaFicha(obj);
+    return 'foundry';
+  }
+  throw new Error('Formato de JSON não reconhecido para edição da ficha.');
+}
+
+function garantirInputImportacao(){
+  let input = document.getElementById('importarFichaJsonInput');
+  if (input) return input;
+  input = document.createElement('input');
+  input.type = 'file';
+  input.id = 'importarFichaJsonInput';
+  input.accept = '.json,application/json';
+  input.style.display = 'none';
+  input.addEventListener('change', async (event) => {
+    const arquivo = event.target.files?.[0];
+    if (!arquivo) return;
+    try {
+      const texto = await arquivo.text();
+      const json = JSON.parse(texto);
+      importarJsonParaEditar(json);
+      window.alert('JSON importado. A ficha foi carregada para edição.');
+      render();
+    } catch (err) {
+      console.error('Falha ao importar JSON para edição:', err);
+      window.alert('Não foi possível importar este JSON para edição.');
+    } finally {
+      event.target.value = '';
+    }
+  });
+  document.body.appendChild(input);
+  return input;
+}
+
+function abrirImportadorJsonFicha(){
+  garantirInputImportacao().click();
+}
+
+function irParaTelaInicial(){
+  state.etapa = 1;
+  salvarEstado();
+  render();
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(err) { window.scrollTo(0,0); }
+}
+
+function salvarFichaNoHistorico(asCopy=false){
+  const entry = upsertCharacterInHistory({ asCopy });
+  window.alert(asCopy ? 'Ficha salva como cópia no histórico.' : 'Ficha salva no histórico.');
+  return entry;
+}
+
+function abrirFichaDoHistorico(id){
+  if (!loadCharacterFromHistory(id)) {
+    window.alert('Não foi possível carregar esta ficha do histórico.');
+    return;
+  }
+  render();
+}
+
+function duplicarFichaDoHistorico(id){
+  const entry = duplicateCharacterInHistory(id);
+  if (!entry) return window.alert('Não foi possível duplicar a ficha.');
+  render();
+}
+
+function excluirFichaDoHistorico(id){
+  const ok = window.confirm('Deseja excluir esta ficha do histórico?');
+  if (!ok) return;
+  deleteCharacterFromHistory(id);
+  render();
+}
+
+function limparBancoCompleto(){
+  const ok = window.confirm('Isso vai apagar a ficha atual e todo o histórico salvo no navegador. Deseja continuar?');
+  if (!ok) return;
+  clearCharacterHistory();
+  limparEstado();
+  resetStateToInitial();
+  salvarEstado();
+  render();
+  window.alert('Banco local limpo com sucesso.');
+}
+
+function renderListaHistorico(){
+  const history = getCharacterHistory().sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  if (!history.length) return '<div class="info-box"><p class="muted">Nenhum personagem salvo no histórico ainda.</p></div>';
+  return `<div class="history-list">${history.map(entry => {
+    const classeNome = entry.classe && CLASSES[entry.classe] ? CLASSES[entry.classe].nome : (entry.snapshot?.personagem?.classe ? nomeCatalogo(CLASSES, entry.snapshot.personagem.classe) : '-');
+    const racaNome = entry.raca && RACES[entry.raca] ? RACES[entry.raca].nome : (entry.snapshot?.personagem?.raca ? nomeCatalogo(RACES, entry.snapshot.personagem.raca) : '-');
+    const nivel = entry.nivel || entry.snapshot?.personagem?.nivel || 1;
+    return `<div class="history-item"><div><strong>${entry.nome || 'Personagem sem nome'}</strong><br><small class="muted">${classeNome} • ${racaNome} • nível ${nivel}</small><br><small class="muted">Atualizado em ${new Date(entry.updatedAt).toLocaleString('pt-BR')}</small></div><div class="history-actions"><button class="small" onclick="abrirFichaDoHistorico('${entry.id}')">Editar ficha</button><button class="small secondary" onclick="duplicarFichaDoHistorico('${entry.id}')">Duplicar</button><button class="small danger" onclick="excluirFichaDoHistorico('${entry.id}')">Excluir</button></div></div>`;
+  }).join('')}</div>`;
+}
+
+function buildTopToolbar(){
+  return `<div class="toolbar-inline toolbar-wrap"><div class="step-indicator">Etapa ${state.etapa} de 11 — ${STEP_LABELS[state.etapa]}</div><div class="toolbar-actions"><button class="small secondary" onclick="irParaTelaInicial()">Tela inicial</button><button class="small secondary" onclick="salvarFichaNoHistorico(false)">Salvar no histórico</button><button class="small secondary" onclick="abrirImportadorJsonFicha()">Importar JSON</button><button class="small danger" onclick="limparBancoCompleto()">Limpar banco</button></div></div>`;
+}
+
+renderPassoBase = function(titulo, conteudo){
+  garantirInputImportacao();
+  app.innerHTML = `<div class="card">${buildTopToolbar()}<h2>${titulo}</h2>${conteudo}</div>`;
+};
+
+renderEscolhaModo = function(){
+  renderPassoBase('Início', `<p>Escolha um modo para começar uma nova ficha, volte ao histórico ou importe um JSON para continuar editando.</p><div class="actions"><button onclick="selecionarModo('A')">Modo A — Criação Oficial</button><button onclick="selecionarModo('B')">Modo B — Criação Livre</button><button class="secondary" onclick="abrirImportadorJsonFicha()">Importar JSON para editar</button></div><h3>Histórico de personagens</h3>${renderListaHistorico()}`);
+};
+
+reiniciar = function(){
+  resetStateToInitial();
+  state.currentHistoryId = null;
+  salvarEstado();
+  irParaTelaInicial();
+};
+
+confirmarLimpezaLocalStorage = function(){
+  limparBancoCompleto();
+};
+
+const _renderResumoOriginal = renderResumo;
+renderResumo = function(){
+  _renderResumoOriginal();
+  const actions = app.querySelector('.actions');
+  if (actions && !actions.querySelector('.history-save-button')) {
+    actions.insertAdjacentHTML('afterbegin', `<button class="secondary history-save-button" onclick="salvarFichaNoHistorico(false)">Salvar no histórico</button><button class="secondary history-save-button" onclick="salvarFichaNoHistorico(true)">Salvar como cópia</button><button class="secondary history-save-button" onclick="irParaTelaInicial()">Tela inicial</button>`);
+  }
+};
+
+window.abrirImportadorJsonFicha = abrirImportadorJsonFicha;
+window.irParaTelaInicial = irParaTelaInicial;
+window.salvarFichaNoHistorico = salvarFichaNoHistorico;
+window.abrirFichaDoHistorico = abrirFichaDoHistorico;
+window.duplicarFichaDoHistorico = duplicarFichaDoHistorico;
+window.excluirFichaDoHistorico = excluirFichaDoHistorico;
+window.limparBancoCompleto = limparBancoCompleto;
