@@ -7,15 +7,6 @@ Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com pers
 ## Demonstração
 
 <<<<<<< HEAD
-- **GitHub Pages:** `https://vitorfariasvf.github.io/dnd5e-builder/`
-- **Repositório:** `https://github.com/VitorFariasVF/dnd5e-builder`
-=======
-- **GitHub Pages:** ``
-- **Repositório:** ``
-
-> Substitua os links acima pelos links finais do seu repositório e da publicação no GitHub Pages.
->>>>>>> b33ea736069c7bb098c5aa6769955e18455d6c3b
-
 ## Principais recursos
 
 Projeto público:
