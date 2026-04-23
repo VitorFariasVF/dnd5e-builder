@@ -6,8 +6,8 @@ Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com pers
 
 ## Demonstração
 
-- **GitHub Pages:** `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`
-- **Repositório:** `https://github.com/SEU-USUARIO/NOME-DO-REPOSITORIO`
+- **GitHub Pages:** ``
+- **Repositório:** ``
 
 > Substitua os links acima pelos links finais do seu repositório e da publicação no GitHub Pages.
 
