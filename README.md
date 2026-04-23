@@ -30,6 +30,7 @@ Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com pers
   - história
 - progressão por nível de **1 a 20**
 - subclasses e recursos rastreáveis
+- suporte inicial ao conteúdo de **Xanathar's Guide to Everything**
 - exportação para:
   - **Foundry VTT**
   - **backup interno do projeto**
@@ -175,15 +176,35 @@ https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/
 - efeitos derivados resumidos na ficha
 - detalhes úteis para exportação e uso no VTT
 
+### Xanathar's Guide to Everything
+- pacote inicial de subclasses de Xanathar
+- pacote ampliado de magias de Xanathar
+- exportação Foundry marcando melhor quando magias/features vêm de Xanathar
+- escolhas internas adicionais para subclasses como:
+  - Arqueiro Arcano
+  - Mestre Kensei
+  - Arauto da Tempestade
+  - Círculo do Pastor
+  - Alma Divina
+  - Colégio das Espadas
+  - Lâmina Maldita
+- recursos rastreáveis extras para subclasses de Xanathar
+- efeitos derivados adicionais para subclasses como Glamour, Espadas, Forja, Sepultura, Pastor, Cavaleiro, Alma Solar, Magia da Tempestade, Celestial e Lâmina Maldita
+- exportação Foundry levando em conta subclasses e origem do conteúdo
+
 ## Exportação
 
 ### 1) Foundry VTT JSON
 A exportação principal gera um **Actor JSON** voltado para o fluxo de **Import Data** do Foundry VTT.
 
+Nesta etapa, a estrutura foi aproximada de um **arquivo modelo real de importação** usado como referência para melhorar a compatibilidade do ator.
+
 Inclui:
 - documento de ator do tipo personagem
 - atributos e dados principais em `system`
-- `items[]` para classe, subclasse, armas, armaduras, equipamentos, magias e features
+- `details.race`, `details.background` e `details.originalClass` apontando para os itens embutidos corretos
+- `prototypeToken` padrão já incluído no JSON
+- `items[]` para classe, subclasse, raça, origem, armas, armaduras, equipamentos, magias e features
 - `flags` com backup do estado interno do projeto
 
 ### 2) Backup do projeto
@@ -204,13 +225,14 @@ Gera uma ficha visual usando a janela de impressão do navegador para salvar em 
 A exportação foi organizada com foco em:
 - **Foundry VTT V14**
 - **sistema D&D 5e 5.3.x**
+- **estrutura aproximada de Actor JSON baseada em arquivo real de importação**
 
 Ainda assim, como o projeto é **offline-first** e não depende do compêndio do mundo do usuário, alguns itens entram como documentos válidos gerados pelo app, e não como referências automáticas a UUIDs de compêndios instalados.
 
 ## Limites atuais
 
 - nem todos os recursos do Livro do Jogador estão automatizados ao nível de um VTT completo
-- a exportação para Foundry prioriza estrutura correta de importação, mas ainda pode exigir ajuste manual para casar com compêndios específicos do mundo
+- a exportação para Foundry está mais próxima de um Actor real importável, mas ainda pode exigir ajuste manual para casar com compêndios específicos do mundo
 - a exportação PDF usa a impressão do navegador, não uma engine externa de layout
 
 ## Roadmap sugerido
@@ -236,3 +258,11 @@ Sugestão:
 - MIT
 - Apache-2.0
 - GPL-3.0
+
+
+### Xanathar — etapa 4
+- ampliação adicional do pacote de magias de Xanathar
+- suporte a magias bônus de subclasse para vários arquétipos de Xanathar
+- novas escolhas internas para subclasses de Xanathar
+- tela de magia mostrando referência rápida das magias bônus da subclasse
+- refinamento dos resumos derivados para subclasses de Xanathar

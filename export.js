@@ -138,6 +138,54 @@ const FOUNDRY_SPELL_EN_MAP = {
   'curar ferimentos': 'Cure Wounds',
   'detect magic': 'Detect Magic',
   'detectar magia': 'Detect Magic',
+  'absorver elementos': 'Absorb Elements',
+  'catapulta': 'Catapult',
+  'causar medo': 'Cause Fear',
+  'cerimonia': 'Ceremony',
+  'chamuscar de aganazzar': "Aganazzar's Scorcher",
+  'controlar chamas': 'Control Flames',
+  'criar fogueira': 'Create Bonfire',
+  'dispersao': 'Scatter',
+  'dobre dos mortos': 'Toll the Dead',
+  'enemies em todo lugar': 'Enemies Abound',
+  'enimigos em todo lugar': 'Enemies Abound',
+  'esfera aquosa': 'Watery Sphere',
+  'esfera tempestuosa': 'Storm Sphere',
+  'esfera vitriolica': 'Vitriolic Sphere',
+  'espinho mental': 'Mind Spike',
+  'espirito curativo': 'Healing Spirit',
+  'estatica sinaptica': 'Synaptic Static',
+  'faca de gelo': 'Ice Knife',
+  'flecha relampejante': 'Lightning Arrow',
+  'forma gasosa': 'Gaseous Form',
+  'golpe do vento cortante': 'Steel Wind Strike',
+  'infestacao': 'Infestation',
+  'inseto gigante': 'Giant Insect',
+  'lamina sombria': 'Shadow Blade',
+  'liberdade de movimento': 'Freedom of Movement',
+  'luz enfermica': 'Sickening Radiance',
+  'moldar terra': 'Mold Earth',
+  'mordida gelida': 'Frostbite',
+  'montaria fantasmagorica': 'Phantom Steed',
+  'muralha de agua': 'Wall of Water',
+  'muralha de areia': 'Wall of Sand',
+  'nevasca de snilloc': "Snilloc's Snowball Swarm",
+  'onda de mare': 'Tidal Wave',
+  'passo arboreo': 'Tree Stride',
+  'passo trovejante': 'Thunder Step',
+  'pedra magica': 'Magic Stone',
+  'pirotecnia': 'Pyrotechnics',
+  'prender a terra': 'Earthbind',
+  'rajada de po': 'Dust Devil',
+  'rajada trovejante': 'Thunderclap',
+  'raio do caos': 'Chaos Bolt',
+  'raio enlouquecedor': 'Maddening Darkness',
+  'selvageria primal': 'Primal Savagery',
+  'soneca': 'Catnap',
+  'sopro do dragao': "Dragon's Breath",
+  'transmutar rocha': 'Transmute Rock',
+  'tremor de terra': 'Earth Tremor',
+  'vento trovejante': 'Thunderwave',
   'escudo arcano': 'Shield',
   'estabilizar': 'Spare the Dying',
   'luz': 'Light',
@@ -151,7 +199,40 @@ const FOUNDRY_SPELL_EN_MAP = {
   'sagrado flamejante': 'Sacred Flame',
   'thaumaturgia': 'Thaumaturgy',
   'toque chocante': 'Shocking Grasp',
-  'toque arrepiante': 'Chill Touch'
+  'toque arrepiante': 'Chill Touch',
+  'absorver elementos': 'Absorb Elements',
+  'armadilha': 'Snare',
+  'ataque zefiro': 'Zephyr Strike',
+  'banimento': 'Banishment',
+  'catapulta': 'Catapult',
+  'causar medo': 'Cause Fear',
+  'controlar chamas': 'Control Flames',
+  'criar fogueira': 'Create Bonfire',
+  'dobre dos mortos': 'Toll the Dead',
+  'espinho mental': 'Mind Spike',
+  'espirito curativo': 'Healing Spirit',
+  'estatica sinaptica': 'Synaptic Static',
+  'faca de gelo': 'Ice Knife',
+  'flecha relampejante': 'Lightning Arrow',
+  'golpe do vento cortante': 'Steel Wind Strike',
+  'guardiaes espirituais': 'Spirit Guardians',
+  'infestacao': 'Infestation',
+  'inimigos em todo lugar': 'Enemies Abound',
+  'lamina sombria': 'Shadow Blade',
+  'montaria fantasmagorica': 'Phantom Steed',
+  'mordida gelida': 'Frostbite',
+  'muralha de agua': 'Wall of Water',
+  'muralha de areia': 'Wall of Sand',
+  'onda de mare': 'Tidal Wave',
+  'palavra de radiancia': 'Word of Radiance',
+  'passo trovejante': 'Thunder Step',
+  'pedra magica': 'Magic Stone',
+  'prender a terra': 'Earthbind',
+  'raio do caos': 'Chaos Bolt',
+  'selvageria primal': 'Primal Savagery',
+  'sopro do dragao': "Dragon's Breath",
+  'tremor de terra': 'Earth Tremor',
+  'vinculo protetor': 'Warding Bond'
 };
 
 const FOUNDRY_COMPENDIUM_HINTS = {
@@ -305,6 +386,27 @@ function getEnglishSpellName(name){
   return FOUNDRY_SPELL_EN_MAP[normalized] || name;
 }
 
+function spellIsFromXanathar(name, classe){
+  const normalized = normalizeLookupText(name);
+  const classesToCheck = classe ? [classe] : Object.keys(globalThis.XANATHAR_SPELLS || {});
+  return classesToCheck.some(key => Object.values((globalThis.XANATHAR_SPELLS || {})[key] || {}).some(list => (list || []).some(spell => normalizeLookupText(spell) === normalized)));
+}
+
+function getSubclassSourceBook(personagem){
+  const sub = (typeof getSubclassOptions === 'function' ? getSubclassOptions(personagem?.classe || '') : []).find(s => s.key === personagem?.subclasse);
+  return sub?.source || 'PHB';
+}
+
+function getFeatureSourceBook(feature, originType, personagem){
+  if(feature?.source) return feature.source;
+  if(originType === 'subclass-feature') return getSubclassSourceBook(personagem);
+  return 'PHB';
+}
+
+function getResourceSourceBook(personagem){
+  return getSubclassSourceBook(personagem);
+}
+
 function createCompendiumMatch(type, ptName, enName, extra={}){
   const names = [ptName, enName].filter(Boolean);
   const slugBase = enName || ptName || type;
@@ -332,6 +434,145 @@ function createCompendiumFlags(match, extra={}){
       ...extra
     }
   };
+}
+
+
+function buildFoundrySource(book='PHB', rules='2014'){
+  const normalizedBook = book === 'XGtE' ? "Xanathar's Guide to Everything" : book;
+  
+  return {
+    book: normalizedBook,
+    page: '',
+    license: '',
+    custom: 'Construtor offline D&D 5e',
+    rules,
+    revision: 1
+  };
+}
+
+function buildFoundryRoll(){
+  return { min: null, max: null, mode: 0 };
+}
+
+function buildFoundryDescription(value=''){
+  return { value, chat: '', unidentified: '' };
+}
+
+function buildFoundryToken(personagem, senses={ darkvision: 0, blindsight: 0, tremorsense: 0, truesight: 0 }){
+  const visionRange = Number(senses.darkvision || senses.blindsight || senses.tremorsense || senses.truesight || 0);
+  return {
+    name: personagem.nome || 'Personagem',
+    displayName: 0,
+    actorLink: true,
+    width: 1,
+    height: 1,
+    texture: {
+      src: 'icons/svg/mystery-man.svg',
+      anchorX: 0.5,
+      anchorY: 0.5,
+      offsetX: 0,
+      offsetY: 0,
+      fit: 'contain',
+      scaleX: 1,
+      scaleY: 1,
+      rotation: 0,
+      tint: '#ffffff',
+      alphaThreshold: 0.75
+    },
+    lockRotation: false,
+    rotation: 0,
+    alpha: 1,
+    disposition: 1,
+    displayBars: 0,
+    bar1: { attribute: 'attributes.hp' },
+    bar2: { attribute: null },
+    light: {
+      negative: false,
+      priority: 0,
+      alpha: 0.5,
+      angle: 360,
+      bright: 0,
+      color: null,
+      coloration: 1,
+      dim: 0,
+      attenuation: 0.5,
+      luminosity: 0.5,
+      saturation: 0,
+      contrast: 0,
+      shadows: 0,
+      animation: { type: null, speed: 5, intensity: 5, reverse: false },
+      darkness: { min: 0, max: 1 }
+    },
+    sight: {
+      enabled: true,
+      range: visionRange,
+      angle: 360,
+      visionMode: visionRange ? 'darkvision' : 'basic',
+      color: null,
+      attenuation: 0,
+      brightness: 0,
+      saturation: -1,
+      contrast: 0
+    },
+    detectionModes: [],
+    occludable: { radius: 0 },
+    ring: {
+      enabled: false,
+      colors: { ring: null, background: null },
+      effects: 1,
+      subject: { scale: 1, texture: null }
+    },
+    turnMarker: { mode: 1, animation: null, src: null, disposition: false },
+    movementAction: null,
+    flags: {},
+    randomImg: false,
+    appendNumber: false,
+    prependAdjective: false
+  };
+}
+
+function getFoundrySenses(personagem){
+  const racial = RACES[personagem.raca] || {};
+  const traitList = (racial.traits || []).join(' | ').toLowerCase();
+  const darkvision = /vis[aã]o no escuro|darkvision/.test(traitList) ? 60 : 0;
+  return {
+    blindsight: 0,
+    darkvision,
+    tremorsense: 0,
+    truesight: 0
+  };
+}
+
+function getFoundryToolMap(personagem){
+  const tools = {};
+  (personagem.ferramentas || []).forEach((tool, index) => {
+    tools[slugFoundry(tool, `tool-${index}`)] = {
+      value: 1,
+      ability: 'int',
+      bonuses: { check: '' },
+      roll: buildFoundryRoll()
+    };
+  });
+  return tools;
+}
+
+function getFoundrySpellProgression(personagem){
+  if(!personagem.magia?.ehConjurador) return 'none';
+  if(personagem.classe === 'bruxo') return 'pact';
+  if(SPELLCASTERS[personagem.classe]?.meioConjurador) return 'half';
+  return 'full';
+}
+
+function getFoundrySpellPreparationFormula(personagem){
+  const ability = getSpellcastingAbilityCode(personagem);
+  const classId = getFoundryClassIdentifier(personagem);
+  if(!ability || !personagem.magia?.ehConjurador) return '';
+  if(personagem.magia?.tipo === 'preparadas') return `max(@abilities.${ability}.mod + @classes.${classId}.levels, 1)`;
+  return '';
+}
+
+function getFoundryItemIdByType(items, type){
+  return items.find(item => item.type === type)?._id || '';
 }
 
 
@@ -432,8 +673,9 @@ function getFoundrySkillEntry(personagem, skillName){
   const code = FOUNDRY_SKILL_MAP[skillName];
   if(!code) return null;
   return [code, {
-    value: (personagem.periciasFinais || []).includes(skillName) ? 1 : 0,
     ability: abilityPtToFoundry(SKILLS[skillName]),
+    roll: buildFoundryRoll(),
+    value: (personagem.periciasFinais || []).includes(skillName) ? 1 : 0,
     bonuses: { check: '', passive: '' }
   }];
 }
@@ -452,7 +694,10 @@ function getFoundryAbilities(personagem){
     abilities[code] = {
       value: Number(personagem.atributos[attr] || 10),
       proficient: (personagem.savesClasse || []).includes(ATTRIBUTE_LABELS[attr]) ? 1 : 0,
-      bonuses: { check: '', save: '' }
+      max: 20,
+      bonuses: { check: '', save: '' },
+      check: { roll: buildFoundryRoll() },
+      save: { roll: buildFoundryRoll() }
     };
   }
   return abilities;
@@ -500,7 +745,7 @@ function getFoundryTraits(personagem){
     size: 'med',
     languages: {
       value: [],
-      custom: (personagem.idiomasRaciais || []).join('; ')
+      custom: [ ...(personagem.idiomasRaciais || []), ...(personagem.idiomas || []) ].join('; ')
     },
     weaponProf: {
       value: mapWeaponProfValue(personagem.proficienciasClasse),
@@ -543,7 +788,7 @@ function buildFoundryWeaponItem(personagem, weaponKey, equipped=false){
       quantity: getInventoryQuantityByName(personagem, weapon.nome),
       weight: Number(weapon.peso || 0),
       price: { value: Number(weapon.precoGp || 0), denomination: 'gp' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
+      source: buildSourceDescriptor('Construtor offline D&D 5e', (feature.source || 'PHB')),
       identifier: compendiumMatch.slugs[0],
       equipped: !!equipped,
       proficient: isWeaponProficient(personagem, weapon),
@@ -709,7 +954,7 @@ function buildFoundrySpellItem(personagem, name, level=0){
     img: 'icons/svg/book.svg',
     system: {
       description: { value: `<p>Magia referenciada pelo construtor offline.</p><p><strong>Nome original:</strong> ${escaparHtml(name)}</p><p>Recomenda-se substituir por uma magia do compêndio SRD no Foundry para automação total.</p>`, chat: '', unidentified: '' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
+      source: buildSourceDescriptor('Construtor offline D&D 5e', spellIsFromXanathar(name, personagem?.classe) ? "Xanathar's Guide to Everything" : 'PHB'),
       identifier: compendiumMatch.slugs[0],
       level,
       school: '',
@@ -747,7 +992,7 @@ function buildFoundryFeatureItem(feature, originType, personagem){
     img: 'icons/svg/upgrade.svg',
     system: {
       description: { value: `<p>${feature.resumo || ''}</p><p><strong>Nome original:</strong> ${escaparHtml(feature.nome)}</p>`, chat: '', unidentified: '' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
+      source: buildSourceDescriptor('Construtor offline D&D 5e', getFeatureSourceBook(feature, originType, personagem) === 'XGtE' ? "Xanathar's Guide to Everything" : getFeatureSourceBook(feature, originType, personagem)),
       identifier: compendiumMatch.slugs[0],
       type: { value: originType === 'subclass-feature' ? 'class' : 'feat' },
       requirements: feature.level ? `Nível ${feature.level}` : '',
@@ -776,7 +1021,7 @@ function buildFoundryResourceFeature(resourceKey, resourceValue, personagem){
     img: 'icons/svg/light.svg',
     system: {
       description: { value: `<p>${resourceValue.detalhe || ''}</p>`, chat: '', unidentified: '' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
+      source: buildSourceDescriptor('Construtor offline D&D 5e', getResourceSourceBook(personagem) === 'XGtE' ? "Xanathar's Guide to Everything" : getResourceSourceBook(personagem)),
       identifier: compendiumMatch.slugs[0],
       type: { value: 'class' },
       uses: {
@@ -801,21 +1046,36 @@ function buildFoundryClassItem(personagem){
     sourceKey: personagem.classe,
     level: Number(personagem.nivel || 1)
   });
+  const ability = getSpellcastingAbilityCode(personagem);
+  const classIdentifier = compendiumMatch.slugs[0];
   return {
     _id: gerarIdFoundry('class'),
-    name: englishName || classe.nome || 'Classe',
+    name: englishName || classe.nome || 'Class',
     type: 'class',
     img: 'icons/svg/book.svg',
     system: {
-      description: { value: `<p>Classe principal exportada pelo construtor offline.</p><p><strong>Nome original:</strong> ${escaparHtml(classe.nome || personagem.classe || 'Classe')}</p>`, chat: '', unidentified: '' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
-      identifier: compendiumMatch.slugs[0],
-      levels: Number(personagem.nivel || 1),
-      hitDice: `d${Number(classe.dadoVida || personagem.dadoVida || 8)}`,
-      spellcasting: { progression: personagem.magia?.tipo === 'conhecidas' || personagem.magia?.tipo === 'preparadas' ? (SPELLCASTERS[personagem.classe]?.meioConjurador ? 'half' : personagem.classe === 'bruxo' ? 'pact' : 'full') : 'none', ability: getSpellcastingAbilityCode(personagem) },
-      advancement: [],
+      advancement: {},
+      description: buildFoundryDescription(`<p>Classe principal exportada pelo construtor offline.</p><p><strong>Nome original:</strong> ${escaparHtml(classe.nome || personagem.classe || 'Classe')}</p>`),
+      identifier: classIdentifier,
+      source: buildFoundrySource(((classe.source) || 'PHB'), '2014'),
+      startingEquipment: [],
       wealth: '',
-      primaryAbility: []
+      hd: {
+        denomination: `d${Number(classe.dadoVida || personagem.dadoVida || 8)}`,
+        spent: 0,
+        additional: ''
+      },
+      levels: Number(personagem.nivel || 1),
+      primaryAbility: {
+        value: ability ? [ability] : [],
+        all: false
+      },
+      properties: [],
+      spellcasting: {
+        progression: getFoundrySpellProgression(personagem),
+        ability,
+        preparation: { formula: getFoundrySpellPreparationFormula(personagem) }
+      }
     },
     effects: [],
     flags: createCompendiumFlags(compendiumMatch, {
@@ -843,10 +1103,15 @@ function buildFoundrySubclassItem(personagem){
     type: 'subclass',
     img: 'icons/svg/upgrade.svg',
     system: {
-      description: { value: `<p>Subclasse exportada pelo construtor offline.</p><p><strong>Nome original:</strong> ${escaparHtml(sub.nome)}</p>`, chat: '', unidentified: '' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
+      advancement: {},
+      description: buildFoundryDescription(`<p>Subclasse exportada pelo construtor offline.</p><p><strong>Nome original:</strong> ${escaparHtml(sub.nome)}</p>`),
+      source: buildFoundrySource('PHB', '2014'),
       identifier: compendiumMatch.slugs[0],
-      classIdentifier: getFoundryClassIdentifier(personagem)
+      classIdentifier: getFoundryClassIdentifier(personagem),
+      spellcasting: {
+        progression: 'none',
+        preparation: {}
+      }
     },
     effects: [],
     flags: createCompendiumFlags(compendiumMatch, {
@@ -861,18 +1126,41 @@ function buildFoundrySpeciesItem(personagem){
   const race = RACES[personagem.raca];
   if(!race) return null;
   const englishName = getEnglishRaceName(personagem.raca);
+  const senses = getFoundrySenses(personagem);
   const compendiumMatch = createCompendiumMatch('species', race.nome, englishName, {
     sourceKey: personagem.raca
   });
   return {
-    _id: gerarIdFoundry('species'),
+    _id: gerarIdFoundry('race'),
     name: englishName || race.nome,
-    type: 'species',
+    type: 'race',
     img: 'icons/svg/mystery-man.svg',
     system: {
-      description: { value: `<p>Traços: ${(race.traits || []).join(', ') || '—'}</p><p><strong>Nome original:</strong> ${escaparHtml(race.nome)}</p>`, chat: '', unidentified: '' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
-      identifier: compendiumMatch.slugs[0]
+      advancement: {},
+      description: buildFoundryDescription(`<p>Traços: ${(race.traits || []).join(', ') || '—'}</p><p><strong>Nome original:</strong> ${escaparHtml(race.nome)}</p>`),
+      identifier: compendiumMatch.slugs[0],
+      source: buildFoundrySource('PHB', '2014'),
+      movement: {
+        burrow: '0',
+        climb: '0',
+        fly: '0',
+        swim: '0',
+        walk: String(personagem.deslocamento || 30),
+        units: 'ft',
+        hover: false,
+        ignoredDifficultTerrain: []
+      },
+      senses: {
+        ranges: {
+          blindsight: senses.blindsight || null,
+          darkvision: senses.darkvision || null,
+          tremorsense: senses.tremorsense || null,
+          truesight: senses.truesight || null
+        },
+        units: 'ft',
+        special: ''
+      },
+      type: { value: 'humanoid' }
     },
     effects: [],
     flags: createCompendiumFlags(compendiumMatch, {
@@ -896,9 +1184,11 @@ function buildFoundryBackgroundItem(personagem){
     type: 'background',
     img: 'icons/svg/scroll.svg',
     system: {
-      description: { value: `<p>Característica: ${bg.caracteristica || '—'}</p><p><strong>Nome original:</strong> ${escaparHtml(bg.nome)}</p>`, chat: '', unidentified: '' },
-      source: buildSourceDescriptor('Construtor offline D&D 5e', 'PHB'),
-      identifier: compendiumMatch.slugs[0]
+      advancement: {},
+      description: buildFoundryDescription(`<p>Característica: ${bg.caracteristica || '—'}</p><p><strong>Nome original:</strong> ${escaparHtml(bg.nome)}</p>`),
+      source: buildFoundrySource('PHB', '2014'),
+      identifier: compendiumMatch.slugs[0],
+      startingEquipment: []
     },
     effects: [],
     flags: createCompendiumFlags(compendiumMatch, {
@@ -965,6 +1255,11 @@ function montarFoundryItems(personagem){
 function montarFoundryActor(){
   const p = state.personagem;
   const payload = montarPayloadExportacao();
+  const items = montarFoundryItems(p);
+  const raceId = getFoundryItemIdByType(items, 'race');
+  const backgroundId = getFoundryItemIdByType(items, 'background');
+  const classId = getFoundryItemIdByType(items, 'class');
+  const senses = getFoundrySenses(p);
   const biographyParts = [
     p.personalidade?.descricaoGeral ? `<p><strong>Descrição geral:</strong> ${escaparHtml(p.personalidade.descricaoGeral)}</p>` : '',
     p.personalidade?.aparencia ? `<p><strong>Aparência:</strong> ${escaparHtml(p.personalidade.aparencia)}</p>` : '',
@@ -979,64 +1274,8 @@ function montarFoundryActor(){
     name: p.nome || 'Personagem sem nome',
     type: 'character',
     img: 'icons/svg/mystery-man.svg',
-    prototypeToken: {
-      name: p.nome || 'Personagem',
-      actorLink: true,
-      disposition: 1,
-      displayName: 20,
-      displayBars: 20,
-      bar1: { attribute: 'attributes.hp' },
-      bar2: { attribute: '' },
-      randomImg: false,
-      appendNumber: false,
-      prependAdjective: false
-    },
+    prototypeToken: buildFoundryToken(p, senses),
     system: {
-      abilities: getFoundryAbilities(p),
-      attributes: {
-        ac: {
-          flat: Number(p.combate?.classeArmadura || 10),
-          calc: getActorAcCalc(p),
-          formula: '',
-          bonus: 0,
-          cover: 0,
-          min: null
-        },
-        hp: {
-          value: Number(p.pvMax || 1),
-          max: Number(p.pvMax || 1),
-          temp: 0,
-          tempmax: 0,
-          bonuses: { level: '', overall: '' }
-        },
-        init: { ability: 'dex', bonus: '', roll: payload.combate.iniciativa || 0 },
-        movement: { walk: Number(p.deslocamento || 30), burrow: 0, climb: 0, fly: 0, swim: 0, units: 'ft', hover: false },
-        senses: { darkvision: 0, blindsight: 0, tremorsense: 0, truesight: 0, units: 'ft', special: '' },
-        spellcasting: getSpellcastingAbilityCode(p),
-        prof: Number(p.bonusProficiencia || 2),
-        inspiration: false,
-        exhaustion: 0,
-        encumbrance: {
-          value: Number(p.inventario?.pesoTotal || 0),
-          max: Number(p.inventario?.capacidadeCarga || 0),
-          pct: 0,
-          encumbered: false
-        }
-      },
-      details: {
-        level: Number(p.nivel || 1),
-        xp: { value: Number(p.xp || 0) },
-        race: nomeCatalogo(RACES, p.raca),
-        background: nomeCatalogo(BACKGROUNDS, p.origem),
-        biography: { value: biographyParts, public: '' },
-        alignment: '',
-        appearance: p.personalidade?.aparencia || '',
-        ideal: (p.personalidade?.ideais || []).join(' | '),
-        bond: (p.personalidade?.vinculos || []).join(' | '),
-        flaw: (p.personalidade?.defeitos || []).join(' | '),
-        trait: (p.personalidade?.tracos || []).join(' | ')
-      },
-      skills: getFoundrySkillMap(p),
       currency: {
         pp: Number(p.inventario?.moedas?.pp || 0),
         gp: Number(p.inventario?.moedas?.gp || 0),
@@ -1044,7 +1283,7 @@ function montarFoundryActor(){
         sp: Number(p.inventario?.moedas?.sp || 0),
         cp: Number(p.inventario?.moedas?.cp || 0)
       },
-      spells: getFoundrySpells(p),
+      abilities: getFoundryAbilities(p),
       bonuses: {
         mwak: { attack: '', damage: '' },
         rwak: { attack: '', damage: '' },
@@ -1053,25 +1292,107 @@ function montarFoundryActor(){
         abilities: { check: '', save: '', skill: '' },
         spell: { dc: '' }
       },
+      skills: getFoundrySkillMap(p),
+      tools: getFoundryToolMap(p),
+      spells: getFoundrySpells(p),
+      attributes: {
+        ac: {
+          calc: getActorAcCalc(p),
+          flat: Number(p.combate?.classeArmadura || 10),
+          formula: ''
+        },
+        init: {
+          ability: 'dex',
+          roll: buildFoundryRoll(),
+          bonus: ''
+        },
+        movement: {
+          units: 'ft',
+          hover: false,
+          ignoredDifficultTerrain: [],
+          walk: String(p.deslocamento || 30),
+          burrow: '0',
+          climb: '0',
+          fly: '0',
+          swim: '0'
+        },
+        attunement: { max: 3 },
+        senses: {
+          ranges: {
+            blindsight: senses.blindsight || 0,
+            darkvision: senses.darkvision || 0,
+            tremorsense: senses.tremorsense || 0,
+            truesight: senses.truesight || 0
+          },
+          units: 'ft',
+          special: ''
+        },
+        spellcasting: getSpellcastingAbilityCode(p),
+        exhaustion: 0,
+        concentration: {
+          ability: '',
+          roll: buildFoundryRoll(),
+          bonuses: { save: '' },
+          limit: 1
+        },
+        loyalty: {},
+        hp: {
+          max: null,
+          temp: 0,
+          tempmax: 0,
+          value: Number(p.pvMax || 1),
+          bonuses: { level: '', overall: '' }
+        },
+        death: {
+          roll: buildFoundryRoll(),
+          success: 0,
+          failure: 0,
+          bonuses: { save: '' }
+        },
+        inspiration: false
+      },
+      bastion: { name: '', description: '' },
+      details: {
+        biography: { value: biographyParts, public: biographyParts },
+        alignment: '',
+        ideal: (p.personalidade?.ideais || []).join(' | '),
+        bond: (p.personalidade?.vinculos || []).join(' | '),
+        flaw: (p.personalidade?.defeitos || []).join(' | '),
+        race: raceId,
+        background: backgroundId,
+        originalClass: classId,
+        xp: { value: Number(p.xp || 0) },
+        appearance: p.personalidade?.aparencia || '',
+        trait: (p.personalidade?.tracos || []).join(' | '),
+        gender: '',
+        eyes: '',
+        height: '',
+        faith: '',
+        hair: '',
+        skin: '',
+        age: '',
+        weight: ''
+      },
       traits: getFoundryTraits(p),
-      resources: fillActorResources(p)
+      resources: fillActorResources(p),
+      favorites: []
     },
-    items: montarFoundryItems(p),
+    items,
     effects: [],
     folder: null,
     sort: 0,
     ownership: { default: 0 },
     flags: {
       dnd5eSheetBuilder: {
-        exportType: 'foundry-actor-v14-dnd5e-5.3x-stage3',
+        exportType: 'foundry-actor-v14-dnd5e-5.3x-stage4',
         exportedAt: new Date().toISOString(),
         sourceBackup: payload,
         targetFoundryVersion: '14',
         targetSystemVersion: 'dnd5e 5.3.x',
         notes: [
-          'Etapa 3: exportação orientada a compêndio/SRD para Foundry V14 + D&D 5e 5.3.x.',
-          'Itens exportados passam a usar nomes e identificadores mais próximos do ecossistema SRD em inglês, mantendo o nome original em flags e descrição.',
-          'Cada item leva dicas de pack e slugs candidatos em flags.dnd5eSheetBuilder.compendiumMatch para facilitar substituição por compêndio dentro do Foundry.'
+          'Etapa 4: exportação aproximada do modelo real de Actor do Foundry usado como referência.',
+          'details.race, details.background e details.originalClass agora referenciam os IDs dos itens embutidos.',
+          'Atributos, sentidos e prototypeToken foram adaptados para ficar mais próximos do JSON modelo de importação.'
         ]
       }
     }
