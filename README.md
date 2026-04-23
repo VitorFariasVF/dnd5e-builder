@@ -6,12 +6,15 @@ Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com pers
 
 ## Demonstração
 
-- **GitHub Pages:** `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`
-- **Repositório:** `https://github.com/SEU-USUARIO/NOME-DO-REPOSITORIO`
-
-> Substitua os links acima pelos links finais do seu repositório e da publicação no GitHub Pages.
+- **GitHub Pages:** `https://vitorfariasvf.github.io/dnd5e-builder/`
+- **Repositório:** `https://github.com/VitorFariasVF/dnd5e-builder`
 
 ## Principais recursos
+
+Projeto público:
+- **Repositório:** `https://github.com/VitorFariasVF/dnd5e-builder`
+- **GitHub Pages:** `https://vitorfariasvf.github.io/dnd5e-builder/`
+
 
 - criação de personagem por etapas
 - modo **A** com validação guiada pelas regras
@@ -52,6 +55,7 @@ Este projeto busca oferecer uma base sólida para uma ficha offline de D&D 5e qu
 - **CSS3**
 - **JavaScript Vanilla**
 - **LocalStorage** para persistência local
+- botão na interface para **limpar os dados salvos** do navegador com confirmação
 
 ## Como rodar localmente
 
@@ -74,11 +78,12 @@ Depois de subir o projeto para o GitHub, você pode publicar pelo GitHub Pages.
 
 ### Estrutura esperada
 - branch principal com os arquivos do projeto na raiz
+- repositório atual: `VitorFariasVF/dnd5e-builder`
 - `index.html` na raiz do repositório
 
 ### Link esperado
 ```text
-[https://vitorfariasvf.github.io/dnd5e-builder/]
+https://vitorfariasvf.github.io/dnd5e-builder/
 ```
 
 ### Checklist rápido
@@ -87,6 +92,7 @@ Depois de subir o projeto para o GitHub, você pode publicar pelo GitHub Pages.
 - ativar GitHub Pages nas configurações do repositório
 - selecionar a branch principal como origem da publicação
 - testar o link público
+- link publicado atual: `https://vitorfariasvf.github.io/dnd5e-builder/`
 
 ## Estrutura do projeto
 
