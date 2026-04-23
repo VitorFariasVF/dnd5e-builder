@@ -6,7 +6,6 @@ Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com pers
 
 ## Demonstração
 
-<<<<<<< HEAD
 ## Principais recursos
 
 Projeto público:
