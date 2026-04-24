@@ -752,6 +752,101 @@ function describeSelectedClassOptions(personagem){
   });
   return linhas;
 }
+
+const XANATHAR_SUBCLASS_PROFICIENCY_RULES = {
+  'bardo:swords': { proficiencias: ['Armaduras médias', 'Cimitarras'] },
+  'clerigo:forge': { proficiencias: ['Armaduras pesadas'] },
+  'guerreiro:arcane_archer': { periciaPorGrupo: ['arcane_archer_lore_skill'] },
+  'guerreiro:samurai': { periciaPorGrupo: ['samurai_bonus_skill'] },
+  'ladino:scout': { pericias: ['Natureza', 'Sobrevivência'] },
+  'monge:drunken_master': { pericias: ['Atuação'], ferramentas: ['Suprimentos de cervejeiro'] },
+  'monge:kensei': { ferramentas: ['Suprimentos de caligrafia'] },
+  'patrulheiro:gloom_stalker': { saveProfByLevel: [{ level: 7, saves: ['Sabedoria'] }] },
+  'bruxo:hexblade': { proficiencias: ['Armaduras médias', 'Escudos', 'Armas marciais'] }
+};
+
+function getSelectedLabelsFromGroup(personagem, groupId){
+  const groups = getClassOptionGroups(personagem?.classe, personagem?.nivel||1, personagem?.subclasse);
+  const group = groups.find(g => g.id === groupId);
+  if(!group) return [];
+  const raw = (personagem?.opcoesClasse || {})[groupId];
+  if(group.multiple){
+    return [].concat(raw || []).map(v => {
+      const found = (group.options||[]).find(opt => getNormalizedOptionValue(opt) === v);
+      return found ? getNormalizedOptionLabel(found) : null;
+    }).filter(Boolean);
+  }
+  const found = (group.options||[]).find(opt => getNormalizedOptionValue(opt) === raw);
+  return found ? [getNormalizedOptionLabel(found)] : [];
+}
+
+function getSubclassGrantedBenefits(personagem){
+  const p = personagem || {};
+  const key = `${p.classe || ''}:${p.subclasse || ''}`;
+  const rule = XANATHAR_SUBCLASS_PROFICIENCY_RULES[key] || {};
+  const nivel = Number(p.nivel || 1);
+  const out = { proficiencias: [], pericias: [], ferramentas: [], saves: [] };
+  (rule.proficiencias || []).forEach(v => out.proficiencias.push(v));
+  (rule.pericias || []).forEach(v => out.pericias.push(v));
+  (rule.ferramentas || []).forEach(v => out.ferramentas.push(v));
+  (rule.periciaPorGrupo || []).forEach(groupId => getSelectedLabelsFromGroup(p, groupId).forEach(v => out.pericias.push(v)));
+  (rule.ferramentaPorGrupo || []).forEach(groupId => getSelectedLabelsFromGroup(p, groupId).forEach(v => out.ferramentas.push(v)));
+  (rule.saveProfByLevel || []).forEach(entry => { if(nivel >= Number(entry.level || 1)) (entry.saves || []).forEach(v => out.saves.push(v)); });
+  out.proficiencias = [...new Set(out.proficiencias)];
+  out.pericias = [...new Set(out.pericias)];
+  out.ferramentas = [...new Set(out.ferramentas)];
+  out.saves = [...new Set(out.saves)];
+  return out;
+}
+
+function getAllCharacterProficiencies(personagem){
+  const base = [].concat(personagem?.proficienciasClasse || []);
+  const extra = getSubclassGrantedBenefits(personagem).proficiencias;
+  return [...new Set([...base, ...extra])];
+}
+function getAllCharacterSkills(personagem){
+  const base = [].concat(personagem?.periciasOrigem || [], personagem?.periciasClasseSelecionadas || []);
+  const extra = getSubclassGrantedBenefits(personagem).pericias;
+  return [...new Set([...base, ...extra])];
+}
+function getAllCharacterTools(personagem){
+  const base = [].concat(personagem?.ferramentas || []);
+  const extra = getSubclassGrantedBenefits(personagem).ferramentas;
+  return [...new Set([...base, ...extra])];
+}
+function getAllCharacterSaveProficiencies(personagem){
+  const base = [].concat(personagem?.savesClasse || []);
+  const extra = getSubclassGrantedBenefits(personagem).saves;
+  return [...new Set([...base, ...extra])];
+}
+function getSubclassProficiencyNotes(personagem){
+  const extra = getSubclassGrantedBenefits(personagem);
+  const linhas = [];
+  if(extra.proficiencias.length) linhas.push(`Proficiências bônus: ${extra.proficiencias.join(', ')}`);
+  if(extra.pericias.length) linhas.push(`Perícias bônus: ${extra.pericias.join(', ')}`);
+  if(extra.ferramentas.length) linhas.push(`Ferramentas bônus: ${extra.ferramentas.join(', ')}`);
+  if(extra.saves.length) linhas.push(`Salvaguardas bônus: ${extra.saves.join(', ')}`);
+  return linhas;
+}
+
+function patchSubclassFeature(classe, key, feature){
+  const list = SUBCLASS_OPTIONS[classe] || [];
+  const sub = list.find(s => s.key === key);
+  if(!sub) return;
+  sub.features = sub.features || [];
+  if(!sub.features.some(f => f.level === feature.level && f.nome === feature.nome)) sub.features.unshift(feature);
+}
+
+patchSubclassFeature('clerigo', 'forge', { level: 1, nome: 'Proficiência Bônus', resumo: 'Recebe proficiência com armaduras pesadas.' });
+patchSubclassFeature('guerreiro', 'arcane_archer', { level: 3, nome: 'Conhecimento do Arqueiro Arcano', resumo: 'Recebe proficiência em Arcanismo ou Natureza e aprende um truque temático.' });
+patchSubclassFeature('monge', 'drunken_master', { level: 3, nome: 'Proficiência Bônus', resumo: 'Recebe proficiência em Atuação e suprimentos de cervejeiro.' });
+patchSubclassFeature('monge', 'kensei', { level: 3, nome: 'Caminho do Pincel', resumo: 'Recebe proficiência com suprimentos de caligrafia.' });
+patchSubclassFeature('patrulheiro', 'gloom_stalker', { level: 7, nome: 'Mente de Ferro', resumo: 'Recebe proficiência em testes de resistência de Sabedoria.' });
+patchSubclassFeature('ladino', 'scout', { level: 3, nome: 'Sobrevivencialista', resumo: 'Recebe proficiência em Natureza e Sobrevivência.' });
+
+if(Array.isArray(SUBCLASS_OPTION_RULES['guerreiro:arcane_archer']) && !SUBCLASS_OPTION_RULES['guerreiro:arcane_archer'].some(g => g.id === 'arcane_archer_lore_skill')){
+  SUBCLASS_OPTION_RULES['guerreiro:arcane_archer'].push({ id: 'arcane_archer_lore_skill', label: 'Perícia do Conhecimento Arcano', minLevel: 3, count: 1, multiple: false, options: ['Arcanismo', 'Natureza'] });
+}
 function compileResourceRule(rule, n, mods){
   const formula = typeof rule.formula === 'number' ? String(rule.formula) : String(rule.formula || '0');
   const recarga = typeof rule.recarga === 'function' ? rule.recarga(n, mods) : (String(rule.recarga||''));

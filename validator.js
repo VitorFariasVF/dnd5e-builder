@@ -32,7 +32,7 @@ function validarPointBuy(valores){
 }
 
 function personagemEhProficienteComArmadura(armor){
-  const profs = state.personagem.proficienciasClasse || [];
+  const profs = (typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
   if(!armor) return false;
   if(armor.tipo === "nenhuma") return true;
   if(profs.includes("Todas as armaduras")) return true;
@@ -42,7 +42,7 @@ function personagemEhProficienteComArmadura(armor){
   return false;
 }
 function personagemEhProficienteComArma(weapon){
-  const profs = state.personagem.proficienciasClasse || [];
+  const profs = (typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
   if(!weapon) return false;
   if(profs.includes("Armas simples") && weapon.categoria === "simples") return true;
   if(profs.includes("Armas marciais") && weapon.categoria === "marcial") return true;

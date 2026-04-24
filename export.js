@@ -685,7 +685,7 @@ function getWeaponAbilityCode(weapon){
 }
 
 function isWeaponProficient(personagem, weapon){
-  const profs = (personagem.proficienciasClasse || []).join(' | ').toLowerCase();
+  const profs = (((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : (personagem.proficienciasClasse || [])) || []).join(' | ').toLowerCase();
   const categoria = String(weapon?.categoria || '').toLowerCase();
   if(categoria.includes('simples') && profs.includes('armas simples')) return true;
   if(categoria.includes('marcial') && profs.includes('armas marciais')) return true;
@@ -693,7 +693,7 @@ function isWeaponProficient(personagem, weapon){
 }
 
 function isArmorProficient(personagem, armor){
-  const profs = (personagem.proficienciasClasse || []).join(' | ').toLowerCase();
+  const profs = (((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : (personagem.proficienciasClasse || [])) || []).join(' | ').toLowerCase();
   if(!armor) return true;
   if(armor.tipo === 'leve') return profs.includes('armaduras leves') || profs.includes('todas as armaduras');
   if(armor.tipo === 'media') return profs.includes('armaduras médias') || profs.includes('armaduras medias') || profs.includes('todas as armaduras');
@@ -775,7 +775,7 @@ function getFoundryAbilities(personagem){
     const code = abilityPtToFoundry(attr);
     abilities[code] = {
       value: Number(personagem.atributos[attr] || 10),
-      proficient: (personagem.savesClasse || []).includes(ATTRIBUTE_LABELS[attr]) ? 1 : 0,
+      proficient: ((typeof getAllCharacterSaveProficiencies==='function') ? getAllCharacterSaveProficiencies(personagem) : (personagem.savesClasse || [])).includes(ATTRIBUTE_LABELS[attr]) ? 1 : 0,
       max: 20,
       bonuses: { check: '', save: '' },
       check: { roll: buildFoundryRoll() },
@@ -841,8 +841,8 @@ function getFoundryTraits(personagem){
     dm: { amount: {}, bypasses: [] },
     ci: { value: [], custom: '' },
     languages: { value: [], custom: idiomasCustom, communication: {} },
-    weaponProf: { value: mapWeaponProfValue(personagem.proficienciasClasse), custom: (personagem.proficienciasClasse || []).join('; '), mastery: { value: [], bonus: [] } },
-    armorProf: { value: mapArmorProfValue(personagem.proficienciasClasse), custom: (personagem.proficienciasClasse || []).join('; ') }
+    weaponProf: { value: mapWeaponProfValue((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : personagem.proficienciasClasse), custom: (((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : (personagem.proficienciasClasse || [])) || []).join('; '), mastery: { value: [], bonus: [] } },
+    armorProf: { value: mapArmorProfValue((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : personagem.proficienciasClasse), custom: (((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : (personagem.proficienciasClasse || [])) || []).join('; ') }
   };
 }
 
@@ -973,7 +973,7 @@ function buildFoundryShieldItem(personagem, equipped=false){
       price: { value: 10, denomination: 'gp' },
       rarity: '', attunement: '', attuned: false, equipped: !!equipped, crew: { value: [] },
       armor: { value: 2, dex: null },
-      proficient: (personagem.proficienciasClasse || []).some(p => /escudos/i.test(p)) ? 1 : 0,
+      proficient: (((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : (personagem.proficienciasClasse || [])) || []).some(p => /escudos/i.test(p)) ? 1 : 0,
       properties: [], strength: 0,
       type: { value: 'shield', baseItem: 'shield' }
     },
@@ -1778,7 +1778,7 @@ function buildFoundryShieldItem(personagem, equipped = false){
       price: { value: 10, denomination: 'gp' },
       rarity: '', attunement: '', attuned: false, equipped: !!equipped, crew: { value: [] },
       armor: { value: 2, dex: null },
-      proficient: (personagem.proficienciasClasse || []).some(p => /escudos/i.test(p)) ? 1 : 0,
+      proficient: (((typeof getAllCharacterProficiencies==='function') ? getAllCharacterProficiencies(personagem) : (personagem.proficienciasClasse || [])) || []).some(p => /escudos/i.test(p)) ? 1 : 0,
       properties: [], strength: 0,
       type: { value: 'shield', baseItem: 'shield' }
     },

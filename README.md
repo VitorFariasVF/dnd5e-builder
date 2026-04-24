@@ -2,16 +2,8 @@
 
 Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com persistência local, para criação de personagens de **D&D 5e** com validação de regras, progressão, inventário, magias e exportação para **Foundry VTT**.
 
-> Projeto pensado para funcionar como um **mini construtor de ficha offline**, com foco em organização modular, expansão futura e uso real em mesa presencial ou online.
+> Projeto pensado para funcionar como um **mini construtor de ficha offline/Online**, com foco em organização modular, expansão futura e uso real em mesa presencial ou online.
 
-## Demonstração
-
-<<<<<<< HEAD
-- **GitHub Pages:** `https://vitorfariasvf.github.io/dnd5e-builder/`
-- **Repositório:** `https://github.com/VitorFariasVF/dnd5e-builder`
-
-=======
->>>>>>> 8460bed38388970dc2a26d2630e1c3d7d4992f3b
 ## Principais recursos
 
 Projeto público:
