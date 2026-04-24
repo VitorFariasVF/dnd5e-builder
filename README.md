@@ -314,13 +314,9 @@ Fluxo sugerido:
 
 ## 📄 Licença
 
-Defina aqui a licença que deseja usar no repositório.
-
-Sugestão comum para projetos open source:
+LIVRE
 
 - MIT
-
-Enquanto não houver um arquivo `LICENSE`, considere isso como pendente de definição.
 
 ---
 
