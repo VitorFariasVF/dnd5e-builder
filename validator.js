@@ -101,7 +101,8 @@ function validarEquipamentoInicial(){
   if(state.modo !== "A") return null;
   const loadout = EQUIPMENT_LOADOUTS[state.personagem.classe] || [];
   for(const group of loadout){
-    if(!state.personagem.equipamentoInicialEscolhas[group.id]) return `Escolha o equipamento inicial em "${group.label}".`;
+    const valor = state.personagem.equipamentoInicialEscolhas[group.id];
+    if((valor === '' || valor == null) && group.choices.length > 1) return `Escolha o equipamento inicial em "${group.label}".`;
   }
   return null;
 }
