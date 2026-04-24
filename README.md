@@ -1,27 +1,82 @@
-# Criador de Personagem D&D 5e Offline
+<div align="center">
 
-Aplicação front-end em **HTML, CSS e JavaScript puro**, sem backend e com persistência local, para criação de personagens de **D&D 5e** com validação de regras, progressão, inventário, magias e exportação para **Foundry VTT**.
+# ⚔️ D&D 5e Builder
 
-> Projeto pensado para funcionar como um **mini construtor de ficha offline**, com foco em organização modular, expansão futura e uso real em mesa presencial ou online.
+**Criador de fichas de D&D 5e em HTML, CSS e JavaScript puro, com salvamento local, histórico de personagens, PDF A4 e exportação para Foundry VTT.**
 
-## Demonstração
+[![Demo Online](https://img.shields.io/badge/🚀%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge)](https://vitorfariasvf.github.io/dnd5e-builder/)
+[![Repositório](https://img.shields.io/badge/📦%20Código-GitHub-111827?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
+[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-2563eb?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
+[![Frontend Only](https://img.shields.io/badge/frontend-only-f59e0b?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
 
-- **GitHub Pages:** `https://vitorfariasvf.github.io/dnd5e-builder/`
-- **Repositório:** `https://github.com/VitorFariasVF/dnd5e-builder`
+## **👉 [ABRIR AGORA NO GITHUB PAGES](https://vitorfariasvf.github.io/dnd5e-builder/)**
 
-## Principais recursos
+**Repositório:** [github.com/VitorFariasVF/dnd5e-builder](https://github.com/VitorFariasVF/dnd5e-builder)
 
-Projeto público:
-- **Repositório:** `https://github.com/VitorFariasVF/dnd5e-builder`
-- **GitHub Pages:** `https://vitorfariasvf.github.io/dnd5e-builder/`
+</div>
 
+---
+
+## ✨ Visão geral
+
+Este projeto é um **construtor offline de personagens de D&D 5e** pensado para funcionar **direto no navegador**, sem backend e sem etapa de build obrigatória.
+
+Ele foi criado para servir como um **mini builder de ficha** com foco em:
+
+- criação guiada por etapas
+- persistência local com **LocalStorage**
+- histórico de personagens
+- edição posterior da ficha
+- exportação para **Foundry VTT**
+- exportação em **PDF A4**
+- base extensível para livros e módulos futuros
+
+---
+
+## 🚀 Como usar
+
+### Opção 1 — usar online
+
+Abra a versão publicada:
+
+## **👉 [Clique aqui para abrir a demo no GitHub Pages](https://vitorfariasvf.github.io/dnd5e-builder/)**
+
+### Opção 2 — usar localmente
+
+Este projeto **não precisa iniciar servidor** para o uso normal.
+
+Basta:
+
+1. baixar ou clonar o repositório
+2. abrir o arquivo **`index.html`**
+3. usar a aplicação normalmente
+
+```text
+/index.html
+```
+
+> O projeto foi organizado para rodar **diretamente do `index.html`**.
+
+### Fluxo rápido
+
+1. escolha o modo de criação
+2. selecione origem, raça, classe e nível
+3. distribua atributos
+4. escolha perícias, equipamentos e magias
+5. preencha traços, ideais, vínculos e defeitos
+6. revise a ficha
+7. exporte para **Foundry JSON**, **backup JSON** ou **PDF**
+
+---
+
+## 🧩 Principais recursos
 
 - criação de personagem por etapas
-- modo **A** com validação guiada pelas regras
-- modo **B** com liberdade maior para customização
+- modo **A** com validação guiada por regras
+- modo **B** com maior liberdade de customização
 - atributos com **Standard Array** e **Point Buy**
 - cálculo de modificadores, saves e perícias
-- combate com armas, armaduras, escudo e inventário com peso
+- combate com armas, armaduras, escudo e peso de inventário
 - magias com slots, truques, preparação e descanso
 - personalidade com:
   - traços
@@ -33,68 +88,28 @@ Projeto público:
   - história
 - progressão por nível de **1 a 20**
 - subclasses e recursos rastreáveis
-- suporte inicial ao conteúdo de **Xanathar's Guide to Everything**
+- suporte em expansão para **Xanathar's Guide to Everything**
 - exportação para:
-  - **Foundry VTT**
+  - **Foundry VTT JSON**
   - **backup interno do projeto**
-  - **PDF via impressão do navegador**
+  - **PDF A4**
+- histórico de personagens para editar depois
+- importação de JSON do projeto para continuar edição
 
-## Objetivo do projeto
+---
 
-Este projeto busca oferecer uma base sólida para uma ficha offline de D&D 5e que seja:
-
-- fácil de usar
-- modular
-- extensível
-- compatível com fluxos de VTT
-- independente de backend
-
-## Stack
+## 🛠️ Tecnologias
 
 - **HTML5**
 - **CSS3**
 - **JavaScript Vanilla**
-- **LocalStorage** para persistência local
-- botão na interface para **limpar os dados salvos** do navegador com confirmação
+- **LocalStorage**
 
-## Como rodar localmente
+Sem framework. Sem backend. Sem build obrigatório.
 
-### Opção 1 — abrir direto no navegador
-Abra o arquivo `index.html`.
+---
 
-### Opção 2 — servidor local
-```bash
-python -m http.server 8000
-```
-
-Depois abra no navegador:
-```text
-http://localhost:8000
-```
-
-## Publicação no GitHub Pages
-
-Depois de subir o projeto para o GitHub, você pode publicar pelo GitHub Pages.
-
-### Estrutura esperada
-- branch principal com os arquivos do projeto na raiz
-- repositório atual: `VitorFariasVF/dnd5e-builder`
-- `index.html` na raiz do repositório
-
-### Link esperado
-```text
-https://vitorfariasvf.github.io/dnd5e-builder/
-```
-
-### Checklist rápido
-- subir todos os arquivos do projeto para o repositório
-- confirmar que `index.html` está na raiz
-- ativar GitHub Pages nas configurações do repositório
-- selecionar a branch principal como origem da publicação
-- testar o link público
-- link publicado atual: `https://vitorfariasvf.github.io/dnd5e-builder/`
-
-## Estrutura do projeto
+## 📁 Estrutura do projeto
 
 ```text
 .
@@ -110,7 +125,7 @@ https://vitorfariasvf.github.io/dnd5e-builder/
 └── README.md
 ```
 
-## Arquitetura
+### Função dos arquivos
 
 - `rules.js` → catálogos, tabelas e regras do jogo
 - `state.js` → estrutura base do estado do personagem
@@ -118,197 +133,176 @@ https://vitorfariasvf.github.io/dnd5e-builder/
 - `ui.js` → renderização, etapas e interação da interface
 - `export.js` → exportação para Foundry JSON, backup e PDF
 - `storage.js` → persistência com LocalStorage
-- `main.js` → bootstrap da aplicação
+- `main.js` → inicialização da aplicação
 
-## Fluxo geral da aplicação
+---
 
-1. selecionar modo de criação
-2. definir origem, raça, classe e nível
-3. configurar atributos
-4. escolher perícias, equipamentos e magias
-5. preencher personalidade e interpretação
-6. revisar resumo final
-7. exportar a ficha
+## 📚 Como a ficha funciona
 
-## O que já foi implementado
+### Criação
 
-### Personalidade e interpretação
-- sistema narrativo com:
-  - traços de personalidade
-  - ideais
-  - vínculos
-  - defeitos
-- sugestões por origem
-- edição manual
-- múltiplas escolhas
-- campos extras de interpretação
-- validação mínima no modo A
+A aplicação organiza a montagem da ficha em etapas para facilitar o fluxo de criação.
 
-### Equipamento inicial inteligente
-- opções reais por classe
-- auto-adição ao inventário
-- sincronização com armas, armaduras e escudo
-- peso recalculado automaticamente
-- opção de converter equipamento em moedas quando aplicável
+### Salvamento local
 
-### Combate
-- armas e armaduras com compatibilidade visual
-- tags coloridas para indicar se podem ser equipadas
-- exibição de:
-  - dano
-  - modificador usado
-  - crítico
-  - valor
-  - categoria/tipo
-- cálculo de CA atualizado ao trocar armadura e escudo
+Os dados ficam no navegador e podem ser reabertos depois sem backend.
 
-### Magias
-- slots por nível
-- magias preparadas, conhecidas e truques
-- limites visuais na interface
-- filtragem por círculos disponíveis
-- descanso curto e longo refletindo recursos aplicáveis
+### Histórico
 
-### Progressão
-- níveis de 1 a 20
-- bônus de proficiência automático
-- PV recalculado por progressão
-- recursos de classe por nível
-- subclasses e traços ativos por nível
+Você pode:
 
-### Recursos e subclasses
-- recursos rastreáveis por classe
-- escolhas de classe e subclasse
-- efeitos derivados resumidos na ficha
-- detalhes úteis para exportação e uso no VTT
+- salvar personagem no histórico
+- abrir personagem salvo para editar
+- duplicar ficha
+- excluir ficha
+- voltar para a tela inicial
+- limpar todo o banco local do navegador
 
-### Xanathar's Guide to Everything
-- pacote inicial de subclasses de Xanathar
-- pacote ampliado de magias de Xanathar
-- exportação Foundry marcando melhor quando magias/features vêm de Xanathar
-- escolhas internas adicionais para subclasses como:
-  - Arqueiro Arcano
-  - Mestre Kensei
-  - Arauto da Tempestade
-  - Círculo do Pastor
-  - Alma Divina
-  - Colégio das Espadas
-  - Lâmina Maldita
-- recursos rastreáveis extras para subclasses de Xanathar
-- efeitos derivados adicionais para subclasses como Glamour, Espadas, Forja, Sepultura, Pastor, Cavaleiro, Alma Solar, Magia da Tempestade, Celestial e Lâmina Maldita
-- exportação Foundry levando em conta subclasses e origem do conteúdo
+### Importação para edição
 
-## Exportação
+A aplicação consegue reabrir JSONs do próprio projeto para continuar a edição.
 
-### 1) Foundry VTT JSON
-A exportação principal gera um **Actor JSON** voltado para o fluxo de **Import Data** do Foundry VTT.
+---
 
-Nesta etapa, a estrutura foi aproximada de um **arquivo modelo real de importação** usado como referência para melhorar a compatibilidade do ator.
+## 📤 Exportação
 
-Inclui:
-- documento de ator do tipo personagem
-- atributos e dados principais em `system`
-- `details.race`, `details.background` e `details.originalClass` apontando para os itens embutidos corretos
-- `prototypeToken` padrão já incluído no JSON
-- `items[]` para classe, subclasse, raça, origem, armas, armaduras, equipamentos, magias e features
-- `flags` com backup do estado interno do projeto
+### 1. Foundry VTT JSON
 
-### 2) Backup do projeto
-Exporta o estado interno completo para reutilização futura no próprio projeto.
+A exportação principal gera um **Actor JSON** voltado ao fluxo de importação do Foundry VTT.
 
-### 3) PDF
-Gera uma ficha visual usando a janela de impressão do navegador para salvar em PDF.
-
-## Fluxo de importação no Foundry VTT
+Fluxo recomendado no Foundry:
 
 1. criar um ator vazio do tipo personagem
 2. clicar com o botão direito no ator
 3. escolher **Import Data**
-4. selecionar o JSON gerado em **Exportar Foundry JSON**
+4. selecionar o JSON exportado pelo projeto
 
-## Compatibilidade atual
+### 2. Backup JSON
 
-A exportação foi organizada com foco em:
-- **Foundry VTT V14**
-- **sistema D&D 5e 5.3.x**
-- **estrutura aproximada de Actor JSON baseada em arquivo real de importação**
+Exporta o estado interno do projeto para reabrir a ficha depois.
 
-Ainda assim, como o projeto é **offline-first** e não depende do compêndio do mundo do usuário, alguns itens entram como documentos válidos gerados pelo app, e não como referências automáticas a UUIDs de compêndios instalados.
+### 3. PDF
 
-## Limites atuais
+Gera uma ficha visual pensada para **A4**, usando a impressão do navegador.
 
-- nem todos os recursos do Livro do Jogador estão automatizados ao nível de um VTT completo
-- a exportação para Foundry está mais próxima de um Actor real importável, mas ainda pode exigir ajuste manual para casar com compêndios específicos do mundo
-- a exportação PDF usa a impressão do navegador, não uma engine externa de layout
+---
 
-## Roadmap sugerido
+## 🎲 Conteúdo já implementado
 
-- melhorar o casamento automático com compêndios SRD no Foundry
-- ampliar subclasses e escolhas avançadas
-- revisar a base de dados do Livro do Jogador com mais granularidade
-- criar testes de consistência para exportação Foundry
-- adicionar tela de revisão final ainda mais detalhada
+### Base da ficha
 
-## Créditos
+- criação por etapas
+- atributos
+- perícias e saves
+- combate
+- armaduras e armas
+- inventário
+- magias
+- personalidade
+- validação
+- progressão
+- subclasses
+- exportações
 
-Projeto original de referência:
-- **VitorVFreire / rpg_sheet_ded_5e**
+### Xanathar
 
-Versão adaptada e expandida para front-end offline modular.
+Já existe suporte em expansão para conteúdo de **Xanathar**, com foco em:
 
-## Licença
+- subclasses
+- magias
+- proficiências adicionais de subclasses
+- habilidades de subclasse que impactam a ficha
 
-Defina aqui a licença do projeto antes de publicar no GitHub.
+---
 
-Sugestão:
+## 🔗 Referências
+
+### Projeto
+
+- **Demo online:** [https://vitorfariasvf.github.io/dnd5e-builder/](https://vitorfariasvf.github.io/dnd5e-builder/)
+- **Código-fonte:** [https://github.com/VitorFariasVF/dnd5e-builder](https://github.com/VitorFariasVF/dnd5e-builder)
+
+### Base técnica usada no projeto
+
+- estrutura de **Actor JSON** para importação no Foundry VTT
+- organização de ficha voltada ao sistema **D&D 5e**
+- comparação com um **actor funcional de referência** para alinhar ordem, shape e blocos principais
+
+### Referências internas de arquitetura
+
+- `rules.js` como base das regras
+- `state.js` como fonte do estado da ficha
+- `export.js` como ponte entre ficha interna e formatos externos
+
+---
+
+## ⚠️ Compatibilidade atual
+
+O foco do projeto está em:
+
+- rodar direto no navegador
+- permitir edição sem backend
+- manter histórico local
+- exportar a ficha em formato útil para Foundry VTT
+
+Ainda assim, por ser um projeto offline e independente do compêndio do mundo do usuário, alguns itens podem entrar como documentos próprios gerados pelo app.
+
+---
+
+## 🧱 Limites atuais
+
+- nem todos os recursos de D&D 5e estão automatizados no nível de um VTT completo
+- alguns conteúdos ainda estão em expansão e revisão
+- a integração com Foundry continua sendo refinada para ficar cada vez mais fiel ao modelo real
+
+---
+
+## 🗺️ Roadmap
+
+- ampliar conteúdos de Xanathar
+- melhorar descrições de magias
+- revisar mais subclasses e recursos
+- enriquecer o PDF A4
+- melhorar a UI do histórico de personagens
+- ampliar a importação para edição
+
+---
+
+## 🤝 Como contribuir
+
+Sugestões de contribuição:
+
+- revisar conteúdo de classes, subclasses e magias
+- testar exportação/importação no Foundry VTT
+- reportar bugs de fluxo da ficha
+- melhorar o visual e a experiência de uso
+- refinar textos e documentação
+
+Fluxo sugerido:
+
+1. faça um fork do projeto
+2. crie uma branch para sua alteração
+3. faça as mudanças
+4. teste localmente abrindo o `index.html`
+5. envie um pull request
+
+---
+
+## 📄 Licença
+
+Defina aqui a licença que deseja usar no repositório.
+
+Sugestão comum para projetos open source:
+
 - MIT
-- Apache-2.0
-- GPL-3.0
 
+Enquanto não houver um arquivo `LICENSE`, considere isso como pendente de definição.
 
-### Xanathar — etapa 4
-- ampliação adicional do pacote de magias de Xanathar
-- suporte a magias bônus de subclasse para vários arquétipos de Xanathar
-- novas escolhas internas para subclasses de Xanathar
-- tela de magia mostrando referência rápida das magias bônus da subclasse
-- refinamento dos resumos derivados para subclasses de Xanathar
+---
 
+<div align="center">
 
-## Foundry JSON: modo modelo-first
+### **🚀 [Abrir a demo no GitHub Pages](https://vitorfariasvf.github.io/dnd5e-builder/)**
+### **📦 [Ver o código no GitHub](https://github.com/VitorFariasVF/dnd5e-builder)**
 
-Nesta versão, a exportação Foundry foi reaproximada do JSON modelo real usado como referência para a importação. A prioridade agora é compatibilidade de importação; expansões adicionais de conteúdo devem vir depois dessa base estabilizada.
-
-
-## Expansão retomada após estabilização do Foundry JSON
-
-Depois do ajuste para espelhar a estrutura do JSON modelo do Foundry, a expansão voltou a ser aplicada por cima dessa base estável.
-
-Nesta fase, a aplicação já inclui:
-- conteúdo de subclasses e magias de **Xanathar's Guide to Everything** na base de regras
-- exibição de **detalhes rápidos das magias** na etapa de magia
-- exportação Foundry com **descrições resumidas**, indicação de **fonte** e metadados de ritual/concentração para magias
-
-A ordem de trabalho continua sendo:
-1. manter a compatibilidade do JSON de importação
-2. expandir conteúdo por cima da base estável
-3. depois aprofundar descrições e listas adicionais de magias
-
-
-## Ajuste recente de exportação Foundry
-
-- IDs de documentos e itens agora usam formato curto compatível com o padrão do Foundry.
-- A exportação de `details.race`, `details.background` e `details.originalClass` foi alinhada aos IDs reais dos itens embutidos.
-- Magias, armas, armaduras, feats e loot passaram a usar estruturas mais próximas do JSON funcional de Actor.
-- Esta etapa prioriza clonagem estrutural do actor antes de nova expansão de conteúdo.
-
-## Histórico, tela inicial e importação para edição
-
-A interface agora separa melhor as ações principais do navegador:
-
-- **Tela inicial**: volta para a etapa inicial sem apagar a ficha atual.
-- **Salvar no histórico**: grava a ficha atual no navegador para continuar depois.
-- **Editar ficha**: abre uma ficha salva do histórico e continua a edição.
-- **Importar JSON**: aceita JSON de backup do projeto e também o JSON de ator gerado pelo próprio export do app para recarregar a ficha em modo de edição.
-- **Limpar banco**: apaga a ficha atual e todo o histórico salvo localmente.
-
-O histórico fica disponível já na tela inicial, facilitando abrir, duplicar e excluir personagens salvos.
+</div>
