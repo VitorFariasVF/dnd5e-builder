@@ -32,7 +32,7 @@ function validarPointBuy(valores){
 }
 
 function personagemEhProficienteComArmadura(armor){
-  const profs = (typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
+  const profs = (state.personagem.proficienciasClasseEfetivas && state.personagem.proficienciasClasseEfetivas.length) ? state.personagem.proficienciasClasseEfetivas : ((typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []));
   if(!armor) return false;
   if(armor.tipo === "nenhuma") return true;
   if(profs.includes("Todas as armaduras")) return true;
@@ -42,7 +42,7 @@ function personagemEhProficienteComArmadura(armor){
   return false;
 }
 function personagemEhProficienteComArma(weapon){
-  const profs = (typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
+  const profs = (state.personagem.proficienciasClasseEfetivas && state.personagem.proficienciasClasseEfetivas.length) ? state.personagem.proficienciasClasseEfetivas : ((typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []));
   if(!weapon) return false;
   if(profs.includes("Armas simples") && weapon.categoria === "simples") return true;
   if(profs.includes("Armas marciais") && weapon.categoria === "marcial") return true;
@@ -58,7 +58,7 @@ function validarCombate(){
     if(!personagemEhProficienteComArmadura(ARMORS[c.armadura])) return "A classe não é proficiente com a armadura escolhida.";
     if(!personagemEhProficienteComArma(WEAPONS[c.armaPrincipal])) return "A classe não é proficiente com a arma principal escolhida.";
     if(!personagemEhProficienteComArma(WEAPONS[c.armaSecundaria])) return "A classe não é proficiente com a arma secundária escolhida.";
-    const profs = (typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
+    const profs = (state.personagem.proficienciasClasseEfetivas && state.personagem.proficienciasClasseEfetivas.length) ? state.personagem.proficienciasClasseEfetivas : ((typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []));
     if(c.escudo && !profs.includes("Escudos")) return "A classe não é proficiente com escudos.";
   }
   return null;
@@ -74,8 +74,9 @@ function validarMagiasSelecionadas(){
   const magia = state.personagem.magia;
   if(!magia.ehConjurador || state.modo !== "A") return null;
   if((magia.listaTruques || []).length > (magia.cantripsConhecidos || 0)) return "Você selecionou mais truques do que o permitido.";
-  if(magia.tipo === "conhecidas" && (magia.listaMagias || []).length > (magia.magiasConhecidas || 0)) return "Você selecionou mais magias conhecidas do que o permitido.";
-  if(magia.tipo === "preparadas" && (magia.listaMagias || []).length > (magia.magiasPreparadas || 0)) return "Você preparou mais magias do que o permitido.";
+  const magiasQueContam = (typeof getRuleEngineCountableSelectedSpells === "function") ? getRuleEngineCountableSelectedSpells(state.personagem) : (magia.listaMagias || []).length;
+  if(magia.tipo === "conhecidas" && magiasQueContam > (magia.magiasConhecidas || 0)) return "Você selecionou mais magias conhecidas do que o permitido.";
+  if(magia.tipo === "preparadas" && magiasQueContam > (magia.magiasPreparadas || 0)) return "Você preparou mais magias do que o permitido.";
   return null;
 }
 
@@ -128,11 +129,66 @@ function validarOpcoesClasse(){
   return null;
 }
 
+function validarAuditoriaListasMagia(){
+  const resultado = { erros: [], avisos: [] };
+  if(typeof SPELL_LIST_AUDIT_SUMMARY === "object" && SPELL_LIST_AUDIT_SUMMARY){
+    resultado.erros = (SPELL_LIST_AUDIT_SUMMARY.errors || []).map(msg => `[Auditoria de magias] ${msg}`);
+    resultado.avisos = (SPELL_LIST_AUDIT_SUMMARY.warnings || []).map(msg => `[Auditoria de magias] ${msg}`);
+  }
+  return resultado;
+}
+
+function validarAuditoriaRuleEngine(){
+  const resultado = { erros: [], avisos: [] };
+  if(typeof resolveCharacterRules !== "function") return resultado;
+
+  try {
+    const auditoria = resolveCharacterRules(state.personagem);
+    const resolved = auditoria && auditoria.resolved ? auditoria.resolved : {};
+    const erros = Array.isArray(resolved.errors) ? resolved.errors : [];
+    const avisos = Array.isArray(resolved.warnings) ? resolved.warnings : [];
+
+    resultado.erros = erros.map(msg => `[Engine de regras] ${msg}`);
+    resultado.avisos = avisos.map(msg => `[Engine de regras] ${msg}`);
+  } catch (error) {
+    resultado.avisos.push(`[Engine de regras] Auditoria não executada: ${error && error.message ? error.message : error}`);
+  }
+
+  return resultado;
+}
+
+function validarMagiasPorClasseECirculo(){
+  const resultado = { erros: [], avisos: [] };
+  if(typeof getRuleEngineSpellSelectionValidation !== "function") return resultado;
+
+  try {
+    const validacao = getRuleEngineSpellSelectionValidation(state.personagem);
+    resultado.erros = (validacao.errors || []).map(msg => `[Validação de magias] ${msg}`);
+    resultado.avisos = (validacao.warnings || []).map(msg => `[Validação de magias] ${msg}`);
+  } catch (error) {
+    resultado.avisos.push(`[Validação de magias] Validação não executada: ${error && error.message ? error.message : error}`);
+  }
+
+  return resultado;
+}
+
 function validarPersonagemCompleto(){
   const erros = [];
   const avisos = [];
 
   [validarOrigem(),validarRaca(),validarClasse(),validarPericias(),validarCombate(),validarMagia(),validarMagiasSelecionadas(),validarPersonalidade(),validarEquipamentoInicial(),validarInventarioPeso(),validarOpcoesClasse()].forEach(erro=>{ if(erro) erros.push(erro); });
+
+  const auditoriaListasMagia = validarAuditoriaListasMagia();
+  erros.push(...auditoriaListasMagia.erros);
+  avisos.push(...auditoriaListasMagia.avisos);
+
+  const auditoriaRuleEngine = validarAuditoriaRuleEngine();
+  erros.push(...auditoriaRuleEngine.erros);
+  avisos.push(...auditoriaRuleEngine.avisos);
+
+  const validacaoMagiasClasseCirculo = validarMagiasPorClasseECirculo();
+  erros.push(...validacaoMagiasClasseCirculo.erros);
+  avisos.push(...validacaoMagiasClasseCirculo.avisos);
 
   const attrsBase = state.personagem.atributosBase || {};
   if(state.personagem.metodoAtributos === "standard" && !validarStandardArray(attrsBase)) erros.push("Os atributos base não correspondem ao Standard Array.");

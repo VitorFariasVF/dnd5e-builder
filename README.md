@@ -24,6 +24,7 @@ Este projeto é um **construtor offline de personagens de D&D 5e** pensado para 
 Ele foi criado para servir como um **mini builder de ficha** com foco em:
 
 - criação guiada por etapas
+- validação paralela com **Rule Engine** segura
 - persistência local com **LocalStorage**
 - histórico de personagens
 - edição posterior da ficha
@@ -74,10 +75,12 @@ Basta:
 - criação de personagem por etapas
 - modo **A** com validação guiada por regras
 - modo **B** com maior liberdade de customização
-- atributos com **Standard Array** e **Point Buy**
+- atributos com **Standard Array**, **Point Buy**, ASI e talentos
 - cálculo de modificadores, saves e perícias
+- proficiências separadas por raça, origem, classe, subclasse e talento
 - combate com armas, armaduras, escudo e peso de inventário
-- magias com slots, truques, preparação e descanso
+- magias com slots, truques, preparação, grimório do mago e descanso
+- validação de listas de magias por classe, círculo e fonte
 - personalidade com:
   - traços
   - ideais
@@ -119,6 +122,7 @@ Sem framework. Sem backend. Sem build obrigatório.
 ├── ui.js
 ├── state.js
 ├── rules.js
+├── rules-engine.js
 ├── validator.js
 ├── export.js
 ├── storage.js
@@ -128,6 +132,7 @@ Sem framework. Sem backend. Sem build obrigatório.
 ### Função dos arquivos
 
 - `rules.js` → catálogos, tabelas e regras do jogo
+- `rules-engine.js` → camada paralela de resolução/auditoria de regras
 - `state.js` → estrutura base do estado do personagem
 - `validator.js` → validações e selo final da ficha
 - `ui.js` → renderização, etapas e interação da interface
@@ -163,6 +168,45 @@ Você pode:
 A aplicação consegue reabrir JSONs do próprio projeto para continuar a edição.
 
 ---
+
+## 🧠 Arquitetura da Rule Engine
+
+A Rule Engine fica em `rules-engine.js` e funciona como uma camada segura acima das regras antigas. Ela recebe `state.personagem`, calcula uma versão resolvida da ficha e gera um `legacyPatch` compatível com os campos antigos.
+
+Fluxo simplificado:
+
+```text
+state.personagem
+    ↓
+resolveCharacterRules(personagem)
+    ↓
+resolved + warnings + errors
+    ↓
+legacyPatch compatível com a estrutura antiga
+```
+
+A exportação continua lendo os campos tradicionais da ficha. Por isso, a engine pode corrigir regras sem exigir mudança imediata no `export.js`.
+
+Principais funções:
+
+- `resolveCharacterRules(personagem)`
+- `resolveAbilityScores(context)`
+- `resolveProficiencies(context)`
+- `resolveSpellcasting(context)`
+- `resolveCantrips(context, profile)`
+- `resolveSpellSlots(context, profile)`
+- `resolvePreparedSpellLimit(context, profile, abilityScores)`
+- `resolveWizardSpellbook(context)`
+- `auditCharacterRules(context, resolved)`
+- `buildLegacyPatch(resolved)`
+
+### O que a engine não faz nesta fase
+
+- não altera a exportação
+- não substitui o `export.js`
+- não depende de backend
+- não exige build
+- não usa compêndio externo em tempo de execução
 
 ## 📤 Exportação
 
@@ -204,6 +248,21 @@ Gera uma ficha visual pensada para **A4**, usando a impressão do navegador.
 - subclasses
 - exportações
 
+### Regras e validação atual
+
+A versão atual inclui uma camada paralela chamada **Rule Engine**, criada para validar e resolver regras sem alterar o formato da exportação. Ela trata:
+
+- Point Buy e Standard Array
+- ASI / aumento de atributo por nível
+- talentos e pré-requisitos
+- proficiências por categoria
+- truques por classe e por fonte
+- slots de magia por tipo de conjurador
+- magias conhecidas e preparadas
+- grimório do mago
+- magias bônus de subclasse
+- validação de magia por classe/círculo
+
 ### Xanathar
 
 Já existe suporte em expansão para conteúdo de **Xanathar**, com foco em:
@@ -212,8 +271,23 @@ Já existe suporte em expansão para conteúdo de **Xanathar**, com foco em:
 - magias
 - proficiências adicionais de subclasses
 - habilidades de subclasse que impactam a ficha
+- talentos raciais e pré-requisitos
+- magias bônus de subclasses como Domínio da Forja, Lâmina Maldita e Patrulheiros de Xanathar
 
 ---
+
+## ✅ Relatórios internos de auditoria
+
+O pacote inclui relatórios gerados durante a revisão da engine:
+
+- `SPELL_AUDIT_REPORT.md`
+- `SPELL_SELECTION_VALIDATION_REPORT.md`
+- `FEAT_ASI_VALIDATION_REPORT.md`
+- `FEAT_DETAIL_CHOICES_REPORT.md`
+- `FULL_FLOW_AUDIT_REPORT.md`
+- `VISUAL_FLOW_AUDIT_REPORT.md`
+
+Eles servem como histórico técnico do que foi validado e dos pontos que ainda merecem teste manual.
 
 ## 🔗 Referências
 
@@ -252,19 +326,22 @@ Ainda assim, por ser um projeto offline e independente do compêndio do mundo do
 ## 🧱 Limites atuais
 
 - nem todos os recursos de D&D 5e estão automatizados no nível de um VTT completo
-- alguns conteúdos ainda estão em expansão e revisão
-- a integração com Foundry continua sendo refinada para ficar cada vez mais fiel ao modelo real
+- descrições completas de magias e recursos ainda podem exigir revisão editorial
+- conteúdos de livros adicionais além do PHB/Xanathar ainda não são foco principal
+- a integração com Foundry continua preservada e sem mudanças nesta fase
+- a exportação não foi reestruturada durante a implantação da Rule Engine
 
 ---
 
 ## 🗺️ Roadmap
 
-- ampliar conteúdos de Xanathar
-- melhorar descrições de magias
+- testar importação/exportação com personagens reais no Foundry VTT
+- melhorar descrições de magias e recursos
 - revisar mais subclasses e recursos
 - enriquecer o PDF A4
 - melhorar a UI do histórico de personagens
 - ampliar a importação para edição
+- documentar casos especiais de multiclasse em etapa futura
 
 ---
 
@@ -287,6 +364,28 @@ Fluxo sugerido:
 5. envie um pull request
 
 ---
+
+## 🧾 Histórico técnico recente
+
+### Etapa 18
+
+- README revisado para refletir a Rule Engine
+- documentação de uso e arquitetura atualizada
+- exportação preservada
+
+### Etapas 03 a 17
+
+- criada camada paralela `rules-engine.js`
+- auditoria conectada à validação
+- atributos, ASI e talentos conectados
+- proficiências conectadas por categoria
+- truques, slots e limites de magia corrigidos
+- grimório do mago separado da preparação
+- magias bônus de subclasse separadas por tipo
+- listas PHB/Xanathar auditadas
+- validação de seleção de magia por classe/círculo adicionada
+- fluxo visual revisado
+- `export.js` preservado durante as etapas
 
 ## 📄 Licença
 

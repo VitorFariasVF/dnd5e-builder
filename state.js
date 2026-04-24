@@ -42,14 +42,14 @@ function createInitialState(){
       metodoAtributos:"standard",
       combate:{armadura:"sem_armadura",escudo:false,armaPrincipal:"adaga",armaSecundaria:"besta_leve",classeArmadura:10,iniciativa:0,ataques:[]},
       inventario:{itens:[],moedas:{pp:0,gp:0,ep:0,sp:0,cp:0},pesoTotal:0,capacidadeCarga:150},
-      magia:{ehConjurador:false,habilidade:null,tipo:null,cdMagia:null,ataqueMagia:null,espacos:[],espacosAtuais:[],nivelEspacosBruxo:null,cantripsConhecidos:0,magiasConhecidas:0,magiasPreparadas:0,listaTruques:[],listaMagias:[],grimorio:[],concentracaoAtiva:"",rituaisDisponiveis:[]},
+      magia:{ehConjurador:false,habilidade:null,tipo:null,cdMagia:null,ataqueMagia:null,espacos:[],espacosAtuais:[],nivelEspacosBruxo:null,cantripsConhecidos:0,magiasConhecidas:0,magiasPreparadas:0,listaTruques:[],listaMagias:[],grimorio:[],magiasSubclasseSemprePreparadas:[],magiasSubclasseListaExpandida:[],magiasSubclasseConhecidasBonus:[],truquesSubclasseBonus:[],concentracaoAtiva:"",rituaisDisponiveis:[]},
       personalidade:{tracos:[],ideais:[],vinculos:[],defeitos:[],descricaoGeral:"",aparencia:"",historia:""},
       progressao:{nivelAtual:1,proximoNivel:2,melhoriasPendentes:[],historico:[]},
       habilidadesClasseAtivas:[],
       subclasse:null,
       habilidadesSubclasseAtivas:[],
       recursosClasse:{},
-      opcoesClasse:{},
+      opcoesClasse:{asi:[]},
       customizado:false,
       valido:false,
       validacaoResumo:{status:"pendente",erros:[],avisos:[]}
@@ -71,6 +71,8 @@ function ensureStateShape(){
   state.personagem.magia = Object.assign({}, fresh.personagem.magia, state.personagem.magia || {});
   state.personagem.personalidade = Object.assign({}, fresh.personagem.personalidade, state.personagem.personalidade || {}, state.personagem.caracteristicas || {});
   state.personagem.progressao = Object.assign({}, fresh.personagem.progressao, state.personagem.progressao || {});
+  state.personagem.opcoesClasse = Object.assign({}, fresh.personagem.opcoesClasse, state.personagem.opcoesClasse || {});
+  if(!Array.isArray(state.personagem.opcoesClasse.asi)) state.personagem.opcoesClasse.asi = [];
   delete state.personagem.caracteristicas;
 }
 

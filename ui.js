@@ -77,23 +77,186 @@ function atualizarSelecaoPericias(input){let arr=[...state.personagem.periciasCl
 function confirmarPericias(){const erro=validarPericias(); if(erro&&state.modo==="A") return alert(erro); if(erro&&state.modo==="B") state.personagem.customizado=true; atualizarPericiasFinais(); recalcularTudo(); avancarPara(6);} 
 function atualizarPericiasFinais(){const base=[...new Set([...state.personagem.periciasOrigem,...state.personagem.periciasClasseSelecionadas])]; state.personagem.periciasFinais=base; state.personagem.periciasFinaisEfetivas=(typeof getEffectiveFinalSkills==='function')?getEffectiveFinalSkills(state.personagem):base;}
 
+function renderAsiControls(){
+  if(typeof ensureRuleAsiChoices !== "function") return "";
+  const choices = ensureRuleAsiChoices(state.personagem);
+  if(!choices.length) return "";
+  const attrOptions = (selected="") => `<option value="">Selecione</option>${ATTRIBUTE_LIST.map(attr=>`<option value="${attr}" ${selected===attr?"selected":""}>${ATTRIBUTE_LABELS[attr]}</option>`).join("")}`;
+  const featOptions = (selected="") => {
+    const feats = {
+      ...(typeof RULE_FEATS !== "undefined" ? RULE_FEATS : {}),
+      ...(typeof RULE_XANATHAR_RACIAL_FEATS !== "undefined" ? RULE_XANATHAR_RACIAL_FEATS : {})
+    };
+    const opts = Object.entries(feats).map(([key,feat])=>`<option value="${key}" ${selected===key?"selected":""}>${feat.name || key}</option>`).join("");
+    return `<option value="">Selecione</option>${opts}`;
+  };
+  return `<h3>Aumentos de atributo / talentos</h3><p class="muted">Liberado pelo nível atual. Talentos agora validam pré-requisitos e aplicam bônus de atributo quando houver.</p><div class="grid">${choices.map(choice=>{
+    const entries = Object.entries(choice.attributes || {});
+    const attr1 = entries[0]?.[0] || "";
+    const attr2 = entries[1]?.[0] || "";
+    const type = choice.type || "plus_two";
+    const controls = type === "plus_two"
+      ? `<label>Atributo +2<select id="asi_${choice.level}_attr" onchange="atualizarAsiChoice(${choice.level})">${attrOptions(attr1)}</select></label>`
+      : type === "plus_one_plus_one"
+        ? `<div class="grid grid-2"><label>Atributo +1<select id="asi_${choice.level}_attr1" onchange="atualizarAsiChoice(${choice.level})">${attrOptions(attr1)}</select></label><label>Outro atributo +1<select id="asi_${choice.level}_attr2" onchange="atualizarAsiChoice(${choice.level})">${attrOptions(attr2)}</select></label></div>`
+        : renderFeatChoiceControls(choice, featOptions, attrOptions);
+    return `<div class="card-nested"><h4>Nível ${choice.level}</h4><label>Escolha<select id="asi_${choice.level}_type" onchange="atualizarAsiChoice(${choice.level})"><option value="plus_two" ${type==="plus_two"?"selected":""}>+2 em um atributo</option><option value="plus_one_plus_one" ${type==="plus_one_plus_one"?"selected":""}>+1 em dois atributos</option><option value="feat" ${type==="feat"?"selected":""}>Talento</option></select></label>${controls}</div>`;
+  }).join("")}</div>`;
+}
+
+function renderFeatChoiceControls(choice, featOptions, attrOptions){
+  const featId = choice.feat || "";
+  const config = typeof getRuleFeatChoiceConfig === "function" ? getRuleFeatChoiceConfig(featId) : { attributeOptions: [] };
+  const selectedAttr = (choice.featOptions || {}).attribute || "";
+  let html = `<label>Talento<select id="asi_${choice.level}_feat" onchange="atualizarAsiChoice(${choice.level})">${featOptions(featId)}</select></label>`;
+  if(config.attributeOptions && config.attributeOptions.length){
+    const opts = `<option value="">Selecione</option>${config.attributeOptions.map(attr=>`<option value="${attr}" ${selectedAttr===attr?"selected":""}>${ATTRIBUTE_LABELS[attr] || attr}</option>`).join("")}`;
+    html += `<label>Atributo do talento +${config.attributeAmount || 1}<select id="asi_${choice.level}_feat_attr" onchange="atualizarAsiChoice(${choice.level})">${opts}</select></label>`;
+  }
+  html += renderFeatDetailedChoiceControls(choice);
+  return html;
+}
+
+function renderOptionListStage15(options, selected=""){
+  return `<option value="">Selecione</option>${(options||[]).map(v=>`<option value="${v}" ${selected===v?"selected":""}>${v}</option>`).join("")}`;
+}
+
+function renderRepeatedSelectsStage15(level, key, label, count, options, selected){
+  const values = [].concat(selected || []);
+  if(!count) return "";
+  return `<div class="grid grid-2">${Array.from({length: count}).map((_,i)=>`<label>${label} ${i+1}<select id="asi_${level}_${key}_${i}" onchange="atualizarAsiChoice(${level})">${renderOptionListStage15(options, values[i] || "")}</select></label>`).join("")}</div>`;
+}
+
+function renderFeatDetailedChoiceControls(choice){
+  if(typeof getRuleFeatDetailedChoiceConfig !== "function") return "";
+  const featId = choice.feat || "";
+  const detail = getRuleFeatDetailedChoiceConfig(featId);
+  const opts = choice.featOptions || {};
+  const level = choice.level;
+  let html = "";
+  const skills = typeof ruleStage15SkillOptions === "function" ? ruleStage15SkillOptions() : Object.keys(SKILLS||{});
+  const tools = typeof ruleStage15ToolOptions === "function" ? ruleStage15ToolOptions() : [];
+  const languages = typeof ruleStage15LanguageOptions === "function" ? ruleStage15LanguageOptions() : [];
+  const weapons = typeof ruleStage15WeaponOptions === "function" ? ruleStage15WeaponOptions() : [];
+
+  if(detail.skillsOrTools){
+    html += `<p class="muted">Habilidoso: escolha 3 opções no total entre perícias e ferramentas.</p>`;
+    html += renderRepeatedSelectsStage15(level, "feat_skill", "Perícia", detail.skillsOrTools, skills, opts.skills || []);
+    html += renderRepeatedSelectsStage15(level, "feat_tool", "Ferramenta", detail.skillsOrTools, tools, opts.tools || []);
+  }
+  if(detail.skills) html += renderRepeatedSelectsStage15(level, "feat_skill", "Perícia", detail.skills, skills, opts.skills || []);
+  if(detail.tools) html += renderRepeatedSelectsStage15(level, "feat_tool", "Ferramenta", detail.tools, tools, opts.tools || []);
+  if(detail.languages) html += renderRepeatedSelectsStage15(level, "feat_language", "Idioma", detail.languages, languages, opts.languages || []);
+  if(detail.weapons) html += renderRepeatedSelectsStage15(level, "feat_weapon", "Arma", detail.weapons, weapons, opts.weapons || []);
+  if(detail.expertise) html += renderRepeatedSelectsStage15(level, "feat_expertise", "Especialização", detail.expertise, [...new Set([...(state.personagem.periciasFinaisEfetivas||[]), ...(opts.skills||[])])], opts.expertise || []);
+  if(detail.magicInitiate){
+    const magicClass = opts.magicClass || "";
+    const classes = typeof RULE_STAGE15_MAGIC_INITIATE_CLASSES !== "undefined" ? RULE_STAGE15_MAGIC_INITIATE_CLASSES : ["bardo","bruxo","clerigo","druida","feiticeiro","mago"];
+    const classOpts = `<option value="">Selecione</option>${classes.map(c=>`<option value="${c}" ${magicClass===c?"selected":""}>${nomeCatalogo(CLASSES||{}, c)}</option>`).join("")}`;
+    const lists = typeof ruleStage15SpellListsForClass === "function" ? ruleStage15SpellListsForClass(magicClass) : { cantrips: [], level1: [] };
+    html += `<div class="card-nested"><p><strong>Iniciado em Magia</strong></p><label>Classe da lista<select id="asi_${level}_feat_magicClass" onchange="atualizarAsiChoice(${level})">${classOpts}</select></label>${renderRepeatedSelectsStage15(level, "feat_cantrip", "Truque", 2, lists.cantrips, opts.cantrips || [])}<label>Magia de 1º círculo<select id="asi_${level}_feat_spell" onchange="atualizarAsiChoice(${level})">${renderOptionListStage15(lists.level1, opts.spell || "")}</select></label></div>`;
+  }
+  return html;
+}
+
+function collectRepeatedSelectsStage15(level, key){
+  const out = [];
+  for(let i=0;i<6;i++){
+    const el = document.getElementById(`asi_${level}_${key}_${i}`);
+    if(el && el.value) out.push(el.value);
+  }
+  return [...new Set(out)];
+}
+
+function collectFeatDetailedOptionsStage15(level, featId){
+  const out = { attribute: document.getElementById(`asi_${level}_feat_attr`)?.value || "" };
+  if(typeof getRuleFeatDetailedChoiceConfig !== "function") return out;
+  const detail = getRuleFeatDetailedChoiceConfig(featId);
+  if(detail.skillsOrTools || detail.skills) out.skills = collectRepeatedSelectsStage15(level, "feat_skill");
+  if(detail.skillsOrTools || detail.tools) out.tools = collectRepeatedSelectsStage15(level, "feat_tool");
+  if(detail.languages) out.languages = collectRepeatedSelectsStage15(level, "feat_language");
+  if(detail.weapons) out.weapons = collectRepeatedSelectsStage15(level, "feat_weapon");
+  if(detail.expertise) out.expertise = collectRepeatedSelectsStage15(level, "feat_expertise");
+  if(detail.magicInitiate){
+    out.magicClass = document.getElementById(`asi_${level}_feat_magicClass`)?.value || "";
+    out.cantrips = collectRepeatedSelectsStage15(level, "feat_cantrip");
+    out.spell = document.getElementById(`asi_${level}_feat_spell`)?.value || "";
+  }
+  return out;
+}
+
+function atualizarAsiChoice(level){
+  const type = document.getElementById(`asi_${level}_type`)?.value || "plus_two";
+  const payload = {};
+  if(type === "plus_two") payload.attr = document.getElementById(`asi_${level}_attr`)?.value || "";
+  if(type === "plus_one_plus_one"){
+    payload.attr1 = document.getElementById(`asi_${level}_attr1`)?.value || "";
+    payload.attr2 = document.getElementById(`asi_${level}_attr2`)?.value || "";
+  }
+  if(type === "feat") {
+    payload.feat = document.getElementById(`asi_${level}_feat`)?.value || "";
+    payload.featOptions = collectFeatDetailedOptionsStage15(level, payload.feat);
+  }
+  if(typeof applyRuleAsiInput === "function") applyRuleAsiInput(state.personagem, level, type, payload);
+  recalcularAtributosFinais();
+  salvarEstado();
+  renderAtributos();
+}
+
+function atualizarAtributoStandard(attr){
+  const el = document.getElementById(`attr_${attr}`);
+  if(!el) return;
+  state.personagem.atributosBase[attr] = parseInt(el.value,10);
+  recalcularAtributosFinais();
+  salvarEstado();
+  renderAtributos();
+}
+
 function renderAtributos(){
+  if(typeof ensureRuleAsiChoices === "function") ensureRuleAsiChoices(state.personagem);
+  recalcularAtributosFinais();
   const metodo=state.personagem.metodoAtributos||"standard";
   let corpo=`<label for="nome">Nome do personagem</label><input id="nome" value="${state.personagem.nome||""}" placeholder="Ex.: Tharion" /><label for="jogador">Jogador</label><input id="jogador" value="${state.personagem.jogador||""}" placeholder="Seu nome" /><label for="metodo">Método de atributos</label><select id="metodo" onchange="trocarMetodoAtributos()"><option value="standard" ${metodo==="standard"?"selected":""}>Standard Array</option><option value="pointbuy" ${metodo==="pointbuy"?"selected":""}>Point Buy</option></select>`;
   if(metodo==="standard"){
-    corpo += ATTRIBUTE_LIST.map(attr=>`<label>${ATTRIBUTE_LABELS[attr]}<select id="attr_${attr}">${ATTRIBUTE_METHODS.standard.valores.map(v=>`<option value="${v}" ${state.personagem.atributosBase[attr]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("");
+    corpo += ATTRIBUTE_LIST.map(attr=>`<label>${ATTRIBUTE_LABELS[attr]}<select id="attr_${attr}" onchange="atualizarAtributoStandard('${attr}')">${ATTRIBUTE_METHODS.standard.valores.map(v=>`<option value="${v}" ${state.personagem.atributosBase[attr]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("");
   } else {
     const usados=calcularPontosUsadosPointBuy(state.personagem.atributosBase); const restantes=ATTRIBUTE_METHODS.pointbuy.pontos-usados;
-    corpo += `<div class="alert ${restantes<0?'error':'success'}">Pontos gastos: ${usados} / ${ATTRIBUTE_METHODS.pointbuy.pontos} — Restantes: ${restantes}</div>`;
+    corpo += `<div class="alert ${restantes<0?'error':restantes>0?'warning':'success'}">Pontos gastos: ${usados} / ${ATTRIBUTE_METHODS.pointbuy.pontos} — Restantes: ${restantes}</div>`;
     corpo += ATTRIBUTE_LIST.map(attr=>`<div class="point-buy-row"><strong style="min-width:140px">${ATTRIBUTE_LABELS[attr]}</strong><button type="button" onclick="ajustarPointBuy('${attr}',-1)">-</button><span class="score">${state.personagem.atributosBase[attr]}</span><button type="button" onclick="ajustarPointBuy('${attr}',1)">+</button></div>`).join("");
   }
-  corpo += `<div class="info-box"><strong>Resultado final com bônus raciais:</strong> ${ATTRIBUTE_LIST.map(attr=>`${ATTRIBUTE_LABELS[attr]} ${state.personagem.atributos[attr]} (${valorFormatadoBonus(calcularMod(state.personagem.atributos[attr]))})`).join(" • ")}</div><div class="actions"><button class="secondary" onclick="voltarPara(5)">Voltar</button><button onclick="confirmarAtributos()">Avançar</button></div>`;
+  corpo += renderAsiControls();
+  corpo += `<div class="info-box"><strong>Resultado final com bônus raciais e ASI/talentos:</strong> ${ATTRIBUTE_LIST.map(attr=>`${ATTRIBUTE_LABELS[attr]} ${state.personagem.atributos[attr]} (${valorFormatadoBonus(calcularMod(state.personagem.atributos[attr]))})`).join(" • ")}</div><div class="actions"><button class="secondary" onclick="voltarPara(5)">Voltar</button><button onclick="confirmarAtributos()">Avançar</button></div>`;
   renderPassoBase("Atributos",corpo);
 }
-function trocarMetodoAtributos(){state.personagem.metodoAtributos=document.getElementById("metodo").value; renderAtributos();}
+function trocarMetodoAtributos(){state.personagem.metodoAtributos=document.getElementById("metodo").value; recalcularAtributosFinais(); salvarEstado(); renderAtributos();}
 function ajustarPointBuy(attr,delta){const atual=state.personagem.atributosBase[attr]; const novo=Math.max(8,Math.min(15,atual+delta)); const copia={...state.personagem.atributosBase,[attr]:novo}; if(calcularPontosUsadosPointBuy(copia) <= ATTRIBUTE_METHODS.pointbuy.pontos){state.personagem.atributosBase=copia; recalcularAtributosFinais(); salvarEstado();} renderAtributos();}
-function recalcularAtributosFinais(){const base=state.personagem.atributosBase; state.personagem.atributos=Object.fromEntries(ATTRIBUTE_LIST.map(attr=>[attr,(base[attr]||0)+(state.personagem.bonusRaciais[attr]||0)]));}
-function confirmarAtributos(){state.personagem.nome=document.getElementById("nome").value.trim(); state.personagem.jogador=document.getElementById("jogador").value.trim(); if(state.personagem.metodoAtributos==="standard"){ATTRIBUTE_LIST.forEach(attr=>state.personagem.atributosBase[attr]=parseInt(document.getElementById(`attr_${attr}`).value,10)); if(state.modo==="A" && !validarStandardArray(state.personagem.atributosBase)) return alert("Os valores precisam corresponder exatamente ao Standard Array.");} else if(state.modo==="A" && !validarPointBuy(state.personagem.atributosBase)){return alert("O Point Buy excedeu 27 pontos.");} recalcularAtributosFinais(); recalcularTudo(); avancarPara(7);}
+function recalcularAtributosFinais(){
+  if(typeof resolveCharacterRules === "function" && typeof applyRuleEngineAbilityPatch === "function"){
+    const resultado = resolveCharacterRules(state.personagem);
+    applyRuleEngineAbilityPatch(state.personagem, resultado);
+    return;
+  }
+  const base=state.personagem.atributosBase;
+  state.personagem.atributos=Object.fromEntries(ATTRIBUTE_LIST.map(attr=>[attr,(base[attr]||0)+(state.personagem.bonusRaciais[attr]||0)]));
+}
+function confirmarAtributos(){
+  state.personagem.nome=document.getElementById("nome").value.trim();
+  state.personagem.jogador=document.getElementById("jogador").value.trim();
+  if(state.personagem.metodoAtributos==="standard"){
+    ATTRIBUTE_LIST.forEach(attr=>state.personagem.atributosBase[attr]=parseInt(document.getElementById(`attr_${attr}`).value,10));
+    if(state.modo==="A" && !validarStandardArray(state.personagem.atributosBase)) return alert("Os valores precisam corresponder exatamente ao Standard Array.");
+  } else if(state.modo==="A" && !validarPointBuy(state.personagem.atributosBase)){
+    return alert("O Point Buy excedeu 27 pontos.");
+  }
+  recalcularAtributosFinais();
+  if(state.modo==="A" && typeof resolveCharacterRules === "function"){
+    const resultado = resolveCharacterRules(state.personagem);
+    const errosAtributo = ((resultado.resolved && resultado.resolved.errors) || []).filter(msg => /Point Buy|Atributos base|ASI|atributo|Força|Destreza|Constituição|Inteligência|Sabedoria|Carisma|Talento|exige/.test(msg));
+    if(errosAtributo.length) return alert(errosAtributo.join("\n"));
+  }
+  recalcularTudo();
+  avancarPara(7);
+}
 
 function inicializarEscolhasEquipamentoInicial(){
   const loadout = EQUIPMENT_LOADOUTS[state.personagem.classe] || [];
@@ -129,11 +292,11 @@ function removerItemInventario(index){state.personagem.inventario.itens.splice(i
 function confirmarInventario(){state.personagem.inventario.moedas={pp:parseInt(document.getElementById("pp").value,10)||0,gp:parseInt(document.getElementById("gp").value,10)||0,ep:parseInt(document.getElementById("ep").value,10)||0,sp:parseInt(document.getElementById("sp").value,10)||0,cp:parseInt(document.getElementById("cp").value,10)||0}; recalcularTudo(); const erro=validarInventarioPeso(); if(erro&&state.modo==="A") return alert(erro); if(erro&&state.modo==="B") state.personagem.customizado=true; avancarPara(9);}
 
 function configurarMagiaDaClasse(){const cfg=SPELLCASTERS[state.personagem.classe]; const magia=state.personagem.magia; if(!cfg){state.personagem.magia={ehConjurador:false,habilidade:null,tipo:null,cdMagia:null,ataqueMagia:null,espacos:[],espacosAtuais:[],nivelEspacosBruxo:null,cantripsConhecidos:0,magiasConhecidas:0,magiasPreparadas:0,listaTruques:[],listaMagias:[],grimorio:[],concentracaoAtiva:"",rituaisDisponiveis:[]}; return;} magia.ehConjurador=true; magia.habilidade=cfg.habilidade; magia.tipo=cfg.tipo; magia.listaTruques = magia.listaTruques || []; magia.listaMagias = magia.listaMagias || []; }
-function listarMagiasDisponiveisPorCirculo(){ return (typeof getCharacterSpellLists==='function' ? getCharacterSpellLists(state.personagem.classe, state.personagem.subclasse, state.personagem.nivel||1) : (SPELL_LISTS[state.personagem.classe] || {truques:[]})); }
-function recalcularMagia(){const classe=state.personagem.classe; const nivel=state.personagem.nivel||1; const cfg=SPELLCASTERS[classe]; const magia=state.personagem.magia; if(!cfg){configurarMagiaDaClasse(); return;} magia.ehConjurador=true; magia.habilidade=cfg.habilidade; magia.tipo=cfg.tipo; const modHab=calcularMod(state.personagem.atributos[cfg.habilidade]||10); magia.cdMagia=8+state.personagem.bonusProficiencia+modHab; magia.ataqueMagia=state.personagem.bonusProficiencia+modHab; if(classe==="bruxo"){ magia.espacos=[SPELL_SLOTS.warlock[nivel][0]||0]; magia.nivelEspacosBruxo=SPELL_SLOTS.warlockCircle[nivel]; } else { magia.espacos=(cfg.meioConjurador?SPELL_SLOTS.half[nivel]:SPELL_SLOTS.full[nivel]).slice(); magia.nivelEspacosBruxo=null; } if(!Array.isArray(magia.espacosAtuais) || magia.espacosAtuais.length!==magia.espacos.length){magia.espacosAtuais = magia.espacos.slice();} else {magia.espacosAtuais = magia.espacosAtuais.map((v,i)=>Math.min(v, magia.espacos[i]||0));} magia.cantripsConhecidos=(cfg.cantrips&&cfg.cantrips[nivel-1])||0; magia.magiasConhecidas=(cfg.magias&&cfg.magias[nivel-1])||0; magia.magiasPreparadas=cfg.tipo==="preparadas" ? Math.max(1,modHab+nivel) : 0; magia.rituaisDisponiveis=(magia.listaMagias||[]).filter(nome=>{const clean=nome.replace(/ \(.+\)$/,''); return Object.values(SPELL_DETAILS[classe]||{}).some(bucket=>bucket[clean]?.ritual);}); }
+function listarMagiasDisponiveisPorCirculo(){ return (typeof getRuleEngineSelectableSpellLists==='function' ? getRuleEngineSelectableSpellLists(state.personagem) : (typeof getCharacterSpellLists==='function' ? getCharacterSpellLists(state.personagem.classe, state.personagem.subclasse, state.personagem.nivel||1) : (SPELL_LISTS[state.personagem.classe] || {truques:[]}))); }
+function recalcularMagia(){const classe=state.personagem.classe; const nivel=state.personagem.nivel||1; const cfg=SPELLCASTERS[classe]; const magia=state.personagem.magia; if(!cfg){configurarMagiaDaClasse(); if(typeof resolveAndApplyRuleEngineCantrips === "function") resolveAndApplyRuleEngineCantrips(state.personagem); return;} magia.ehConjurador=true; magia.habilidade=cfg.habilidade; magia.tipo=cfg.tipo; const modHab=calcularMod(state.personagem.atributos[cfg.habilidade]||10); magia.cdMagia=8+state.personagem.bonusProficiencia+modHab; magia.ataqueMagia=state.personagem.bonusProficiencia+modHab; if(classe==="bruxo"){ magia.espacos=[SPELL_SLOTS.warlock[nivel][0]||0]; magia.nivelEspacosBruxo=SPELL_SLOTS.warlockCircle[nivel]; } else { magia.espacos=(cfg.meioConjurador?SPELL_SLOTS.half[nivel]:SPELL_SLOTS.full[nivel]).slice(); magia.nivelEspacosBruxo=null; } if(!Array.isArray(magia.espacosAtuais) || magia.espacosAtuais.length!==magia.espacos.length){magia.espacosAtuais = magia.espacos.slice();} else {magia.espacosAtuais = magia.espacosAtuais.map((v,i)=>Math.min(v, magia.espacos[i]||0));} magia.cantripsConhecidos=(cfg.cantrips&&cfg.cantrips[nivel-1])||0; magia.magiasConhecidas=(cfg.magias&&cfg.magias[nivel-1])||0; magia.magiasPreparadas=cfg.tipo==="preparadas" ? Math.max(1,modHab+nivel) : 0; magia.rituaisDisponiveis=(magia.listaMagias||[]).filter(nome=>{const clean=nome.replace(/ \(.+\)$/,""); return Object.values(SPELL_DETAILS[classe]||{}).some(bucket=>bucket[clean]?.ritual);}); if(typeof resolveAndApplyRuleEngineCantrips === "function") resolveAndApplyRuleEngineCantrips(state.personagem); if(typeof resolveAndApplyRuleEngineSlots === "function") resolveAndApplyRuleEngineSlots(state.personagem); if(typeof resolveAndApplyRuleEngineSpellLimits === "function") resolveAndApplyRuleEngineSpellLimits(state.personagem); if(typeof resolveAndApplyRuleEngineWizardSpellbook === "function") resolveAndApplyRuleEngineWizardSpellbook(state.personagem); if(typeof resolveAndApplyRuleEngineSubclassSpells === "function") resolveAndApplyRuleEngineSubclassSpells(state.personagem); }
 function renderMagia(){ const magia=state.personagem.magia; if(!magia.ehConjurador){ return renderPassoBase("Magia",`<div class="info-box"><p>Classe sem magia.</p></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`);} const listas=listarMagiasDisponiveisPorCirculo(); const bonusSpells=(typeof getCharacterBonusSpellSummary==='function'?getCharacterBonusSpellSummary(state.personagem):[]); const circulosDisponiveis=Object.keys(listas).filter(k=>k!=="truques" && Number(k)<=obterMaiorCirculoDisponivel()); const truquesRestantes=Math.max(0,(magia.cantripsConhecidos||0)-(magia.listaTruques||[]).length); const limiteMagias=magia.tipo==="conhecidas" ? (magia.magiasConhecidas||0) : (magia.magiasPreparadas||0); const magiasRestantes=Math.max(0, limiteMagias-(magia.listaMagias||[]).length); const truqueOptions=(listas.truques||[]).filter(nome=>!(magia.listaTruques||[]).includes(nome)).map(nome=>`<option value="${nome}">${nome}</option>`).join(""); const circleOptions=circulosDisponiveis.map(k=>`<option value="${k}">${k}º círculo</option>`).join(""); const primeiroCirculo=circulosDisponiveis[0] || "1"; const magiaOptions=((listas[primeiroCirculo]||[]).filter(nome=>!(magia.listaMagias||[]).includes(`${nome} (${primeiroCirculo}º)`))).map(nome=>`<option value="${nome}">${nome}</option>`).join(""); const truques=(magia.listaTruques||[]).map((nome,idx)=>`<tr><td>${nome}</td><td></td><td><button class="small secondary" onclick="removerMagia('truque',${idx})">Remover</button></td></tr>`).join(""); const magias=(magia.listaMagias||[]).map((nome,idx)=>`<tr><td>${nome}</td><td></td><td><button class="small secondary" onclick="removerMagia('magia',${idx})">Remover</button></td></tr>`).join(""); renderPassoBase("Magia",`<div class="grid grid-2"><div class="spell-card"><p><strong>Habilidade:</strong> ${ATTRIBUTE_LABELS[magia.habilidade]}</p><p><strong>CD:</strong> ${magia.cdMagia}</p><p><strong>Ataque mágico:</strong> ${valorFormatadoBonus(magia.ataqueMagia)}</p><p><strong>Espaços:</strong> ${magia.espacos.map((v,i)=>v?`${i+1}º ${magia.espacosAtuais[i]}/${v}`:"").filter(Boolean).join(" • ") || "Nenhum"}</p>${magia.nivelEspacosBruxo?`<p><strong>Círculo dos espaços:</strong> ${magia.nivelEspacosBruxo}º</p>`:""}</div><div class="spell-card"><p><strong>Truques:</strong> ${(magia.listaTruques||[]).length}/${magia.cantripsConhecidos}</p><p><strong>${magia.tipo==="conhecidas"?"Magias conhecidas":"Magias preparadas"}:</strong> ${(magia.listaMagias||[]).length}/${limiteMagias}</p><p><strong>Truques restantes:</strong> ${truquesRestantes}</p><p><strong>Magias restantes:</strong> ${magiasRestantes}</p></div></div>${bonusSpells.length?`<div class="info-box"><p><strong>Magias bônus da subclasse:</strong></p><p>${bonusSpells.join(' • ')}</p><p class="muted">Essas magias ficam destacadas para subclasses de Xanathar e ajudam na importação/referência do Foundry.</p></div>`:''}<div class="grid grid-2"><div><h3>Truques</h3><div class="inline-row"><div style="flex:1"><select id="novoTruque"><option value="">Selecione</option>${truqueOptions}</select></div><div><button onclick="adicionarMagia('truque')" ${(truquesRestantes<=0)?'disabled':''}>Adicionar</button></div></div><table class="table-like"><tbody>${truques||'<tr><td>Nenhum truque adicionado.</td><td></td><td></td></tr>'}</tbody></table></div><div><h3>Magias</h3><div class="inline-row"><div><select id="circuloMagia" onchange="atualizarOpcoesMagia()">${circleOptions}</select></div><div style="flex:1"><select id="novaMagia"><option value="">Selecione</option>${magiaOptions}</select></div><div><button onclick="adicionarMagia('magia')" ${(magiasRestantes<=0)?'disabled':''}>Adicionar</button></div></div><p class="muted">Mostrando apenas círculos disponíveis no nível atual.</p><table class="table-like"><tbody>${magias||'<tr><td>Nenhuma magia adicionada.</td><td></td><td></td></tr>'}</tbody></table></div></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`); }
-function atualizarOpcoesMagia(){ const selectCirculo=document.getElementById("circuloMagia"); const selectMagia=document.getElementById("novaMagia"); if(!selectCirculo||!selectMagia) return; const lista=(listarMagiasDisponiveisPorCirculo()[selectCirculo.value]||[]).filter(nome=>!(state.personagem.magia.listaMagias||[]).includes(`${nome} (${selectCirculo.value}º)`)); selectMagia.innerHTML=`<option value="">Selecione</option>` + lista.map(nome=>`<option value="${nome}">${nome}</option>`).join(""); }
-function adicionarMagia(tipo){ const magia=state.personagem.magia; if(tipo==="truque"){const nome=document.getElementById("novoTruque").value; if(!nome||magia.listaTruques.includes(nome)) return; if((magia.listaTruques||[]).length >= (magia.cantripsConhecidos||0)) return alert("Você já atingiu o limite de truques desta classe/nível."); magia.listaTruques.push(nome);} else {const nome=document.getElementById("novaMagia").value; const circulo=document.getElementById("circuloMagia").value; if(!nome) return; const limite = magia.tipo==="conhecidas" ? (magia.magiasConhecidas||0) : (magia.magiasPreparadas||0); if((magia.listaMagias||[]).length >= limite) return alert("Você já atingiu o limite de magias desta classe/nível."); const registrado=`${nome} (${circulo}º)`; if(magia.listaMagias.includes(registrado)) return; magia.listaMagias.push(registrado); const detalhe=(SPELL_DETAILS[state.personagem.classe]?.[circulo]||{})[nome]; if(detalhe?.concentracao && !magia.concentracaoAtiva) magia.concentracaoAtiva=nome; if(state.personagem.classe==="mago" && !magia.grimorio.includes(nome)) magia.grimorio.push(nome);} recalcularMagia(); salvarEstado(); renderMagia(); }
+function atualizarOpcoesMagia(){ const selectCirculo=document.getElementById("circuloMagia"); const selectMagia=document.getElementById("novaMagia"); if(!selectCirculo||!selectMagia) return; const listaBase=(listarMagiasDisponiveisPorCirculo()[selectCirculo.value]||[]); const lista=(typeof filtrarOpcoesMagiaSelecionaveis==='function') ? filtrarOpcoesMagiaSelecionaveis(listaBase, selectCirculo.value) : listaBase.filter(nome=>!(state.personagem.magia.listaMagias||[]).includes(`${nome} (${selectCirculo.value}º)`)); selectMagia.innerHTML=`<option value="">Selecione</option>` + lista.map(nome=>`<option value="${nome}">${nome}</option>`).join(""); }
+function adicionarMagia(tipo){ const magia=state.personagem.magia; magia.listaTruques=magia.listaTruques||[]; magia.listaMagias=magia.listaMagias||[]; magia.grimorio=magia.grimorio||[]; if(tipo==="truque"){const nome=document.getElementById("novoTruque").value; if(!nome||magia.listaTruques.includes(nome)) return; if(typeof validateRuleEngineCantripChoice==='function'){ const check=validateRuleEngineCantripChoice(state.personagem,nome); if(!check.ok) return alert(check.error); } if((magia.listaTruques||[]).length >= (magia.cantripsConhecidos||0)) return alert("Você já atingiu o limite de truques desta classe/nível."); magia.listaTruques.push(nome);} else {const nome=document.getElementById("novaMagia").value; const circulo=document.getElementById("circuloMagia").value; if(!nome) return; if(typeof validateRuleEngineSpellChoice==='function'){ const check=validateRuleEngineSpellChoice(state.personagem,nome,circulo); if(!check.ok) return alert(check.error); } if(state.personagem.classe==="mago" && !listaNomesGrimorioMago().includes(nome)) return alert("Mago só pode preparar magias que já estejam no grimório. Adicione a magia ao grimório primeiro."); const limite = magia.tipo==="conhecidas" ? (magia.magiasConhecidas||0) : (magia.magiasPreparadas||0); const usadasQueContam = (typeof quantidadeMagiasSelecionadasQueContam==='function') ? quantidadeMagiasSelecionadasQueContam() : (magia.listaMagias||[]).length; if(usadasQueContam >= limite) return alert("Você já atingiu o limite de magias desta classe/nível."); const registrado=`${nome} (${circulo}º)`; if(magia.listaMagias.includes(registrado)) return; magia.listaMagias.push(registrado); const detalhe=(SPELL_DETAILS[state.personagem.classe]?.[circulo]||{})[nome]; if(detalhe?.concentracao && !magia.concentracaoAtiva) magia.concentracaoAtiva=nome;} recalcularMagia(); salvarEstado(); renderMagia(); }
 function removerMagia(tipo,index){ if(tipo==="truque") state.personagem.magia.listaTruques.splice(index,1); else state.personagem.magia.listaMagias.splice(index,1); recalcularMagia(); salvarEstado(); renderMagia(); }
 function gastarEspaco(circulo){ const erro=validarUsoEspaco(circulo); if(erro&&state.modo==="A") return alert(erro); const idx=Number(circulo)-1; if((state.personagem.magia.espacosAtuais[idx]||0)>0) state.personagem.magia.espacosAtuais[idx]-=1; salvarEstado(); renderMagia(); }
 function descansoCurto(){ if(state.personagem.classe==="bruxo") state.personagem.magia.espacosAtuais=state.personagem.magia.espacos.slice(); state.personagem.magia.concentracaoAtiva=""; salvarEstado(); renderMagia(); }
@@ -146,8 +309,31 @@ function adicionarEntradasManuaisPersonalidade(tipo){ const el=document.getEleme
 function confirmarPersonalidade(){ ['tracos','ideais','vinculos','defeitos'].forEach(adicionarEntradasManuaisPersonalidade); state.personagem.personalidade.descricaoGeral=document.getElementById('descricaoGeral').value.trim(); state.personagem.personalidade.aparencia=document.getElementById('aparencia').value.trim(); state.personagem.personalidade.historia=document.getElementById('historia').value.trim(); const erro=validarPersonalidade(); if(erro&&state.modo==="A") return alert(erro); if(erro&&state.modo==="B") state.personagem.customizado=true; avancarPara(11); }
 
 function recalcularPv(){const dado=state.personagem.dadoVida||0; const nivel=Math.max(1,state.personagem.nivel||1); const modCon=calcularMod(state.personagem.atributos.constituicao||10); const mediaPorNivel=Math.floor(dado/2)+1; state.personagem.pvMax=Math.max(1,(dado+modCon)+((nivel-1)*(mediaPorNivel+modCon)));}
-function recalcularPericias(){const efetivas=(typeof getEffectiveFinalSkills==='function')?getEffectiveFinalSkills(state.personagem):(state.personagem.periciasFinais||[]); state.personagem.periciasFinaisEfetivas=efetivas; const bonus={}; for(const skill of Object.keys(SKILLS)){const attr=SKILLS[skill]; let valor=calcularMod(state.personagem.atributos[attr]||10); if(efetivas.includes(skill)) valor+=state.personagem.bonusProficiencia; bonus[skill]=valor;} state.personagem.bonusPericias=bonus;}
-function recalcularSaves(){const savesEfetivos=(typeof getEffectiveSaveProficiencies==='function')?getEffectiveSaveProficiencies(state.personagem):(state.personagem.savesClasse||[]); state.personagem.savesClasseEfetivos=savesEfetivos; const saves={}; for(const [label,key] of Object.entries(SAVE_TO_KEY)){let valor=calcularMod(state.personagem.atributos[key]||10); if(savesEfetivos.includes(label)) valor+=state.personagem.bonusProficiencia; saves[label]=valor;} state.personagem.savesCalculados=saves;}
+function recalcularPericias(){
+  if(typeof resolveAndApplyRuleEngineProficiencies === "function") resolveAndApplyRuleEngineProficiencies(state.personagem);
+  const efetivas = state.personagem.periciasFinaisEfetivas || ((typeof getEffectiveFinalSkills==="function")?getEffectiveFinalSkills(state.personagem):(state.personagem.periciasFinais||[]));
+  state.personagem.periciasFinaisEfetivas = efetivas;
+  const bonus={};
+  for(const skill of Object.keys(SKILLS)){
+    const attr=SKILLS[skill];
+    let valor=calcularMod(state.personagem.atributos[attr]||10);
+    if(efetivas.includes(skill)) valor+=state.personagem.bonusProficiencia;
+    bonus[skill]=valor;
+  }
+  state.personagem.bonusPericias=bonus;
+}
+function recalcularSaves(){
+  if(typeof resolveAndApplyRuleEngineProficiencies === "function") resolveAndApplyRuleEngineProficiencies(state.personagem);
+  const savesEfetivos = state.personagem.savesClasseEfetivos || ((typeof getEffectiveSaveProficiencies==="function")?getEffectiveSaveProficiencies(state.personagem):(state.personagem.savesClasse||[]));
+  state.personagem.savesClasseEfetivos=savesEfetivos;
+  const saves={};
+  for(const [label,key] of Object.entries(SAVE_TO_KEY)){
+    let valor=calcularMod(state.personagem.atributos[key]||10);
+    if(savesEfetivos.includes(label)) valor+=state.personagem.bonusProficiencia;
+    saves[label]=valor;
+  }
+  state.personagem.savesCalculados=saves;
+}
 function calcularClasseArmadura(chaveArmadura,escudo){ const armor=ARMORS[chaveArmadura]||ARMORS.sem_armadura; const modDex=calcularMod(state.personagem.atributos.destreza||10); let ca=armor.baseCA; if(armor.dex==="full") ca+=modDex; else if(armor.dex==="max2") ca+=Math.min(2,modDex); if(state.personagem.classe==="barbaro" && chaveArmadura==="sem_armadura") ca = 10 + modDex + calcularMod(state.personagem.atributos.constituicao||10); if(state.personagem.classe==="monge" && chaveArmadura==="sem_armadura" && !escudo) ca = 10 + modDex + calcularMod(state.personagem.atributos.sabedoria||10); if(escudo) ca+=2; return ca; }
 function calcularAtaque(chaveArma){ const weapon=WEAPONS[chaveArma]; if(!weapon) return {nome:"Sem arma",bonusAtaque:0,dano:"-",danoVersatil:null,alcance:"-",propriedades:[],atributo:"-",proficiente:false,critico:"-",valorGp:0,modificadorUsado:0}; const modFor=calcularMod(state.personagem.atributos.forca||10); const modDex=calcularMod(state.personagem.atributos.destreza||10); const modCha=calcularMod(state.personagem.atributos.carisma||10); const favored=(typeof getHexbladeFavoredWeaponLabel==='function'?getHexbladeFavoredWeaponLabel(state.personagem):''); const usaCarisma = !!favored && favored===weapon.nome && state.personagem.classe==='bruxo' && state.personagem.subclasse==='hexblade'; const modAttr = usaCarisma ? modCha : (weapon.ranged ? modDex : (weapon.finesse ? Math.max(modDex, modFor) : modFor)); const atributo = usaCarisma ? "Carisma" : (weapon.ranged ? "Destreza" : (weapon.finesse ? (modDex >= modFor ? "Destreza" : "Força") : "Força")); const proficiente=personagemEhProficienteComArma(weapon); return {nome:weapon.nome, bonusAtaque: modAttr + (proficiente?state.personagem.bonusProficiencia:0), dano:`${weapon.dano} ${valorFormatadoBonus(modAttr)}`, danoVersatil:weapon.versatile?`${weapon.versatile} ${valorFormatadoBonus(modAttr)}`:null, alcance:weapon.alcance, propriedades:weapon.propriedades, atributo, proficiente, critico:(typeof getWeaponCritDisplay==='function'?getWeaponCritDisplay(state.personagem, weapon):(weapon.critico||"20/x2")), valorGp:weapon.precoGp||0, modificadorUsado:modAttr}; }
 function formatarMoedaGp(valor){ return `${Number(valor||0).toFixed(2).replace(/\.00$/,"")} gp`; }
@@ -162,7 +348,7 @@ function atualizarPreviewCombate(){ const armadura=document.getElementById("arma
 function obterMaiorCirculoDisponivel(){ const espacos=state.personagem.magia?.espacos||[]; for(let i=espacos.length-1;i>=0;i--){ if((espacos[i]||0)>0) return i+1; } return 0; }
 function recalcularCombate(){state.personagem.combate.classeArmadura=calcularClasseArmadura(state.personagem.combate.armadura,state.personagem.combate.escudo); state.personagem.combate.iniciativa=calcularMod(state.personagem.atributos.destreza||10); state.personagem.combate.ataques=[calcularAtaque(state.personagem.combate.armaPrincipal),calcularAtaque(state.personagem.combate.armaSecundaria)]; state.personagem.combate.ataquesPorAcao=getAttacksPerAction(state.personagem.classe, state.personagem.nivel||1);}
 function recalcularInventario(){const pesoItens=state.personagem.inventario.itens.reduce((a,item)=>a+item.pesoTotal,0); const pesoEquipado=(ARMORS[state.personagem.combate.armadura]?.peso||0)+(WEAPONS[state.personagem.combate.armaPrincipal]?.peso||0)+(WEAPONS[state.personagem.combate.armaSecundaria]?.peso||0)+(state.personagem.combate.escudo?6:0); state.personagem.inventario.pesoTotal=Number((pesoItens+pesoEquipado).toFixed(2)); state.personagem.inventario.capacidadeCarga=(state.personagem.atributos.forca||10)*15;}
-function atualizarProgressao(){ const nivel=Math.max(1, Math.min(20, state.personagem.nivel||1)); state.personagem.nivel=nivel; state.personagem.progressao.nivelAtual=nivel; state.personagem.bonusProficiencia=2 + Math.floor((nivel-1)/4); state.personagem.progressao.proximoNivel=Math.min(20,nivel+1); state.personagem.progressao.melhoriasPendentes=[]; state.personagem.habilidadesClasseAtivas=getClassFeaturesForLevel(state.personagem.classe,nivel); const unlock=getSubclassUnlockLevel(state.personagem.classe); if(nivel < unlock) state.personagem.subclasse=null; state.personagem.habilidadesSubclasseAtivas=getSubclassFeaturesForLevel(state.personagem.classe,state.personagem.subclasse,nivel); const recursosAtuais=state.personagem.recursosClasse||{}; state.personagem.recursosClasse=Object.fromEntries(getClassResources(state.personagem.classe,nivel,state.personagem).map(r=>{ const prev=recursosAtuais[r.id]; return [r.id, {...r, detalhe: r.detalhe || prev?.detalhe || '', atual: Math.max(0, Math.min(prev?.atual ?? r.max, r.max))}]; })); state.personagem.progressao.historico=[...(state.personagem.habilidadesClasseAtivas||[]), ...(state.personagem.habilidadesSubclasseAtivas||[])].map(f=>`Nível ${f.level}: ${f.nome}`); if([4,8,12,16,19].includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Aumento de Valor de Habilidade / talento"); if([3,6,10,14,18].includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Verificar recursos de subclasse do nível atual"); if(SPELLCASTERS[state.personagem.classe]) state.personagem.progressao.melhoriasPendentes.push("Revisar lista de magias, truques e espaços do nível atual"); state.personagem.progressao.ataquesPorAcao=getAttacksPerAction(state.personagem.classe,nivel); }
+function atualizarProgressao(){ const nivel=Math.max(1, Math.min(20, state.personagem.nivel||1)); state.personagem.nivel=nivel; state.personagem.progressao.nivelAtual=nivel; state.personagem.bonusProficiencia=2 + Math.floor((nivel-1)/4); state.personagem.progressao.proximoNivel=Math.min(20,nivel+1); state.personagem.progressao.melhoriasPendentes=[]; state.personagem.habilidadesClasseAtivas=getClassFeaturesForLevel(state.personagem.classe,nivel); const unlock=getSubclassUnlockLevel(state.personagem.classe); if(nivel < unlock) state.personagem.subclasse=null; state.personagem.habilidadesSubclasseAtivas=getSubclassFeaturesForLevel(state.personagem.classe,state.personagem.subclasse,nivel); const recursosAtuais=state.personagem.recursosClasse||{}; state.personagem.recursosClasse=Object.fromEntries(getClassResources(state.personagem.classe,nivel,state.personagem).map(r=>{ const prev=recursosAtuais[r.id]; return [r.id, {...r, detalhe: r.detalhe || prev?.detalhe || '', atual: Math.max(0, Math.min(prev?.atual ?? r.max, r.max))}]; })); state.personagem.progressao.historico=[...(state.personagem.habilidadesClasseAtivas||[]), ...(state.personagem.habilidadesSubclasseAtivas||[])].map(f=>`Nível ${f.level}: ${f.nome}`); if((typeof getRuleAsiLevelsForCharacter === "function" ? getRuleAsiLevelsForCharacter(state.personagem) : [4,8,12,16,19].filter(l=>nivel>=l)).includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Aumento de Valor de Habilidade / talento"); if([3,6,10,14,18].includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Verificar recursos de subclasse do nível atual"); if(SPELLCASTERS[state.personagem.classe]) state.personagem.progressao.melhoriasPendentes.push("Revisar lista de magias, truques e espaços do nível atual"); state.personagem.progressao.ataquesPorAcao=getAttacksPerAction(state.personagem.classe,nivel); }
 function recalcularTudo(){ atualizarProgressao(); recalcularPv(); recalcularPericias(); recalcularSaves(); recalcularCombate(); recalcularInventario(); recalcularMagia(); }
 
 function alterarRecursoClasse(id, delta){ const r=state.personagem.recursosClasse?.[id]; if(!r) return; r.atual=Math.max(0, Math.min(r.max, (r.atual||0)+delta)); salvarEstado(); if(state.etapa===11) renderResumo(); }
@@ -242,7 +428,7 @@ function mostrarPreviewClasse(){
   preview.innerHTML = buildClassPreviewHtml(key, nivel, selected);
 }
 function confirmarClasse(){const key=document.getElementById("classe").value; state.personagem.classe=key; state.personagem.nivel=Math.max(1, Math.min(20, Number(document.getElementById("nivel")?.value || 1))); state.personagem.subclasse=document.getElementById("subclasse")?.value || null; state.personagem.opcoesClasse=coletarOpcoesClasseDaTela(); state.personagem.opcoesClasse=sanitizeClassOptionState(state.personagem); const erro=validarClasse(); const erroOpcoes=(typeof validarOpcoesClasse==='function')?validarOpcoesClasse():null; if((erro||erroOpcoes)&&state.modo==="A") return alert(erro||erroOpcoes); if((erro||erroOpcoes)&&state.modo==="B") state.personagem.customizado=true; if(key&&CLASSES[key]){const c=CLASSES[key]; state.personagem.dadoVida=c.dadoVida; state.personagem.savesClasseBase=[...c.saves]; state.personagem.savesClasse=[...c.saves]; state.personagem.proficienciasClasseBase=[...c.proficiencias]; state.personagem.proficienciasClasse=[...c.proficiencias]; state.personagem.equipamentoClasse=[...c.equipamento]; state.personagem.periciasClasseSelecionadas=[]; state.personagem.equipamentoInicialEscolhas={}; state.personagem.equipamentoInicialValores={}; configurarMagiaDaClasse(); recalcularTudo();} avancarPara(5);} 
-function atualizarProgressao(){ const nivel=Math.max(1, Math.min(20, state.personagem.nivel||1)); state.personagem.nivel=nivel; state.personagem.progressao.nivelAtual=nivel; state.personagem.bonusProficiencia=2 + Math.floor((nivel-1)/4); state.personagem.progressao.proximoNivel=Math.min(20,nivel+1); state.personagem.progressao.melhoriasPendentes=[]; state.personagem.opcoesClasse = (typeof sanitizeClassOptionState === 'function') ? sanitizeClassOptionState(state.personagem) : (state.personagem.opcoesClasse||{}); state.personagem.proficienciasClasseEfetivas=(typeof getEffectiveClassProficiencies==='function')?getEffectiveClassProficiencies(state.personagem):(state.personagem.proficienciasClasse||[]); state.personagem.savesClasseEfetivos=(typeof getEffectiveSaveProficiencies==='function')?getEffectiveSaveProficiencies(state.personagem):(state.personagem.savesClasse||[]); state.personagem.ferramentasEfetivas=(typeof getEffectiveTools==='function')?getEffectiveTools(state.personagem):(state.personagem.ferramentas||[]); state.personagem.habilidadesClasseAtivas=getClassFeaturesForLevel(state.personagem.classe,nivel); const unlock=getSubclassUnlockLevel(state.personagem.classe); if(nivel < unlock) state.personagem.subclasse=null; state.personagem.habilidadesSubclasseAtivas=getSubclassFeaturesForLevel(state.personagem.classe,state.personagem.subclasse,nivel); const recursosAtuais=state.personagem.recursosClasse||{}; state.personagem.recursosClasse=Object.fromEntries(getClassResources(state.personagem.classe,nivel,state.personagem).map(r=>{ const prev=recursosAtuais[r.id]; return [r.id, {...r, detalhe: r.detalhe || prev?.detalhe || '', atual: Math.max(0, Math.min(prev?.atual ?? r.max, r.max))}]; })); state.personagem.progressao.historico=[...(state.personagem.habilidadesClasseAtivas||[]), ...(state.personagem.habilidadesSubclasseAtivas||[])].map(f=>`Nível ${f.level}: ${f.nome}`); if([4,8,12,16,19].includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Aumento de Valor de Habilidade / talento"); if([3,6,10,14,18].includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Verificar recursos de subclasse do nível atual"); if(SPELLCASTERS[state.personagem.classe]) state.personagem.progressao.melhoriasPendentes.push("Revisar lista de magias, truques e espaços do nível atual"); state.personagem.progressao.ataquesPorAcao=getAttacksPerAction(state.personagem.classe,nivel); }
+function atualizarProgressao(){ const nivel=Math.max(1, Math.min(20, state.personagem.nivel||1)); state.personagem.nivel=nivel; state.personagem.progressao.nivelAtual=nivel; state.personagem.bonusProficiencia=2 + Math.floor((nivel-1)/4); state.personagem.progressao.proximoNivel=Math.min(20,nivel+1); state.personagem.progressao.melhoriasPendentes=[]; { const asiAtual = (state.personagem.opcoesClasse && state.personagem.opcoesClasse.asi) || []; state.personagem.opcoesClasse = (typeof sanitizeClassOptionState === 'function') ? sanitizeClassOptionState(state.personagem) : (state.personagem.opcoesClasse||{}); state.personagem.opcoesClasse.asi = asiAtual; } state.personagem.proficienciasClasseEfetivas=(typeof getEffectiveClassProficiencies==='function')?getEffectiveClassProficiencies(state.personagem):(state.personagem.proficienciasClasse||[]); state.personagem.savesClasseEfetivos=(typeof getEffectiveSaveProficiencies==='function')?getEffectiveSaveProficiencies(state.personagem):(state.personagem.savesClasse||[]); state.personagem.ferramentasEfetivas=(typeof getEffectiveTools==='function')?getEffectiveTools(state.personagem):(state.personagem.ferramentas||[]); state.personagem.habilidadesClasseAtivas=getClassFeaturesForLevel(state.personagem.classe,nivel); const unlock=getSubclassUnlockLevel(state.personagem.classe); if(nivel < unlock) state.personagem.subclasse=null; state.personagem.habilidadesSubclasseAtivas=getSubclassFeaturesForLevel(state.personagem.classe,state.personagem.subclasse,nivel); const recursosAtuais=state.personagem.recursosClasse||{}; state.personagem.recursosClasse=Object.fromEntries(getClassResources(state.personagem.classe,nivel,state.personagem).map(r=>{ const prev=recursosAtuais[r.id]; return [r.id, {...r, detalhe: r.detalhe || prev?.detalhe || '', atual: Math.max(0, Math.min(prev?.atual ?? r.max, r.max))}]; })); state.personagem.progressao.historico=[...(state.personagem.habilidadesClasseAtivas||[]), ...(state.personagem.habilidadesSubclasseAtivas||[])].map(f=>`Nível ${f.level}: ${f.nome}`); if((typeof getRuleAsiLevelsForCharacter === "function" ? getRuleAsiLevelsForCharacter(state.personagem) : [4,8,12,16,19].filter(l=>nivel>=l)).includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Aumento de Valor de Habilidade / talento"); if([3,6,10,14,18].includes(nivel)) state.personagem.progressao.melhoriasPendentes.push("Verificar recursos de subclasse do nível atual"); if(SPELLCASTERS[state.personagem.classe]) state.personagem.progressao.melhoriasPendentes.push("Revisar lista de magias, truques e espaços do nível atual"); state.personagem.progressao.ataquesPorAcao=getAttacksPerAction(state.personagem.classe,nivel); }
 function renderResumo(){ recalcularTudo(); state.personagem.validacaoResumo=validarPersonagemCompleto(); state.personagem.valido=state.personagem.validacaoResumo.status==="oficial"; const p=state.personagem; const status=p.validacaoResumo.status==="oficial"?`<div class="alert success">✔ personagem válido</div>`:p.validacaoResumo.status==="customizado"?`<div class="alert warning">⚠ personagem customizado</div>`:`<div class="alert error">⚠ personagem com pendências</div>`; const atributos=ATTRIBUTE_LIST.map(attr=>`<li>${ATTRIBUTE_LABELS[attr]}: ${p.atributos[attr]} (mod ${valorFormatadoBonus(calcularMod(p.atributos[attr]))})</li>`).join(""); const ataques=p.combate.ataques.map(a=>`<div class="attack-card"><h4>${a.nome}</h4><p><strong>Bônus:</strong> ${valorFormatadoBonus(a.bonusAtaque)}</p><p><strong>Dano:</strong> ${a.dano}</p>${a.danoVersatil?`<p><strong>Dano versátil:</strong> ${a.danoVersatil}</p>`:""}<p><strong>Crítico:</strong> ${a.critico||"-"}</p><p><strong>Valor:</strong> ${formatarMoedaGp(a.valorGp||0)}</p><p><strong>Atributo:</strong> ${a.atributo||"-"}</p><p><strong>Proficiência:</strong> ${a.proficiente?"Sim":"Não"}</p><p><strong>Alcance:</strong> ${a.alcance}</p><p><strong>Propriedades:</strong> ${a.propriedades.join(", ")||"Nenhuma"}</p></div>`).join(""); const inventario=p.inventario.itens.map(item=>`<li>${item.nome} x${item.quantidade} — peso ${item.pesoTotal}</li>`).join("")||"<li>Nenhum item.</li>"; const magia = !p.magia.ehConjurador ? "<p>Classe sem conjuração.</p>" : `<p><strong>Habilidade:</strong> ${ATTRIBUTE_LABELS[p.magia.habilidade]}</p><p><strong>CD:</strong> ${p.magia.cdMagia}</p><p><strong>Ataque mágico:</strong> ${valorFormatadoBonus(p.magia.ataqueMagia)}</p><p><strong>Espaços:</strong> ${p.magia.espacos.map((v,i)=>v?`${i+1}º:${p.magia.espacosAtuais[i]||0}/${v}`:"").filter(Boolean).join(" • ") || "Nenhum"}</p><p><strong>Truques:</strong> ${(p.magia.listaTruques||[]).join(", ") || "Nenhum"}</p><p><strong>Magias:</strong> ${(p.magia.listaMagias||[]).join(", ") || "Nenhuma"}</p>`; const pendencias = `<ul class="clean">${(p.validacaoResumo.erros||[]).map(e=>`<li>${e}</li>`).join("") || '<li>Nenhuma pendência crítica.</li>'}</ul>`; const avisos = `<ul class="clean">${(p.validacaoResumo.avisos||[]).map(e=>`<li>${e}</li>`).join("") || '<li>Nenhum aviso.</li>'}</ul>`; const subclasseNome=nomeCatalogo(Object.fromEntries(getSubclassOptions(p.classe).map(s=>[s.key,{nome:s.nome}])), p.subclasse); renderPassoBase("Resumo da Ficha",`${status}<div class="grid grid-2"><div><h3>Identidade</h3><p><strong>Nome:</strong> ${p.nome||'-'}</p><p><strong>Origem:</strong> ${nomeCatalogo(BACKGROUNDS,p.origem)}</p><p><strong>Raça:</strong> ${nomeCatalogo(RACES,p.raca)}</p><p><strong>Classe:</strong> ${nomeCatalogo(CLASSES,p.classe)} ${p.nivel}</p><p><strong>Subclasse:</strong> ${subclasseNome}</p><p><strong>Progressão:</strong> próximo nível ${p.progressao.proximoNivel} • bônus de proficiência ${valorFormatadoBonus(p.bonusProficiencia)} • ataques por ação ${p.progressao.ataquesPorAcao||1}</p><h4>Melhorias pendentes</h4><ul class="clean">${(p.progressao.melhoriasPendentes||[]).map(item=>`<li>${item}</li>`).join("") || "<li>Nenhuma no nível atual.</li>"}</ul><h3>Habilidades de Classe</h3>${renderClassFeaturesHtml()}<h3>Subclasse</h3>${renderSubclassFeaturesHtml()}<h3>Recursos</h3>${renderRecursosClasseHtml()}<h3>Escolhas de classe</h3>${renderClassOptionsResumoHtml()}<h3>Atributos</h3><ul class="clean">${atributos}</ul><h3>Combate</h3><p><strong>PV:</strong> ${p.pvMax}</p><p><strong>CA:</strong> ${p.combate.classeArmadura}</p><p><strong>Iniciativa:</strong> ${valorFormatadoBonus(p.combate.iniciativa)}</p><p><strong>Deslocamento:</strong> ${p.deslocamento} pés</p><div class="grid grid-2">${ataques}</div><h3>Validação</h3>${pendencias}<h4>Avisos</h4>${avisos}</div><div><h3>Inventário</h3><ul class="clean">${inventario}</ul><p><strong>Peso:</strong> ${p.inventario.pesoTotal}/${p.inventario.capacidadeCarga}</p><p><strong>Moedas:</strong> PP ${p.inventario.moedas.pp}, GP ${p.inventario.moedas.gp}, EP ${p.inventario.moedas.ep}, SP ${p.inventario.moedas.sp}, CP ${p.inventario.moedas.cp}</p><h3>Magia</h3>${magia}<h3>Personalidade</h3><p><strong>Traços:</strong> ${(p.personalidade.tracos||[]).join(' | ')||'-'}</p><p><strong>Ideais:</strong> ${(p.personalidade.ideais||[]).join(' | ')||'-'}</p><p><strong>Vínculos:</strong> ${(p.personalidade.vinculos||[]).join(' | ')||'-'}</p><p><strong>Defeitos:</strong> ${(p.personalidade.defeitos||[]).join(' | ')||'-'}</p><p><strong>Descrição:</strong> ${p.personalidade.descricaoGeral||'-'}</p><p><strong>Aparência:</strong> ${p.personalidade.aparencia||'-'}</p><p><strong>História:</strong> ${p.personalidade.historia||'-'}</p></div></div><div class="actions"><button class="secondary" onclick="voltarPara(10)">Voltar</button><button onclick="exportarFoundryActorJSON()">Exportar JSON Foundry</button><button class="secondary" onclick="exportarBackupJSON()">Exportar JSON Backup</button><button onclick="exportarPDF()">Exportar PDF</button><button class="secondary" onclick="reiniciar()">Criar novo personagem</button></div>`); salvarEstado(); }
 
 
@@ -292,7 +478,154 @@ function renderPainelDetalheMagiaSelecionadaAtual(){
   if(!detalhe) return '<div class="info-box"><p class="muted">Sem detalhes adicionais para a magia selecionada.</p></div>';
   return `<div class="info-box"><p><strong>${detalhe.nome}</strong> <span class="muted">• ${detalhe.fonte}</span></p><p>${detalhe.resumo}</p><p class="muted">${[detalhe.escola, detalhe.ritual ? 'Ritual' : '', detalhe.concentracao ? 'Concentração' : '', detalhe.duracao ? `Duração: ${detalhe.duracao}` : ''].filter(Boolean).join(' • ')}</p></div>`;
 }
-function renderMagia(){ const magia=state.personagem.magia; if(!magia.ehConjurador){ return renderPassoBase("Magia",`<div class="info-box"><p>Classe sem magia.</p></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`);} const listas=listarMagiasDisponiveisPorCirculo(); const bonusSpells=(typeof getCharacterBonusSpellSummary==='function'?getCharacterBonusSpellSummary(state.personagem):[]); const circulosDisponiveis=Object.keys(listas).filter(k=>k!=="truques" && Number(k)<=obterMaiorCirculoDisponivel()); const truquesRestantes=Math.max(0,(magia.cantripsConhecidos||0)-(magia.listaTruques||[]).length); const limiteMagias=magia.tipo==="conhecidas" ? (magia.magiasConhecidas||0) : (magia.magiasPreparadas||0); const magiasRestantes=Math.max(0, limiteMagias-(magia.listaMagias||[]).length); const truqueSelecionado=(window.__spellPreview?.tipo==='truque' ? window.__spellPreview.nome : ''); const circuloSelecionado=String(window.__spellPreview?.tipo==='magia' && window.__spellPreview.circulo ? window.__spellPreview.circulo : (circulosDisponiveis[0] || '1')); const truqueOptions=(listas.truques||[]).filter(nome=>!(magia.listaTruques||[]).includes(nome)).map(nome=>`<option value="${nome}" ${truqueSelecionado===nome?'selected':''}>${nome}</option>`).join(""); const circleOptions=circulosDisponiveis.map(k=>`<option value="${k}" ${circuloSelecionado===String(k)?'selected':''}>${k}º círculo</option>`).join(""); const magiaSelecionada=(window.__spellPreview?.tipo==='magia' ? window.__spellPreview.nome : ''); const magiaOptions=((listas[circuloSelecionado]||[]).filter(nome=>!(magia.listaMagias||[]).includes(`${nome} (${circuloSelecionado}º)`))).map(nome=>`<option value="${nome}" ${magiaSelecionada===nome?'selected':''}>${nome}</option>`).join(""); const truques=(magia.listaTruques||[]).map((nome,idx)=>renderLinhaMagiaDetalhada(nome, idx, 'truque')).join(""); const magias=(magia.listaMagias||[]).map((nome,idx)=>renderLinhaMagiaDetalhada(nome, idx, 'magia')).join(""); renderPassoBase("Magia",`<div class="grid grid-2"><div class="spell-card"><p><strong>Habilidade:</strong> ${ATTRIBUTE_LABELS[magia.habilidade]}</p><p><strong>CD:</strong> ${magia.cdMagia}</p><p><strong>Ataque mágico:</strong> ${valorFormatadoBonus(magia.ataqueMagia)}</p><p><strong>Espaços:</strong> ${magia.espacos.map((v,i)=>v?`${i+1}º ${magia.espacosAtuais[i]||0}/${v}`:"").filter(Boolean).join(" • ") || "Nenhum"}</p>${magia.nivelEspacosBruxo?`<p><strong>Círculo dos espaços:</strong> ${magia.nivelEspacosBruxo}º</p>`:""}</div><div class="spell-card"><p><strong>Truques:</strong> ${(magia.listaTruques||[]).length}/${magia.cantripsConhecidos}</p><p><strong>${magia.tipo==="conhecidas"?"Magias conhecidas":"Magias preparadas"}:</strong> ${(magia.listaMagias||[]).length}/${limiteMagias}</p><p><strong>Truques restantes:</strong> ${truquesRestantes}</p><p><strong>Magias restantes:</strong> ${magiasRestantes}</p></div></div>${bonusSpells.length?`<div class="info-box"><p><strong>Magias bônus da subclasse:</strong></p><p>${bonusSpells.join(' • ')}</p><p class="muted">Essas magias ficam destacadas para subclasses de Xanathar e ajudam na importação/referência do Foundry.</p></div>`:''}<div id="spellDetailPreview">${renderPainelDetalheMagiaSelecionadaAtual()}</div><div class="grid grid-2"><div><h3>Truques</h3><div class="inline-row"><div style="flex:1"><select id="novoTruque" onchange="selecionarPreviewTruque()"><option value="">Selecione</option>${truqueOptions}</select></div><div><button onclick="adicionarMagia('truque')" ${(truquesRestantes<=0)?'disabled':''}>Adicionar</button></div></div><table class="table-like"><tbody>${truques||'<tr><td>Nenhum truque adicionado.</td><td></td></tr>'}</tbody></table></div><div><h3>Magias</h3><div class="inline-row"><div><select id="circuloMagia" onchange="atualizarOpcoesMagia(); selecionarPreviewMagia()">${circleOptions}</select></div><div style="flex:1"><select id="novaMagia" onchange="selecionarPreviewMagia()"><option value="">Selecione</option>${magiaOptions}</select></div><div><button onclick="adicionarMagia('magia')" ${(magiasRestantes<=0)?'disabled':''}>Adicionar</button></div></div><p class="muted">Mostrando apenas círculos disponíveis no nível atual.</p><table class="table-like"><tbody>${magias||'<tr><td>Nenhuma magia adicionada.</td><td></td></tr>'}</tbody></table></div></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`); }
+
+function normalizarNomeMagiaFicha(valor){
+  return String(valor || '').replace(/\s*\(\d+º\)\s*$/, '').trim();
+}
+
+function listaNomesGrimorioMago(){
+  const magia = state.personagem.magia || {};
+  return [...new Set([].concat(magia.grimorio || []).map(normalizarNomeMagiaFicha).filter(Boolean))];
+}
+
+function calcularMinimoGrimorioMago(){
+  if(state.personagem.classe !== 'mago') return 0;
+  return 6 + Math.max(0, Number(state.personagem.nivel || 1) - 1) * 2;
+}
+
+function renderPainelGrimorioMago(listas, circulosDisponiveis){
+  if(state.personagem.classe !== 'mago') return '';
+  const magia = state.personagem.magia || {};
+  magia.grimorio = listaNomesGrimorioMago();
+  const grimorio = magia.grimorio;
+  const minimo = calcularMinimoGrimorioMago();
+  const circuloInicial = String(window.__wizardSpellbookCircle || circulosDisponiveis[0] || '1');
+  const circleOptions = circulosDisponiveis.map(k=>`<option value="${k}" ${String(k)===circuloInicial?'selected':''}>${k}º círculo</option>`).join('');
+  const magiaOptions = ((listas[circuloInicial]||[]).filter(nome=>!grimorio.includes(nome))).map(nome=>`<option value="${nome}">${nome}</option>`).join('');
+  const linhas = grimorio.map((nome,idx)=>`<tr><td><strong>${nome}</strong></td><td><button class="small secondary" onclick="removerMagiaGrimorio(${idx})">Remover</button></td></tr>`).join('');
+  const pendencia = Math.max(0, minimo - grimorio.length);
+  return `<div class="info-box"><h3>Grimório do mago</h3><p><strong>Magias no grimório:</strong> ${grimorio.length}/${minimo} mínimo esperado</p>${pendencia?`<p class="muted">Ainda faltam ${pendencia} magia(s) no grimório para o nível atual.</p>`:''}<div class="inline-row"><div><select id="circuloGrimorio" onchange="atualizarOpcoesGrimorio()">${circleOptions}</select></div><div style="flex:1"><select id="novaMagiaGrimorio"><option value="">Selecione</option>${magiaOptions}</select></div><div><button onclick="adicionarMagiaGrimorio()">Adicionar ao grimório</button></div></div><p class="muted">Magias preparadas do mago agora devem vir do grimório. Esta etapa não altera o banco completo de magias.</p><table class="table-like"><tbody>${linhas||'<tr><td>Nenhuma magia no grimório.</td><td></td></tr>'}</tbody></table></div>`;
+}
+
+function atualizarOpcoesGrimorio(){
+  const selectCirculo = document.getElementById('circuloGrimorio');
+  const selectMagia = document.getElementById('novaMagiaGrimorio');
+  if(!selectCirculo || !selectMagia) return;
+  window.__wizardSpellbookCircle = selectCirculo.value;
+  const listas = listarMagiasDisponiveisPorCirculo();
+  const grimorio = listaNomesGrimorioMago();
+  const lista = (listas[selectCirculo.value] || []).filter(nome=>!grimorio.includes(nome));
+  selectMagia.innerHTML = '<option value="">Selecione</option>' + lista.map(nome=>`<option value="${nome}">${nome}</option>`).join('');
+}
+
+function adicionarMagiaGrimorio(){
+  if(state.personagem.classe !== 'mago') return;
+  const nome = document.getElementById('novaMagiaGrimorio')?.value || '';
+  if(!nome) return;
+  state.personagem.magia = state.personagem.magia || {};
+  state.personagem.magia.grimorio = listaNomesGrimorioMago();
+  if(!state.personagem.magia.grimorio.includes(nome)) state.personagem.magia.grimorio.push(nome);
+  if(typeof resolveAndApplyRuleEngineWizardSpellbook === 'function') resolveAndApplyRuleEngineWizardSpellbook(state.personagem);
+  salvarEstado();
+  renderMagia();
+}
+
+function removerMagiaGrimorio(idx){
+  if(state.personagem.classe !== 'mago') return;
+  const magia = state.personagem.magia || {};
+  const grimorio = listaNomesGrimorioMago();
+  const nome = grimorio[idx];
+  if(!nome) return;
+  const preparadas = (magia.listaMagias || []).map(normalizarNomeMagiaFicha);
+  if(preparadas.includes(nome)) return alert('Remova essa magia das preparadas antes de remover do grimório.');
+  grimorio.splice(idx, 1);
+  magia.grimorio = grimorio;
+  if(typeof resolveAndApplyRuleEngineWizardSpellbook === 'function') resolveAndApplyRuleEngineWizardSpellbook(state.personagem);
+  salvarEstado();
+  renderMagia();
+}
+
+function obterResumoMagiasSubclasseEngine(){
+  if(typeof getRuleEngineSubclassSpellSummary === 'function') return getRuleEngineSubclassSpellSummary(state.personagem);
+  const magia = state.personagem.magia || {};
+  return {
+    alwaysPrepared: magia.magiasSubclasseSemprePreparadas || [],
+    expandedList: magia.magiasSubclasseListaExpandida || [],
+    bonusKnown: magia.magiasSubclasseConhecidasBonus || [],
+    bonusCantrips: magia.truquesSubclasseBonus || []
+  };
+}
+
+function normalizarNomeMagiaComparacao(valor){
+  return normalizarNomeMagiaFicha(valor).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+
+function nomesMagiasSubclasseAutomaticas(){
+  if(typeof getRuleEngineAutomaticSubclassSpellNames === 'function') return getRuleEngineAutomaticSubclassSpellNames(state.personagem);
+  const resumo = obterResumoMagiasSubclasseEngine();
+  return [...new Set([...(resumo.alwaysPrepared||[]), ...(resumo.bonusKnown||[])].map(normalizarNomeMagiaComparacao).filter(Boolean))];
+}
+
+function quantidadeMagiasSelecionadasQueContam(){
+  if(typeof getRuleEngineCountableSelectedSpells === 'function') return getRuleEngineCountableSelectedSpells(state.personagem);
+  const automaticas = new Set(nomesMagiasSubclasseAutomaticas());
+  return (state.personagem.magia.listaMagias || []).filter(nome=>!automaticas.has(normalizarNomeMagiaComparacao(nome))).length;
+}
+
+function filtrarOpcoesMagiaSelecionaveis(lista, circulo){
+  const magia = state.personagem.magia || {};
+  const automaticas = new Set(nomesMagiasSubclasseAutomaticas());
+  const escolhidas = new Set((magia.listaMagias || []).map(normalizarNomeMagiaComparacao));
+  let out = (lista || []).filter(nome=>!escolhidas.has(normalizarNomeMagiaComparacao(`${nome} (${circulo}º)`)) && !automaticas.has(normalizarNomeMagiaComparacao(nome)));
+  if(state.personagem.classe === 'mago'){
+    const grimorio = listaNomesGrimorioMago();
+    out = out.filter(nome=>grimorio.includes(nome));
+  }
+  return out;
+}
+
+function renderListaSimplesMagias(titulo, lista, descricao){
+  if(!lista || !lista.length) return '';
+  return `<div class="card-nested"><p><strong>${titulo}</strong></p><p>${lista.join(" • ")}</p><p class="muted">${descricao}</p></div>`;
+}
+
+function renderPainelMagiasSubclasseEngine(){
+  const resumo = obterResumoMagiasSubclasseEngine();
+  const blocos = [
+    renderListaSimplesMagias('Sempre preparadas', resumo.alwaysPrepared, 'Entram automaticamente e não contam no limite de magias preparadas.'),
+    renderListaSimplesMagias('Lista expandida', resumo.expandedList, 'Entram como opções de escolha; contam normalmente se forem escolhidas.'),
+    renderListaSimplesMagias('Conhecidas bônus', resumo.bonusKnown, 'Entram automaticamente e não contam no limite de magias conhecidas.'),
+    renderListaSimplesMagias('Truques bônus', resumo.bonusCantrips, 'Entram separadas dos truques escolhidos pela classe.')
+  ].filter(Boolean).join('');
+  if(!blocos) return '';
+  return `<div class="info-box"><h3>Magias bônus da subclasse</h3>${blocos}<p class="muted">Etapa 11: os benefícios foram separados por tipo para não consumir limite errado.</p></div>`;
+}
+
+function renderMagia(){
+  const magia=state.personagem.magia;
+  if(!magia.ehConjurador){
+    return renderPassoBase("Magia",`<div class="info-box"><p>Classe sem magia.</p></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`);
+  }
+  const listas=listarMagiasDisponiveisPorCirculo();
+  const circulosDisponiveis=Object.keys(listas).filter(k=>k!=="truques" && Number(k)<=obterMaiorCirculoDisponivel());
+  const truquesRestantes=Math.max(0,(magia.cantripsConhecidos||0)-(magia.listaTruques||[]).length);
+  const limiteMagias=magia.tipo==="conhecidas" ? (magia.magiasConhecidas||0) : (magia.magiasPreparadas||0);
+  const magiasSelecionadasQueContam = quantidadeMagiasSelecionadasQueContam();
+  const magiasRestantes=Math.max(0, limiteMagias-magiasSelecionadasQueContam);
+  const truqueSelecionado=(window.__spellPreview?.tipo==='truque' ? window.__spellPreview.nome : '');
+  const circuloSelecionado=String(window.__spellPreview?.tipo==='magia' && window.__spellPreview.circulo ? window.__spellPreview.circulo : (circulosDisponiveis[0] || '1'));
+  const truqueOptions=(listas.truques||[]).filter(nome=>!(magia.listaTruques||[]).includes(nome)).map(nome=>`<option value="${nome}" ${truqueSelecionado===nome?'selected':''}>${nome}</option>`).join("");
+  const circleOptions=circulosDisponiveis.map(k=>`<option value="${k}" ${circuloSelecionado===String(k)?'selected':''}>${k}º círculo</option>`).join("");
+  const magiaSelecionada=(window.__spellPreview?.tipo==='magia' ? window.__spellPreview.nome : '');
+  const opcoesMagiaBase = listas[circuloSelecionado] || [];
+  const opcoesMagiaPermitidas = filtrarOpcoesMagiaSelecionaveis(opcoesMagiaBase, circuloSelecionado);
+  const magiaOptions=opcoesMagiaPermitidas.map(nome=>`<option value="${nome}" ${magiaSelecionada===nome?'selected':''}>${nome}</option>`).join("");
+  const truques=(magia.listaTruques||[]).map((nome,idx)=>renderLinhaMagiaDetalhada(nome, idx, 'truque')).join("");
+  const magias=(magia.listaMagias||[]).map((nome,idx)=>renderLinhaMagiaDetalhada(nome, idx, 'magia')).join("");
+  const painelGrimorio = renderPainelGrimorioMago(listas, circulosDisponiveis);
+  const painelMagiasSubclasse = renderPainelMagiasSubclasseEngine();
+  renderPassoBase("Magia",`<div class="grid grid-2"><div class="spell-card"><p><strong>Habilidade:</strong> ${ATTRIBUTE_LABELS[magia.habilidade]}</p><p><strong>CD:</strong> ${magia.cdMagia}</p><p><strong>Ataque mágico:</strong> ${valorFormatadoBonus(magia.ataqueMagia)}</p><p><strong>Espaços:</strong> ${magia.espacos.map((v,i)=>v?`${i+1}º ${magia.espacosAtuais[i]||0}/${v}`:"").filter(Boolean).join(" • ") || "Nenhum"}</p>${magia.nivelEspacosBruxo?`<p><strong>Círculo dos espaços:</strong> ${magia.nivelEspacosBruxo}º</p>`:""}</div><div class="spell-card"><p><strong>Truques:</strong> ${(magia.listaTruques||[]).length}/${magia.cantripsConhecidos}</p><p><strong>${magia.tipo==="conhecidas"?"Magias conhecidas":"Magias preparadas"}:</strong> ${magiasSelecionadasQueContam}/${limiteMagias}</p><p><strong>Truques restantes:</strong> ${truquesRestantes}</p><p><strong>Magias restantes:</strong> ${magiasRestantes}</p></div></div>${painelMagiasSubclasse}<div id="spellDetailPreview">${renderPainelDetalheMagiaSelecionadaAtual()}</div>${painelGrimorio}<div class="grid grid-2"><div><h3>Truques</h3><div class="inline-row"><div style="flex:1"><select id="novoTruque" onchange="selecionarPreviewTruque()"><option value="">Selecione</option>${truqueOptions}</select></div><div><button onclick="adicionarMagia('truque')" ${(truquesRestantes<=0)?'disabled':''}>Adicionar</button></div></div><table class="table-like"><tbody>${truques||'<tr><td>Nenhum truque adicionado.</td><td></td></tr>'}</tbody></table></div><div><h3>Magias</h3><div class="inline-row"><div><select id="circuloMagia" onchange="atualizarOpcoesMagia(); selecionarPreviewMagia()">${circleOptions}</select></div><div style="flex:1"><select id="novaMagia" onchange="selecionarPreviewMagia()"><option value="">Selecione</option>${magiaOptions}</select></div><div><button onclick="adicionarMagia('magia')" ${(magiasRestantes<=0)?'disabled':''}>Adicionar</button></div></div><p class="muted">Mostrando apenas círculos disponíveis no nível atual. Para mago, aparecem apenas magias já registradas no grimório.</p><table class="table-like"><tbody>${magias||'<tr><td>Nenhuma magia adicionada.</td><td></td></tr>'}</tbody></table></div></div><div class="actions"><button class="secondary" onclick="voltarPara(8)">Voltar</button><button onclick="confirmarMagia()">Avançar</button></div>`);
+}
 
 function normalizarBuscaFicha(valor){
   return String(valor || '')

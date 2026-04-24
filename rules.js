@@ -237,6 +237,128 @@ function getCharacterBonusSpellSummary(personagem){
 
 function calcularPontosUsadosPointBuy(valores){ let total=0; for(const attr of ATTRIBUTE_LIST){ total += ATTRIBUTE_METHODS.pointbuy.custos[valores[attr]] ?? 999; } return total; }
 
+
+// ===============================
+// ETAPA 12 - AUDITORIA E CORREÇÃO DE LISTAS DE MAGIAS
+// ===============================
+// Corrige nomes, remove entradas de classe incorretas e amplia as listas por classe.
+// Mantém apenas nomes e metadados mínimos; não adiciona descrições completas de livros.
+const RULE_SPELL_ALIASES_STAGE12 = {
+  "Dobre dos Mortos":"Dobrar os Mortos", "Corda de Flechas":"Cordão de Flechas", "Segurar Pessoa":"Imobilizar Pessoa",
+  "Searing Smite":"Destruição Lancinante", "Bestow Curse":"Rogar Maldição", "Fear":"Medo", "Blur":"Nublar",
+  "Branding Smite":"Destruição Marcante", "Blink":"Piscar", "Elemental Weapon":"Arma Elemental",
+  "Phantasmal Killer":"Assassino Fantasmagórico", "Staggering Smite":"Destruição Estonteante",
+  "Banishing Smite":"Destruição Banidora", "Cone of Cold":"Cone de Frio", "Chama Sagrada Flamejante":"Coluna de Chamas",
+  "Disguise Self":"Disfarçar-se", "Rope Trick":"Truque de Corda", "Greater Invisibility":"Invisibilidade Maior",
+  "Seeming":"Similaridade", "Protection from Evil and Good":"Proteção contra o Bem e o Mal", "Misty Step":"Passo Nebuloso",
+  "Haste":"Velocidade", "Banishment":"Banimento", "Teleportation Circle":"Círculo de Teletransporte",
+  "Zone of Truth":"Zona da Verdade", "Magic Circle":"Círculo Mágico", "Hold Monster":"Imobilizar Monstro",
+  "Otiluke's Resilient Sphere":"Esfera Resiliente de Otiluke", "Wall of Force":"Muralha de Força",
+  "Dominate Beast":"Dominar Besta", "Stoneskin":"Pele de Pedra", "Cloudkill":"Névoa Mortal", "Dominate Person":"Dominar Pessoa",
+  "Banimento da Vida":"Perdição", "Pedra da Pele":"Pele de Pedra"
+};
+function ruleSpellCanonicalStage12(nome){ return RULE_SPELL_ALIASES_STAGE12[nome] || nome; }
+function ruleSpellKeyStage12(nome){ return String(ruleSpellCanonicalStage12(nome)||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim(); }
+function ruleSpellUniqueStage12(lista){ const seen=new Set(); const out=[]; (lista||[]).forEach(n=>{ const v=ruleSpellCanonicalStage12(String(n||"").trim()); const k=ruleSpellKeyStage12(v); if(!v||seen.has(k)) return; seen.add(k); out.push(v); }); return out; }
+function ruleSpellMergeStage12(target, patch){ Object.entries(patch||{}).forEach(([classe,data])=>{ target[classe]=target[classe]||{truques:[]}; Object.entries(data||{}).forEach(([circle,spells])=>{ target[classe][circle]=ruleSpellUniqueStage12([...(target[classe][circle]||[]), ...(spells||[])]); }); }); }
+function ruleSpellRemoveStage12(target, deny){ Object.entries(deny||{}).forEach(([classe,data])=>{ Object.entries(data||{}).forEach(([circle,spells])=>{ const denied=new Set((spells||[]).map(ruleSpellKeyStage12)); target[classe][circle]=(target[classe][circle]||[]).filter(n=>!denied.has(ruleSpellKeyStage12(n))); }); }); }
+function ruleSpellNormalizeAllStage12(target){ Object.entries(target||{}).forEach(([classe,data])=>{ Object.entries(data||{}).forEach(([circle,spells])=>{ target[classe][circle]=ruleSpellUniqueStage12(spells); }); }); }
+
+const RULE_SPELL_DENYLIST_STAGE12 = {
+  bardo:{1:["Absorver Elementos","Catapulta","Raio do Caos"], truques:["Controlar Chamas","Moldar Terra"]},
+  bruxo:{1:["Absorver Elementos","Catapulta"], 4:["Esfera Aquosa"], truques:["Moldar Terra"]},
+  clerigo:{1:["Causar Medo"],2:["Pirotecnia"],5:["Estática Sináptica"], truques:["Moldar Terra"]},
+  druida:{2:["Sopro do Dragão"],3:["Forma Gasosa"],7:["Miragem Arcana"]},
+  paladino:{1:["Absorver Elementos"],2:["Montaria Fantasmagórica"]},
+  patrulheiro:{2:["Sopro do Dragão"]}
+};
+
+const RULE_SPELL_PATCH_STAGE12 = {
+  bardo:{
+    truques:["Amizade","Consertar","Ilusão Menor","Luz","Luzes Dançantes","Mãos Mágicas","Mensagem","Prestidigitação","Proteção contra Lâminas","Zombaria Viciosa","Rajada Trovejante"],
+    1:["Compreender Idiomas","Detectar Magia","Disfarçar-se","Enfeitiçar Pessoa","Heroísmo","Identificar","Imagem Silenciosa","Onda Trovejante","Perdição","Queda Suave","Riso Histérico de Tasha","Servo Invisível","Tremor de Terra"],
+    2:["Acalmar Emoções","Arrombar","Cegueira/Surdez","Detectar Pensamentos","Esquentar Metal","Força Fantasmagórica","Invisibilidade","Localizar Objeto","Nublar","Restauração Menor","Soneca","Ver o Invisível","Zona da Verdade"],
+    3:["Dissipar Magia","Enviar Mensagem","Falar com os Mortos","Falar com Plantas","Glifo de Vigilância","Idiomas","Imagem Maior","Medo","Névoa Fétida","Padrão Hipnótico","Pequena Cabana de Leomund","Rogar Maldição","Vento Trovejante"],
+    4:["Compulsão","Confusão","Invisibilidade Maior","Localizar Criatura","Movimentação Livre","Polimorfia","Porta Dimensional","Terreno Alucinatório"],
+    5:["Animar Objetos","Círculo de Teletransporte","Conhecimento Lendário","Curar Ferimentos em Massa","Dominar Pessoa","Estática Sináptica","Modificar Memória","Restauração Maior","Similaridade","Sonho"]
+  },
+  clerigo:{
+    truques:["Poupar os Mortos","Dobrar os Mortos","Palavra de Radiância"],
+    1:["Criar ou Destruir Água","Detectar o Bem e o Mal","Detectar Veneno e Doença","Infligir Ferimentos","Proteção contra o Bem e o Mal","Purificar Alimentos","Raio Guiador","Santuário","Cerimônia"],
+    2:["Acalmar Emoções","Augúrio","Cegueira/Surdez","Chama Contínua","Encontrar Armadilhas","Oração Curativa","Proteção contra Veneno","Repouso Gentil","Zona da Verdade"],
+    3:["Animar Mortos","Clarividência","Criar Alimentos","Dissipar Magia","Enviar Mensagem","Espíritos Guardiões","Falar com os Mortos","Glifo de Vigilância","Idiomas","Luz do Dia","Mesclar-se às Rochas","Proteção contra Energia","Remover Maldição","Revivificar"],
+    4:["Adivinhação","Banimento","Controlar Água","Guardião da Fé","Localizar Criatura","Moldar Rochas","Movimentação Livre","Proteção contra a Morte"],
+    5:["Coluna de Chamas","Comunhão","Conhecimento Lendário","Consagrar","Contágio","Curar Ferimentos em Massa","Dissipar o Bem e o Mal","Praga de Insetos","Restauração Maior","Reviver os Mortos"]
+  },
+  druida:{
+    truques:["Druidismo","Consertar","Criar Fogueira","Controlar Chamas","Moldar Terra","Moldar Água","Rajada Trovejante","Selvageria Primal"],
+    1:["Absorver Elementos","Armadilha","Bom Fruto","Criar ou Destruir Água","Detectar Magia","Detectar Veneno e Doença","Névoa Obscurecente","Onda Trovejante","Passos Longos","Purificar Alimentos","Salto","Faca de Gelo","Tremor de Terra"],
+    2:["Augúrio","Calor Metálico","Crescer Espinhos","Encontrar Armadilhas","Lâmina Flamejante","Localizar Animais ou Plantas","Localizar Objeto","Mensageiro Animal","Raio Lunar","Sentido Bestial","Visão no Escuro","Espírito Curativo","Prender à Terra","Rajada de Pó","Vento Protetor"],
+    3:["Ampliar Plantas","Chamar Relâmpagos","Conjurar Animais","Dissipar Magia","Fundir-se às Rochas","Luz do Dia","Muralha de Vento","Nevasca","Proteção contra Energia","Respirar na Água","Onda de Maré","Muralha de Areia","Muralha de Água","Vento Trovejante"],
+    4:["Confusão","Conjurar Seres da Floresta","Controlar Água","Dominar Besta","Inseto Gigante","Localizar Criatura","Movimentação Livre","Muralha de Fogo","Moldar Rochas","Polimorfia","Tempestade de Gelo","Esfera Aquosa","Guardião da Natureza"],
+    5:["Concha Antivida","Comunhão com a Natureza","Conjurar Elemental","Contágio","Curar Ferimentos em Massa","Despertar","Muralha de Pedra","Praga de Insetos","Reencarnação","Restauração Maior","Transmutar Rocha"]
+  },
+  feiticeiro:{
+    truques:["Borrifo Ácido","Luz","Luzes Dançantes","Mensagem","Proteção contra Lâminas","Raio de Fogo","Raio de Gelo","Toque Chocante","Criar Fogueira","Controlar Chamas","Moldar Terra","Moldar Água","Mordida Gélida","Rajada Trovejante"],
+    1:["Absorver Elementos","Catapulta","Causar Medo","Disfarçar-se","Enfeitiçar Pessoa","Imagem Silenciosa","Névoa Obscurecente","Onda Trovejante","Orbe Cromática","Raio Adoecente","Raio do Caos","Recuo Acelerado","Salto","Vitalidade Falsa","Faca de Gelo","Tremor de Terra"],
+    2:["Alterar-se","Aprimorar Habilidade","Arrombar","Cegueira/Surdez","Coroa da Loucura","Detectar Pensamentos","Escuridão","Levitação","Nublar","Passo Nebuloso","Patas de Aranha","Raio Ardente","Sugestão","Teia","Ver o Invisível","Lâmina Sombria","Espinho Mental","Sopro do Dragão","Passo Trovejante"],
+    3:["Bola de Fogo","Clarividência","Contramágica","Dissipar Magia","Forma Gasosa","Idiomas","Imagem Maior","Lentidão","Medo","Nevasca","Padrão Hipnótico","Proteção contra Energia","Raio de Relâmpago","Respirar na Água","Voo","Onda de Maré","Vento Trovejante"],
+    4:["Banimento","Confusão","Dominar Besta","Invisibilidade Maior","Muralha de Fogo","Pele de Pedra","Polimorfia","Porta Dimensional","Tempestade de Gelo","Esfera Aquosa","Esfera Tempestuosa"],
+    5:["Animar Objetos","Cone de Frio","Criação","Dominar Pessoa","Névoa Mortal","Telecinese","Círculo de Teletransporte","Estática Sináptica","Distante Passo"]
+  },
+  mago:{
+    truques:["Borrifo Ácido","Luzes Dançantes","Mensagem","Proteção contra Lâminas","Raio de Fogo","Raio de Gelo","Criar Fogueira","Controlar Chamas","Dobrar os Mortos","Infestação","Moldar Terra","Moldar Água","Pedra Mágica","Rajada Trovejante"],
+    1:["Alarme","Absorver Elementos","Armadilha","Catapulta","Causar Medo","Faca de Gelo","Tremor de Terra","Onda Trovejante","Orbe Cromática","Queda Suave","Raio Adoecente","Recuo Acelerado","Riso Histérico de Tasha","Servo Invisível","Vitalidade Falsa"],
+    2:["Alterar-se","Arrombar","Aumentar/Reduzir","Boca Encantada","Cegueira/Surdez","Coroa da Loucura","Detectar Pensamentos","Despedaçar","Escuridão","Esfera Flamejante","Força Fantasmagórica","Levitação","Localizar Objeto","Nublar","Patas de Aranha","Raio Ardente","Sugestão","Teia","Ver o Invisível","Lâmina Sombria","Espinho Mental","Prender à Terra","Sopro do Dragão","Passo Trovejante","Pirotecnia","Rajada de Pó","Vento Protetor"],
+    3:["Animar Mortos","Clarividência","Contramágica","Dissipar Magia","Enviar Mensagem","Forma Gasosa","Glifo de Vigilância","Idiomas","Imagem Maior","Lentidão","Medo","Nevasca","Padrão Hipnótico","Pequena Cabana de Leomund","Proteção contra Energia","Raio de Relâmpago","Remover Maldição","Respirar na Água","Rogar Maldição","Toque Vampírico","Velocidade","Voo","Onda de Maré","Muralha de Areia","Muralha de Água","Vento Trovejante"],
+    4:["Assassino Fantasmagórico","Banimento","Confusão","Controlar Água","Escudo de Fogo","Esfera Resiliente de Otiluke","Fabricar","Invisibilidade Maior","Localizar Criatura","Moldar Rochas","Muralha de Fogo","Olho Arcano","Pele de Pedra","Polimorfia","Porta Dimensional","Tempestade de Gelo","Terreno Alucinatório","Esfera Aquosa","Esfera Tempestuosa"],
+    5:["Animar Objetos","Cone de Frio","Conjurar Elemental","Contato Extraplanar","Criação","Dominar Pessoa","Mão de Bigby","Muralha de Energia","Muralha de Pedra","Névoa Mortal","Similaridade","Sonho","Telecinese","Círculo de Teletransporte","Estática Sináptica","Transmutar Rocha","Distante Passo"]
+  },
+  bruxo:{
+    truques:["Amizade","Proteção contra Lâminas","Criar Fogueira","Dobrar os Mortos","Infestação","Pedra Mágica","Rajada Trovejante"],
+    1:["Armadura de Agathys","Braços de Hadar","Compreender Idiomas","Enfeitiçar Pessoa","Escrita Ilusória","Hex","Proteção contra o Bem e o Mal","Recuo Acelerado","Repreensão Infernal","Servo Invisível","Causar Medo"],
+    2:["Coroa da Loucura","Despedaçar","Escuridão","Imobilizar Pessoa","Invisibilidade","Passo Nebuloso","Patas de Aranha","Raio do Enfraquecimento","Sugestão","Lâmina Sombria","Espinho Mental","Passo Trovejante"],
+    3:["Contramágica","Dissipar Magia","Fome de Hadar","Forma Gasosa","Imagem Maior","Medo","Padrão Hipnótico","Remover Maldição","Toque Vampírico","Voo","Invocar Demônios Menores","Vento Trovejante"],
+    4:["Banimento","Murchar","Porta Dimensional","Terreno Alucinatório","Raio Enlouquecedor","Invocar Demônio Maior"],
+    5:["Contato Extraplanar","Imobilizar Monstro","Sonho","Vidência","Estática Sináptica","Distante Passo"]
+  },
+  paladino:{
+    1:["Detectar Magia","Detectar o Bem e o Mal","Detectar Veneno e Doença","Destruição Lancinante","Destruição Trovejante","Proteção contra o Bem e o Mal","Purificar Alimentos","Cerimônia"],
+    2:["Encontrar Montaria","Destruição Marcante","Proteção contra Veneno","Zona da Verdade"],
+    3:["Aura de Vitalidade","Círculo Mágico","Criar Alimentos","Destruição Cegante","Dissipar Magia","Luz do Dia","Remover Maldição","Revivificar"],
+    4:["Aura de Pureza","Aura de Vida","Banimento","Localizar Criatura","Proteção contra a Morte","Destruição Estonteante"],
+    5:["Círculo de Poder","Destruição Banidora","Dissipar o Bem e o Mal","Geas","Onda Destrutiva","Reviver os Mortos"]
+  },
+  patrulheiro:{
+    1:["Alarme","Amizade Animal","Bom Fruto","Detectar Magia","Detectar Veneno e Doença","Marca do Caçador","Névoa Obscurecente","Passos Longos","Salto","Absorver Elementos","Ataque Zéfiro","Armadilha"],
+    2:["Cordão de Flechas","Crescer Espinhos","Encontrar Armadilhas","Localizar Animais ou Plantas","Localizar Objeto","Mensageiro Animal","Sentido Bestial","Silêncio","Visão no Escuro","Espírito Curativo","Prender à Terra"],
+    3:["Conjurar Animais","Conjurar Barragem","Falar com Plantas","Flecha Relampejante","Luz do Dia","Muralha de Vento","Proteção contra Energia","Respirar na Água","Flechas Flamejantes","Vento Trovejante"],
+    4:["Conjurar Seres da Floresta","Localizar Criatura","Movimentação Livre","Pele de Pedra","Guardião da Natureza"],
+    5:["Aljava Veloz","Comunhão com a Natureza","Conjurar Saraivada","Passo Arbóreo","Golpe do Vento Cortante"]
+  }
+};
+
+const RULE_AUDITED_SUBCLASS_BONUS_SPELLS_STAGE12 = {
+  'clerigo:forge': {1:["Identificar","Destruição Lancinante"],3:["Arma Mágica","Calor Metálico"],5:["Arma Elemental","Proteção contra Energia"],7:["Fabricar","Muralha de Fogo"],9:["Animar Objetos","Criação"]},
+  'clerigo:grave': {1:["Perdição","Vitalidade Falsa"],3:["Repouso Gentil","Raio do Enfraquecimento"],5:["Revivificar","Toque Vampírico"],7:["Murchar","Proteção contra a Morte"],9:["Concha Antivida","Reviver os Mortos"]},
+  'paladino:conquest': {3:["Armadura de Agathys","Comando"],5:["Imobilizar Pessoa","Arma Espiritual"],9:["Rogar Maldição","Medo"],13:["Dominar Besta","Pele de Pedra"],17:["Névoa Mortal","Dominar Pessoa"]},
+  'paladino:redemption': {3:["Santuário","Sono"],5:["Acalmar Emoções","Imobilizar Pessoa"],9:["Contramágica","Padrão Hipnótico"],13:["Esfera Resiliente de Otiluke","Pele de Pedra"],17:["Imobilizar Monstro","Muralha de Força"]},
+  'patrulheiro:gloom_stalker': {3:["Disfarçar-se"],5:["Truque de Corda"],9:["Medo"],13:["Invisibilidade Maior"],17:["Similaridade"]},
+  'patrulheiro:horizon_walker': {3:["Proteção contra o Bem e o Mal"],5:["Passo Nebuloso"],9:["Velocidade"],13:["Banimento"],17:["Círculo de Teletransporte"]},
+  'patrulheiro:monster_slayer': {3:["Proteção contra o Bem e o Mal"],5:["Zona da Verdade"],9:["Círculo Mágico"],13:["Banimento"],17:["Imobilizar Monstro"]},
+  'bruxo:celestial': {1:["Curar Ferimentos","Raio Guiador"],3:["Esfera Flamejante","Restauração Menor"],5:["Luz do Dia","Bola de Fogo"],7:["Guardião da Fé","Muralha de Fogo"],9:["Coluna de Chamas","Restauração Maior"]},
+  'bruxo:hexblade': {1:["Escudo","Destruição Colérica"],3:["Nublar","Destruição Marcante"],5:["Piscar","Arma Elemental"],7:["Assassino Fantasmagórico","Destruição Estonteante"],9:["Destruição Banidora","Cone de Frio"]}
+};
+
+ruleSpellNormalizeAllStage12(SPELL_LISTS);
+ruleSpellRemoveStage12(SPELL_LISTS, RULE_SPELL_DENYLIST_STAGE12);
+ruleSpellMergeStage12(SPELL_LISTS, RULE_SPELL_PATCH_STAGE12);
+Object.keys(XANATHAR_SUBCLASS_BONUS_SPELLS).forEach(key=>delete XANATHAR_SUBCLASS_BONUS_SPELLS[key]);
+Object.assign(XANATHAR_SUBCLASS_BONUS_SPELLS, RULE_AUDITED_SUBCLASS_BONUS_SPELLS_STAGE12);
+function auditSpellListIntegrity(){ const errors=[]; const warnings=[]; ["bardo","bruxo","clerigo","druida","feiticeiro","mago","paladino","patrulheiro"].forEach(c=>{ if(!SPELL_LISTS[c]) errors.push(`Lista ausente: ${c}`); if(!Array.isArray(SPELL_LISTS[c]?.truques)) warnings.push(`Truques ausentes: ${c}`); }); ["paladino","patrulheiro"].forEach(c=>{ if((SPELL_LISTS[c]?.truques||[]).length) errors.push(`${c} não deveria ter truques de classe no PHB/Xanathar.`); }); return {errors,warnings}; }
+const SPELL_LIST_AUDIT_SUMMARY = auditSpellListIntegrity();
+
+
 const SPELL_DETAILS = Object.fromEntries(Object.entries(SPELL_LISTS).map(([classe,data])=>{
   const mapped={};
   Object.entries(data).forEach(([circulo,lista])=>{
