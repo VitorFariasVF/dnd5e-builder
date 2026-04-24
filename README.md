@@ -69,28 +69,6 @@ Basta:
 
 ---
 
-## 🖼️ Prévia do projeto
-
-> Espaço recomendado para imagens do projeto no repositório.
-
-Você pode adicionar depois arquivos como:
-
-```text
-/docs/images/home.png
-/docs/images/builder.png
-/docs/images/magic.png
-/docs/images/pdf.png
-```
-
-Exemplo de seção pronta:
-
-```md
-![Tela inicial](docs/images/home.png)
-![Criação da ficha](docs/images/builder.png)
-![Tela de magias](docs/images/magic.png)
-![Exportação PDF](docs/images/pdf.png)
-```
-
 ---
 
 ## 🧩 Principais recursos
