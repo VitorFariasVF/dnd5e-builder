@@ -32,7 +32,7 @@ function validarPointBuy(valores){
 }
 
 function personagemEhProficienteComArmadura(armor){
-  const profs = state.personagem.proficienciasClasse || [];
+  const profs = (typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
   if(!armor) return false;
   if(armor.tipo === "nenhuma") return true;
   if(profs.includes("Todas as armaduras")) return true;
@@ -42,7 +42,7 @@ function personagemEhProficienteComArmadura(armor){
   return false;
 }
 function personagemEhProficienteComArma(weapon){
-  const profs = state.personagem.proficienciasClasse || [];
+  const profs = (typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
   if(!weapon) return false;
   if(profs.includes("Armas simples") && weapon.categoria === "simples") return true;
   if(profs.includes("Armas marciais") && weapon.categoria === "marcial") return true;
@@ -58,7 +58,8 @@ function validarCombate(){
     if(!personagemEhProficienteComArmadura(ARMORS[c.armadura])) return "A classe não é proficiente com a armadura escolhida.";
     if(!personagemEhProficienteComArma(WEAPONS[c.armaPrincipal])) return "A classe não é proficiente com a arma principal escolhida.";
     if(!personagemEhProficienteComArma(WEAPONS[c.armaSecundaria])) return "A classe não é proficiente com a arma secundária escolhida.";
-    if(c.escudo && !(state.personagem.proficienciasClasse || []).includes("Escudos")) return "A classe não é proficiente com escudos.";
+    const profs = (typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []);
+    if(c.escudo && !profs.includes("Escudos")) return "A classe não é proficiente com escudos.";
   }
   return null;
 }
