@@ -922,6 +922,54 @@ function resolveKnownSpellLimit(context, profile) {
   return profile.knownSpellProgression[context.level - 1] || 0;
 }
 
+// ===============================
+// ETAPA 21 - PV E SLOTS CONSOLIDADOS
+// ===============================
+// PV oficial: nível 1 usa dado de vida cheio + modificador de Constituição.
+// Níveis seguintes usam a média fixa da classe + modificador de Constituição,
+// com mínimo de 1 PV ganho por nível.
+function resolveHitPoints(context, abilityScores) {
+  const classData = (typeof CLASSES !== "undefined" && context.classKey) ? CLASSES[context.classKey] : null;
+  const hitDie = Number(classData?.dadoVida || context.personagem?.dadoVida || 0);
+  const level = Math.max(1, Math.min(20, Number(context.level || 1)));
+  const conScore = Number(context.personagem?.atributos?.constituicao || (abilityScores && abilityScores.final && abilityScores.final.constituicao) || 10);
+  const conMod = ruleCalcMod(conScore);
+
+  if (!hitDie) {
+    return { hitDie: 0, level, constitutionModifier: conMod, firstLevel: 0, perLevel: 0, max: null };
+  }
+
+  const firstLevel = Math.max(1, hitDie + conMod);
+  const fixedAverage = Math.floor(hitDie / 2) + 1;
+  const perLevel = Math.max(1, fixedAverage + conMod);
+  const max = firstLevel + Math.max(0, level - 1) * perLevel;
+  return { hitDie, level, constitutionModifier: conMod, firstLevel, perLevel, max };
+}
+
+function formatRuleEngineSpellSlotSummary(personagem) {
+  const context = buildRuleContext(personagem || {});
+  const profile = resolveSpellcastingProfile(context);
+  if (!profile) return "Não";
+  if (context.level < (profile.startsAtLevel || 1)) return "Sem espaços";
+
+  const resolved = resolveSpellSlots(context, profile);
+  if (profile.casterType === "pact") {
+    const pactCount = Number((resolved.pactSlots || [0])[0] || 0);
+    return pactCount
+      ? `${pactCount} espaço(s) de pacto de ${resolved.pactSlotLevel || 1}º círculo`
+      : "Sem espaços";
+  }
+
+  const parts = (resolved.slots || [])
+    .map((value, index) => Number(value || 0) ? `${index + 1}º:${Number(value || 0)}` : "")
+    .filter(Boolean);
+  return parts.length ? parts.join(" • ") : "Sem espaços";
+}
+
+function getRuleEngineSpellSlotSummary(personagem) {
+  return formatRuleEngineSpellSlotSummary(personagem || {});
+}
+
 function resolveCantrips(context, profile) {
   const current = context.currentMagic || {};
   const classLimit = profile && profile.cantripProgression && context.level >= (profile.startsAtLevel || 1) ? (profile.cantripProgression[context.level - 1] || 0) : 0;
@@ -1252,6 +1300,7 @@ function buildLegacyPatch(resolved) {
     savesClasseEfetivos: (resolved.proficiencies || {}).savingThrows || [],
     periciasFinaisEfetivas: (resolved.proficiencies || {}).skills || [],
     ferramentasEfetivas: (resolved.proficiencies || {}).tools || [],
+    pvMax: resolved.hitPoints ? resolved.hitPoints.max : null,
     magia: {
       ehConjurador: !!spellcasting.ehConjurador,
       habilidade: spellcasting.ability,
@@ -1283,12 +1332,13 @@ function resolveCharacterRules(personagem) {
   const asi = resolveAbilityScoreImprovements(context);
   const proficiencies = resolveProficiencies(context);
   const spellcasting = resolveSpellcasting(context, abilityScores);
+  const hitPoints = resolveHitPoints(context, abilityScores);
   const feats = resolveFeatGrants(context);
   const race = resolveRaceGrants(context);
   const background = resolveBackgroundGrants(context);
   const classGrants = resolveClassGrants(context);
   const subclass = resolveSubclassGrants(context);
-  const resolved = { abilityScores, asi, proficiencies, spellcasting, feats, race, background, classGrants, subclass };
+  const resolved = { abilityScores, asi, proficiencies, spellcasting, hitPoints, feats, race, background, classGrants, subclass };
   const audit = auditCharacterRules(context, resolved);
   return { ok: audit.errors.length === 0, version: RULE_ENGINE_VERSION, resolved: { ...resolved, warnings: audit.warnings, errors: audit.errors }, legacyPatch: buildLegacyPatch(resolved) };
 }
@@ -1298,6 +1348,19 @@ function applyRuleEngineAbilityPatch(personagem, resultado) {
   const patch = resultado.legacyPatch;
   if (patch.atributos) personagem.atributos = { ...(personagem.atributos || {}), ...patch.atributos };
   return personagem;
+}
+
+function applyRuleEngineHitPointPatch(personagem, resultado) {
+  if (!personagem || !resultado || !resultado.legacyPatch) return personagem;
+  const pv = resultado.legacyPatch.pvMax;
+  if (Number.isFinite(Number(pv)) && Number(pv) > 0) personagem.pvMax = Number(pv);
+  return personagem;
+}
+
+function resolveAndApplyRuleEngineHitPoints(personagem) {
+  if (!personagem || typeof resolveCharacterRules !== "function") return personagem;
+  const resultado = resolveCharacterRules(personagem);
+  return applyRuleEngineHitPointPatch(personagem, resultado);
 }
 
 function applyRuleEngineCantripPatch(personagem, resultado) {
@@ -1427,6 +1490,7 @@ function applyRuleEngineLegacyPatch(personagem, resultado) {
   if (patch.savesClasseEfetivos) personagem.savesClasseEfetivos = patch.savesClasseEfetivos;
   if (patch.periciasFinaisEfetivas) personagem.periciasFinaisEfetivas = patch.periciasFinaisEfetivas;
   if (patch.ferramentasEfetivas) personagem.ferramentasEfetivas = patch.ferramentasEfetivas;
+  if (Number.isFinite(Number(patch.pvMax)) && Number(patch.pvMax) > 0) personagem.pvMax = Number(patch.pvMax);
   if (patch.magia) personagem.magia = { ...(personagem.magia || {}), ...patch.magia };
   return personagem;
 }
