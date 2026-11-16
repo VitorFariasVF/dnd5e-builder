@@ -2,7 +2,7 @@
 
 # ⚔️ D&D 5e Builder
 
-**Criador de fichas de D&D 5e em HTML, CSS e JavaScript puro, com salvamento local, histórico de personagens, PDF A4 e exportação para Foundry VTT.**
+**Criador de fichas de D&D 5e em HTML, CSS e JavaScript puro, com salvamento local, histórico de personagens, PDF A4 estilizado e exportação para Foundry VTT e Roll20.**
 
 [![Demo Online](https://img.shields.io/badge/🚀%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge)](https://vitorfariasvf.github.io/dnd5e-builder/)
 [![Repositório](https://img.shields.io/badge/📦%20Código-GitHub-111827?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
@@ -28,9 +28,21 @@ Ele foi criado para servir como um **mini builder de ficha** com foco em:
 - persistência local com **LocalStorage**
 - histórico de personagens
 - edição posterior da ficha
-- exportação para **Foundry VTT**
-- exportação em **PDF A4**
+- tipo de ficha: **D&D 5e 2014 (PHB + Xanathar)** ou **D&D 2024 (5.5)**
+- exportação para **Foundry VTT** e **Roll20**
+- exportação em **PDF A4** com arte estilizada
 - base extensível para livros e módulos futuros
+
+---
+
+## Tipo de ficha: 2014 × 2024
+
+Na tela inicial escolha a edição das regras:
+
+- **D&D 5e (2014) — PHB + Xanathar:** raças com bônus de atributo, antecedentes do PHB, subclasses de Xanathar (a ficha avisa que são opcionais).
+- **D&D 2024 (5.5):** espécies sem bônus, 16 antecedentes com +2/+1 ou +1/+1/+1 e talento de origem, subclasse no nível 3. **Classes, subclasses e magias ainda usam o catálogo 2014**, e a ficha mostra um aviso.
+
+A exportação marca a mesma edição em todos os itens (Foundry `source.rules`).
 
 ---
 
@@ -108,7 +120,7 @@ Basta:
 - **JavaScript Vanilla**
 - **LocalStorage**
 
-Sem framework. Sem backend. Sem build obrigatório.
+Sem framework. Sem backend. Sem build obrigatório. Visual no padrão [VF Tools](https://github.com/VitorFariasVF/VF-Tools) (tema escuro/claro; arquivos em `vf/`).
 
 ---
 
@@ -118,13 +130,16 @@ Sem framework. Sem backend. Sem build obrigatório.
 .
 ├── index.html
 ├── style.css
+├── vf/                  (padrão visual VF Tools, cópias)
 ├── main.js
 ├── ui.js
 ├── state.js
 ├── rules.js
 ├── rules-engine.js
 ├── validator.js
-├── export.js
+├── export.js            (Foundry VTT e backup)
+├── export-pdf.js        (PDF A4 estilizado)
+├── export-roll20.js     (Roll20: script de API e lista de campos)
 ├── storage.js
 └── README.md
 ```
@@ -136,7 +151,9 @@ Sem framework. Sem backend. Sem build obrigatório.
 - `state.js` → estrutura base do estado do personagem
 - `validator.js` → validações e selo final da ficha
 - `ui.js` → renderização, etapas e interação da interface
-- `export.js` → exportação para Foundry JSON, backup e PDF
+- `export.js` → exportação para Foundry JSON e backup
+- `export-pdf.js` → ficha em PDF A4 com moldura, escudos de atributo e brasão de classe
+- `export-roll20.js` → script de API do Roll20 e lista de campos da ficha OGL
 - `storage.js` → persistência com LocalStorage
 - `main.js` → inicialização da aplicação
 
@@ -221,13 +238,22 @@ Fluxo recomendado no Foundry:
 3. escolher **Import Data**
 4. selecionar o JSON exportado pelo projeto
 
-### 2. Backup JSON
+### 2. Roll20
+
+O Roll20 não importa um arquivo de ficha sozinho. O app gera:
+
+- **Script de API** (`*_roll20_api.js`): requer campanha com assinatura **Pro** e a ficha **D&D 5E by Roll20**. Cole em *Scripts de API* e digite no chat o comando `!vf-importar-<nome>` que aparece no topo do arquivo.
+- **Lista de campos** (`*_roll20_campos.json`): valores prontos para copiar à mão ou usar em um importador de terceiros.
+
+> Testado só em uma API simulada, não em uma campanha real. Confira os campos depois de importar (veja `AUDITORIA_FICHAS_VTT.md`).
+
+### 3. Backup JSON
 
 Exporta o estado interno do projeto para reabrir a ficha depois.
 
-### 3. PDF
+### 4. PDF
 
-Gera uma ficha visual pensada para **A4**, usando a impressão do navegador.
+Gera uma ficha em **2 páginas A4** (moldura, escudos de atributo, brasão da classe), usando a impressão do navegador. Funciona offline.
 
 ---
 

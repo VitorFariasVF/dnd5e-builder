@@ -1,70 +1,80 @@
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;color:#222}
-.container{max-width:1120px;margin:0 auto;padding:24px 16px 48px}.app-header{text-align:center;margin-bottom:24px}.subtitle{color:#666;margin-top:8px}
-.card{background:#fff;border-radius:10px;padding:20px;margin:0 auto 20px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-.grid{display:grid;gap:12px}.grid-2{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.grid-3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
-label{display:block;font-weight:bold;margin-bottom:6px}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-top:4px}
-textarea{min-height:90px;resize:vertical}button{border:0;border-radius:8px;padding:10px 14px;cursor:pointer;background:#222;color:#fff;margin-right:8px;margin-top:4px}button.secondary{background:#666}button.small{padding:6px 10px;font-size:.9rem}
-.alert{padding:12px;border-radius:8px;margin:12px 0}.alert.error{background:#ffe5e5;color:#8b0000}.alert.warning{background:#fff7db;color:#7a5b00}.alert.success{background:#e4f6e7;color:#156b2d}
-.info-box{background:#f7f7f7;border:1px solid #e4e4e4;border-radius:8px;padding:12px;margin-top:12px}.step-indicator{margin-bottom:16px;color:#555;font-size:.95rem}.actions{margin-top:16px}
-ul.clean{padding-left:18px;margin:8px 0}.inline-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.table-like{width:100%;border-collapse:collapse;margin-top:12px}.table-like td,.table-like th{border-bottom:1px solid #e6e6e6;padding:8px 6px;text-align:left}
-.attack-card,.spell-card,.card-nested{border:1px solid #e4e4e4;border-radius:10px;padding:12px;background:#fafafa;margin-top:12px}.muted{color:#666}.chip{display:inline-block;background:#ececec;border-radius:999px;padding:5px 8px;margin:4px 6px 0 0;font-size:.9rem}
-.point-buy-row{display:flex;align-items:center;gap:8px;margin:6px 0}.score{min-width:40px;text-align:center;font-weight:bold}.chips{margin-top:8px}
+/* D&D 5e Builder — estilos próprios, sobre o padrão VF Tools (identidade Editorial).
+   Só tokens (vf/tokens.css) e componentes (vf/components.css): nenhuma cor, espaço ou raio solto.
+   Regras: DESIGN.md do VF-Tools. Escuro por padrão; claro com data-theme="light". */
+:root{--tool-w:1120px}
 
-.checkbox-row{display:flex;align-items:center;gap:8px;font-weight:normal}.checkbox-row input{width:auto;margin:0}.chip-ok{background:#e4f6e7;color:#156b2d}.chip-no{background:#ffe5e5;color:#8b0000}button:disabled{opacity:.55;cursor:not-allowed}
-.resource-card{display:flex;justify-content:space-between;align-items:center;gap:12px}.resource-controls{display:flex;align-items:center;gap:8px}.resource-value{min-width:64px;text-align:center;font-weight:bold}
+/* Casca da ferramenta */
+#app{display:block}
+#app .card{margin-bottom:var(--s5)}
+#app h2{margin-top:0}
+#app h3{font:500 1.15rem var(--font-display);margin:var(--s5) 0 var(--s2)}
+#app h4{font:600 1rem var(--font);margin:var(--s4) 0 var(--s2)}
+.hint{color:var(--muted);font-size:.85rem;margin:var(--s2) 0 0}
 
+/* Grades do app */
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
 
-.toolbar-inline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
-.danger{background:#a12b2b;color:#fff;border-color:#8a2020;}
-.danger:hover{filter:brightness(1.05);}
+/* Campos: rótulo sempre visível, alvo ≥ 44px */
+#app label{display:block;font-weight:600;font-size:.9rem;margin-bottom:var(--s2)}
+#app input:not([type=checkbox]):not([type=radio]),#app select,#app textarea{width:100%;min-height:44px;margin-top:var(--s1);padding:var(--s2) var(--s4);font:inherit;font-size:1rem;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+#app textarea{min-height:6rem;resize:vertical}
+#app input:focus,#app select:focus,#app textarea:focus{border-color:var(--accent)}
+#app input[type=checkbox],#app input[type=radio]{width:1.25rem;height:1.25rem;margin:0;accent-color:var(--accent)}
+#app label.checkbox-row,.checkbox-row{display:flex;align-items:center;gap:var(--s2);font-weight:400;min-height:44px;margin-bottom:0}
+fieldset.rules-pick{border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s3) var(--s4);margin:0 0 var(--s4)}
+fieldset.rules-pick legend{font:500 1.05rem var(--font-display);padding:0 var(--s2)}
 
-.toolbar-wrap {
-  gap: 0.75rem;
-  flex-wrap: wrap;
+/* Botões: o padrão é a ação principal (âmbar); .secondary é contorno. Um principal por tela. */
+#app button{min-height:44px;margin:var(--s1) var(--s2) var(--s1) 0;padding:0 var(--s5);display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);font:600 .9rem var(--font);color:var(--accent-ink);background:var(--accent);border:1px solid var(--accent);border-radius:var(--r-pill);cursor:pointer;transition:border-color var(--dur),transform var(--dur) var(--ease)}
+#app button:hover{transform:translateY(-1px)}
+#app button.secondary,#app button.small,#app .point-buy-row button,#app .resource-controls button{color:var(--text);background:transparent;border-color:var(--line)}
+#app button.secondary:hover,#app button.small:hover,#app .point-buy-row button:hover,#app .resource-controls button:hover{border-color:var(--accent)}
+#app button.small{min-height:40px;padding:0 var(--s4);font-size:.85rem}
+#app button.danger{color:var(--danger);background:transparent;border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
+#app button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.actions{margin-top:var(--s5);display:flex;flex-wrap:wrap;gap:var(--s2)}
+
+/* Avisos: sempre com texto, cor é só reforço */
+.alert{padding:var(--s3) var(--s4);border-radius:var(--r-md);margin:var(--s3) 0;border:1px solid var(--line)}
+.alert.error{color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,var(--surface));border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
+.alert.warning{color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,var(--surface));border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.alert.success{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface));border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
+
+/* Blocos de informação */
+.info-box,.attack-card,.spell-card,.card-nested{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s3) var(--s4);margin-top:var(--s3)}
+.card-pending{border-color:var(--warn)}
+.step-indicator{color:var(--muted);font-size:.9rem}
+ul.clean{padding-left:var(--s5);margin:var(--s2) 0}
+.muted{color:var(--muted)}
+.table-like{width:100%;border-collapse:collapse;margin-top:var(--s3)}
+.table-like td,.table-like th{border-bottom:1px solid var(--line);padding:var(--s2) var(--s1);text-align:left}
+
+/* Chips do app são rótulos (não botões) */
+.chips{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s2)}
+#app .chip{display:inline-block;min-height:0;padding:var(--s1) var(--s3);font-size:.85rem;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:var(--r-pill);cursor:default}
+#app .chip:hover{border-color:var(--line)}
+#app .chip-ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
+#app .chip-no{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
+
+/* Point Buy, recursos, linha de campos */
+.point-buy-row{display:flex;align-items:center;gap:var(--s2);margin:var(--s2) 0}
+.score{min-width:2.5rem;text-align:center;font-weight:700}
+.inline-row{display:flex;gap:var(--s2);align-items:end;flex-wrap:wrap}
+.resource-card{display:flex;justify-content:space-between;align-items:center;gap:var(--s3)}
+.resource-controls{display:flex;align-items:center;gap:var(--s2)}
+.resource-value{min-width:4rem;text-align:center;font-weight:700}
+
+/* Barra de ferramentas e histórico */
+.toolbar-inline{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
+.toolbar-wrap{gap:var(--s3)}
+.toolbar-actions{display:flex;gap:var(--s2);flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+.history-list{display:grid;gap:var(--s3);margin-top:var(--s4)}
+.history-item{display:flex;justify-content:space-between;gap:var(--s4);align-items:center;padding:var(--s3) var(--s4);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
+.history-actions{display:flex;gap:var(--s2);flex-wrap:wrap;justify-content:flex-end}
+
+@media(max-width:640px){
+  .history-item{flex-direction:column;align-items:stretch}
+  .history-actions,.toolbar-actions{justify-content:stretch}
+  #app button{flex:1 1 auto}
 }
-
-.toolbar-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  margin-left: auto;
-}
-
-.history-list {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
-  background: rgba(255,255,255,0.03);
-}
-
-.history-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-@media (max-width: 720px) {
-  .history-item {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .history-actions,
-  .toolbar-actions {
-    justify-content: stretch;
-  }
-}
-
-.card-pending{border-color:#e4b24a;background:#fffaf0;}

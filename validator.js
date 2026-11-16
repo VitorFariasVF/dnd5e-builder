@@ -1,5 +1,11 @@
 function calcularMod(valor){ return Math.floor((valor-10)/2); }
-function validarOrigem(){ return state.personagem.origem ? null : "Selecione uma origem."; }
+function validarOrigem(){
+  if(!state.personagem.origem) return "Selecione uma origem.";
+  if(getRulesEdition()==="2024"){
+    if(!calcularBonusOrigem2024(state.personagem.origem, state.personagem.bonusOrigem2024)) return "Distribua os bônus de atributo do antecedente (+2/+1 ou +1/+1/+1 entre os 3 atributos listados).";
+  }
+  return null;
+}
 function validarRaca(){ return state.personagem.raca ? null : "Selecione uma raça."; }
 function validarClasse(){ if(!state.personagem.classe) return "Selecione uma classe."; if((state.personagem.nivel||1) < 1 || (state.personagem.nivel||1) > 20) return "O nível precisa ficar entre 1 e 20."; const nivel=state.personagem.nivel||1; const unlock=getSubclassUnlockLevel(state.personagem.classe); if(state.modo === "A" && nivel >= unlock && getSubclassOptions(state.personagem.classe).length && !state.personagem.subclasse) return "Selecione uma subclasse para esse nível."; return null; }
 
@@ -41,12 +47,19 @@ function personagemEhProficienteComArmadura(armor){
   if(armor.tipo === "pesada" && (profs.includes("Armaduras pesadas") || profs.includes("Todas as armaduras"))) return true;
   return false;
 }
-function personagemEhProficienteComArma(weapon){
-  const profs = (state.personagem.proficienciasClasseEfetivas && state.personagem.proficienciasClasseEfetivas.length) ? state.personagem.proficienciasClasseEfetivas : ((typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []));
+/* Normaliza para comparar nomes/proficiências: sem acento, minúsculas, plural simples → singular. */
+function normalizarTermoProficiencia(texto){
+  return String(texto||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()
+    .split(/\s+/).map(w => w.replace(/(oes|aes)$/,"ao").replace(/s$/,"")).join(" ");
+}
+function personagemEhProficienteComArma(weapon, personagem){
+  const pers = personagem || state.personagem;
+  const profs = (pers.proficienciasClasseEfetivas && pers.proficienciasClasseEfetivas.length) ? pers.proficienciasClasseEfetivas : ((typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(pers) : (pers.proficienciasClasse || []));
   if(!weapon) return false;
   if(profs.includes("Armas simples") && weapon.categoria === "simples") return true;
   if(profs.includes("Armas marciais") && weapon.categoria === "marcial") return true;
-  return profs.some(p => weapon.nome.toLowerCase().includes(p.toLowerCase().replace(/[ãs]/g,"a")) || p.toLowerCase().includes(weapon.nome.toLowerCase()));
+  const nomeArma = normalizarTermoProficiencia(weapon.nome);
+  return profs.some(p => normalizarTermoProficiencia(p) === nomeArma);
 }
 
 function validarCombate(){
@@ -208,6 +221,13 @@ function validarPersonagemCompleto(){
   if(state.personagem.subclasse && (state.personagem.habilidadesSubclasseAtivas || []).length === 0) avisos.push("A subclasse escolhida ainda não carregou traços ativos para o nível atual.");
   if(!state.personagem.subclasse && (state.personagem.nivel||1) >= getSubclassUnlockLevel(state.personagem.classe) && getSubclassOptions(state.personagem.classe).length) avisos.push("Há uma subclasse disponível para o nível atual e ela ainda não foi escolhida.");
   if(state.personagem.progressao.ataquesPorAcao !== getAttacksPerAction(state.personagem.classe, state.personagem.nivel||1)) avisos.push("Os ataques por ação não foram sincronizados com a progressão da classe.");
+
+  if(getRulesEdition()==="2024"){
+    avisos.push("Ficha 2024 (5.5): espécie, antecedente, bônus de atributo, talento de origem e subclasse no nível 3 seguem o Livro do Jogador 2024. Características de classe, subclasses e magias ainda vêm do catálogo 2014 (sem Maestria em Arma nem os recursos novos de classe) — revise a ficha na mesa.");
+    if(!state.personagem.talentoOrigem && state.personagem.origem) avisos.push("O talento de origem do antecedente ainda não foi registrado.");
+  } else if(state.personagem.subclasse && (getSubclassByKey(state.personagem.classe, state.personagem.subclasse)||{}).source === "XGtE"){
+    avisos.push("Subclasse de Xanathar's Guide to Everything (fonte opcional): confirme com o mestre se a mesa permite.");
+  }
 
   const oficial = erros.length === 0 && !state.personagem.customizado;
   const status = oficial ? "oficial" : (erros.length === 0 ? "customizado" : "invalido");

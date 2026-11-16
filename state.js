@@ -1,6 +1,7 @@
 function createInitialState(){
   return {
     modo:null,
+    regras:"2014",
     etapa:1,
     currentHistoryId:null,
     personagem:{
@@ -36,6 +37,8 @@ function createInitialState(){
       ferramentasEfetivas:[],
       idiomas:0,
       caracteristicaOrigem:null,
+      talentoOrigem:"",
+      bonusOrigem2024:{formato:"2_1",mais2:"",mais1:"",tres:[]},
       bonusPericias:{},
       atributosBase:{forca:15,destreza:14,constituicao:13,inteligencia:12,sabedoria:10,carisma:8},
       atributos:{forca:15,destreza:14,constituicao:13,inteligencia:12,sabedoria:10,carisma:8},
@@ -62,6 +65,7 @@ const state = createInitialState();
 function ensureStateShape(){
   const fresh = createInitialState();
   state.modo ??= fresh.modo;
+  state.regras = (state.regras === "2024") ? "2024" : "2014";
   state.etapa ??= fresh.etapa;
   state.currentHistoryId ??= fresh.currentHistoryId;
   state.personagem = Object.assign({}, fresh.personagem, state.personagem || {});
@@ -73,7 +77,9 @@ function ensureStateShape(){
   state.personagem.progressao = Object.assign({}, fresh.personagem.progressao, state.personagem.progressao || {});
   state.personagem.opcoesClasse = Object.assign({}, fresh.personagem.opcoesClasse, state.personagem.opcoesClasse || {});
   if(!Array.isArray(state.personagem.opcoesClasse.asi)) state.personagem.opcoesClasse.asi = [];
+  state.personagem.bonusOrigem2024 = Object.assign({}, fresh.personagem.bonusOrigem2024, state.personagem.bonusOrigem2024 || {});
   delete state.personagem.caracteristicas;
+  if(typeof aplicarCatalogoRegras === "function") aplicarCatalogoRegras(state.regras);
 }
 
 

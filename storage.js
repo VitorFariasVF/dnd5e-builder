@@ -1,23 +1,48 @@
+/* Armazenamento no padrão VF Tools: tudo fica em localStorage na chave "vf-tools:dnd5e-builder:v1"
+   (via VFTool, vf/tool.js), sempre com try/catch. Dados antigos (chaves "criacao_dnd_5e*") são migrados
+   na primeira leitura e a chave antiga é removida. Sem VFTool (testes em Node), cai para as chaves antigas. */
+const LEGACY_STATE_KEY = "criacao_dnd_5e";
+const LEGACY_HISTORY_KEY = "criacao_dnd_5e_history_v1";
+
+function vfLer(chave, legado){
+  try {
+    if(typeof VFTool !== "undefined"){
+      const atual = VFTool.get(chave, null);
+      if(atual !== null && atual !== undefined) return atual;
+      const raw = localStorage.getItem(legado);
+      if(raw){ const migrado = JSON.parse(raw); VFTool.set(chave, migrado); localStorage.removeItem(legado); return migrado; }
+      return null;
+    }
+    const raw = localStorage.getItem(legado);
+    return raw ? JSON.parse(raw) : null;
+  } catch(err){ console.warn("Falha ao ler dados salvos:", err); return null; }
+}
+function vfGravar(chave, valor, legado){
+  try {
+    if(typeof VFTool !== "undefined") VFTool.set(chave, valor);
+    else localStorage.setItem(legado, JSON.stringify(valor));
+  } catch(err){ console.warn("Falha ao salvar dados:", err); }
+}
+function vfRemover(chave, legado){
+  try {
+    localStorage.removeItem(legado);
+    if(typeof VFTool !== "undefined") VFTool.set(chave, null);
+  } catch(err){ console.warn("Falha ao limpar dados:", err); }
+}
+
 function salvarEstado(){
   ensureStateShape();
-  localStorage.setItem("criacao_dnd_5e", JSON.stringify(state));
+  vfGravar("estado", state, LEGACY_STATE_KEY);
 }
 function carregarEstado(){
-  const raw = localStorage.getItem("criacao_dnd_5e");
-  if(!raw) return;
-  try {
-    const parsed = JSON.parse(raw);
-    if(parsed && typeof parsed === "object"){
-      Object.assign(state, parsed);
-      ensureStateShape();
-    }
-  } catch(err){
-    console.warn("Falha ao carregar estado salvo:", err);
+  const parsed = vfLer("estado", LEGACY_STATE_KEY);
+  if(parsed && typeof parsed === "object"){
+    Object.assign(state, parsed);
+    ensureStateShape();
   }
 }
-function limparEstado(){ localStorage.removeItem("criacao_dnd_5e"); }
+function limparEstado(){ vfRemover("estado", LEGACY_STATE_KEY); }
 
-const CHARACTER_HISTORY_KEY = 'criacao_dnd_5e_history_v1';
 
 function makeSerializableStateSnapshot(){
   ensureStateShape();
@@ -25,18 +50,12 @@ function makeSerializableStateSnapshot(){
 }
 
 function getCharacterHistory(){
-  try {
-    const raw = localStorage.getItem(CHARACTER_HISTORY_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.warn('Falha ao ler histórico de personagens:', err);
-    return [];
-  }
+  const lista = vfLer("historico", LEGACY_HISTORY_KEY);
+  return Array.isArray(lista) ? lista : [];
 }
 
 function saveCharacterHistory(history){
-  localStorage.setItem(CHARACTER_HISTORY_KEY, JSON.stringify(history || []));
+  vfGravar("historico", history || [], LEGACY_HISTORY_KEY);
 }
 
 function generateHistoryId(){
@@ -91,7 +110,7 @@ function deleteCharacterFromHistory(historyId){
 }
 
 function clearCharacterHistory(){
-  localStorage.removeItem(CHARACTER_HISTORY_KEY);
+  vfRemover("historico", LEGACY_HISTORY_KEY);
   state.currentHistoryId = null;
 }
 

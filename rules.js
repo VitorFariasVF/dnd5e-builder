@@ -53,7 +53,7 @@ const CLASSES = {
   bardo:{nome:"Bardo",dadoVida:8,saves:["Destreza","Carisma"],proficiencias:["Armaduras leves","Armas simples","Bestas de mão","Espadas longas","Rapieiras","Espadas curtas","Três instrumentos musicais"],equipamento:["Rapieira ou espada longa ou arma simples","Instrumento musical","Armadura de couro"],escolhaPericias:{quantidade:3,opcoes:Object.keys(SKILLS)}},
   bruxo:{nome:"Bruxo",dadoVida:8,saves:["Sabedoria","Carisma"],proficiencias:["Armaduras leves","Armas simples"],equipamento:["Besta leve ou arma simples","Bolsa de componentes ou foco arcano","Armadura de couro","Duas adagas"],escolhaPericias:{quantidade:2,opcoes:["Arcanismo","Enganação","História","Intimidação","Investigação","Natureza","Religião"]}},
   clerigo:{nome:"Clérigo",dadoVida:8,saves:["Sabedoria","Carisma"],proficiencias:["Armaduras leves","Armaduras médias","Escudos","Armas simples"],equipamento:["Maça ou martelo de guerra","Armadura de escamas ou couro ou cota de malha","Escudo"],escolhaPericias:{quantidade:2,opcoes:["História","Intuição","Medicina","Persuasão","Religião"]}},
-  druida:{nome:"Druida",dadoVida:8,saves:["Inteligência","Sabedoria"],proficiencias:["Armaduras leves","Armaduras médias","Escudos","Clavas","Adagas","Dardos","Azagaias","Maças","Bordões","Cimitarras","Foices","Fundas","Kit de herbalismo"],equipamento:["Escudo de madeira ou arma simples","Cimitarra ou arma corpo a corpo simples","Armadura de couro"],escolhaPericias:{quantidade:2,opcoes:["Arcanismo","Adestrar Animais","Intuição","Medicina","Natureza","Percepção","Religião","Sobrevivência"]}},
+  druida:{nome:"Druida",dadoVida:8,saves:["Inteligência","Sabedoria"],proficiencias:["Armaduras leves","Armaduras médias","Escudos","Clavas","Adagas","Dardos","Azagaias","Maças","Bordões","Cimitarras","Foices curtas","Fundas","Lanças","Kit de herbalismo"],equipamento:["Escudo de madeira ou arma simples","Cimitarra ou arma corpo a corpo simples","Armadura de couro"],escolhaPericias:{quantidade:2,opcoes:["Arcanismo","Adestrar Animais","Intuição","Medicina","Natureza","Percepção","Religião","Sobrevivência"]}},
   feiticeiro:{nome:"Feiticeiro",dadoVida:6,saves:["Constituição","Carisma"],proficiencias:["Adagas","Dardos","Fundas","Bordões","Bestas leves"],equipamento:["Besta leve ou arma simples","Duas adagas"],escolhaPericias:{quantidade:2,opcoes:["Arcanismo","Enganação","Intuição","Intimidação","Persuasão","Religião"]}},
   guerreiro:{nome:"Guerreiro",dadoVida:10,saves:["Força","Constituição"],proficiencias:["Todas as armaduras","Escudos","Armas simples","Armas marciais"],equipamento:["Cota de malha ou couro","Arma marcial e escudo ou duas armas marciais","Besta leve ou machadinhas"],escolhaPericias:{quantidade:2,opcoes:["Acrobacia","Adestrar Animais","Atletismo","História","Intuição","Intimidação","Percepção","Sobrevivência"]}},
   ladino:{nome:"Ladino",dadoVida:8,saves:["Destreza","Inteligência"],proficiencias:["Armaduras leves","Armas simples","Bestas de mão","Espadas longas","Rapieiras","Espadas curtas","Ferramentas de ladrão"],equipamento:["Rapieira ou espada curta","Arco curto ou espada curta","Armadura de couro","Duas adagas"],escolhaPericias:{quantidade:4,opcoes:["Acrobacia","Atletismo","Atuação","Enganação","Furtividade","Intimidação","Investigação","Intuição","Percepção","Persuasão","Prestidigitação"]}},
@@ -65,25 +65,67 @@ const CLASSES = {
 
 const ARMORS = {
   sem_armadura:{nome:"Sem armadura",tipo:"nenhuma",baseCA:10,dex:"full",peso:0,precoGp:0,tags:["sem armadura"]},
+  acolchoada:{nome:"Armadura acolchoada",tipo:"leve",baseCA:11,dex:"full",peso:8,precoGp:5,desvantagemFurtividade:true,tags:["leve","tecido"]},
   couro:{nome:"Armadura de couro",tipo:"leve",baseCA:11,dex:"full",peso:10,precoGp:10,tags:["leve","couro"]},
   couro_batido:{nome:"Armadura de couro batido",tipo:"leve",baseCA:12,dex:"full",peso:13,precoGp:45,tags:["leve","couro"]},
   gibao_peles:{nome:"Gibão de peles",tipo:"media",baseCA:12,dex:"max2",peso:12,precoGp:10,tags:["média","pele"]},
-  cota_escamas:{nome:"Cota de escamas",tipo:"media",baseCA:14,dex:"max2",peso:45,precoGp:50,tags:["média","metal"]},
-  cota_malha:{nome:"Cota de malha",tipo:"pesada",baseCA:16,dex:"none",peso:55,precoGp:75,tags:["pesada","metal"]}
+  camisa_malha:{nome:"Camisa de malha",tipo:"media",baseCA:13,dex:"max2",peso:20,precoGp:50,tags:["média","metal"]},
+  cota_escamas:{nome:"Cota de escamas",tipo:"media",baseCA:14,dex:"max2",peso:45,precoGp:50,desvantagemFurtividade:true,tags:["média","metal"]},
+  peitoral:{nome:"Peitoral",tipo:"media",baseCA:14,dex:"max2",peso:20,precoGp:400,tags:["média","metal"]},
+  meia_armadura:{nome:"Meia-armadura",tipo:"media",baseCA:15,dex:"max2",peso:40,precoGp:750,desvantagemFurtividade:true,tags:["média","metal"]},
+  cota_aneis:{nome:"Cota de anéis",tipo:"pesada",baseCA:14,dex:"none",peso:40,precoGp:30,desvantagemFurtividade:true,tags:["pesada","metal"]},
+  cota_malha:{nome:"Cota de malha",tipo:"pesada",baseCA:16,dex:"none",peso:55,precoGp:75,forcaMin:13,desvantagemFurtividade:true,tags:["pesada","metal"]},
+  talas:{nome:"Talas",tipo:"pesada",baseCA:17,dex:"none",peso:60,precoGp:200,forcaMin:15,desvantagemFurtividade:true,tags:["pesada","metal"]},
+  placas:{nome:"Placas",tipo:"pesada",baseCA:18,dex:"none",peso:65,precoGp:1500,forcaMin:15,desvantagemFurtividade:true,tags:["pesada","metal"]}
 };
 
+/* Armas do PHB (5e 2014). Crítico é sempre 20 natural com dados dobrados (x2): só o Campeão amplia a margem.
+   alcancePes/alcanceLongoPes: valores em pés para a exportação (Foundry/Roll20); alcance: texto em metros para a tela. */
+function _arma(nome,categoria,corpo,dano,tipoDano,peso,precoGp,props,extra){
+  const e=extra||{};
+  const ranged=!!e.ranged;
+  const finesse=props.includes("acuidade");
+  const tags=[categoria,ranged?"à distância":"corpo a corpo"].concat(props.filter(p=>!/^(munição|carga|arremesso)/.test(p)));
+  return Object.assign({nome,categoria,tipo:ranged?"à distância":"corpo a corpo",dano,tipoDano,alcance:e.alcance||"adjacente",peso,precoGp,critico:"20/x2",propriedades:props,finesse,ranged,versatile:e.versatile||null,tags},e.alcancePes?{alcancePes:e.alcancePes,alcanceLongoPes:e.alcanceLongoPes}:{});
+}
 const WEAPONS = {
-  adaga:{nome:"Adaga",categoria:"simples",tipo:"corpo a corpo",dano:"1d4",alcance:"adjacente",peso:1,precoGp:2,critico:"20/x2",propriedades:["acuidade","leve","arremesso 6/18"],finesse:true,ranged:false,versatile:null,tags:["simples","corpo a corpo","acuidade"]},
-  bordao:{nome:"Bordão",categoria:"simples",tipo:"corpo a corpo",dano:"1d6",alcance:"adjacente",peso:4,precoGp:0.2,critico:"20/x2",propriedades:["versátil 1d8"],finesse:false,ranged:false,versatile:"1d8",tags:["simples","corpo a corpo","versátil"]},
-  maca:{nome:"Maça",categoria:"simples",tipo:"corpo a corpo",dano:"1d6",alcance:"adjacente",peso:4,precoGp:5,critico:"20/x2",propriedades:[],finesse:false,ranged:false,versatile:null,tags:["simples","corpo a corpo"]},
-  espada_curta:{nome:"Espada curta",categoria:"marcial",tipo:"corpo a corpo",dano:"1d6",alcance:"adjacente",peso:2,precoGp:10,critico:"19-20/x2",propriedades:["acuidade","leve"],finesse:true,ranged:false,versatile:null,tags:["marcial","corpo a corpo","acuidade"]},
-  rapieira:{nome:"Rapieira",categoria:"marcial",tipo:"corpo a corpo",dano:"1d8",alcance:"adjacente",peso:2,precoGp:25,critico:"18-20/x2",propriedades:["acuidade"],finesse:true,ranged:false,versatile:null,tags:["marcial","corpo a corpo","acuidade"]},
-  espada_longa:{nome:"Espada longa",categoria:"marcial",tipo:"corpo a corpo",dano:"1d8",alcance:"adjacente",peso:3,precoGp:15,critico:"19-20/x2",propriedades:["versátil 1d10"],finesse:false,ranged:false,versatile:"1d10",tags:["marcial","corpo a corpo","versátil"]},
-  machado_grande:{nome:"Machado grande",categoria:"marcial",tipo:"corpo a corpo",dano:"1d12",alcance:"adjacente",peso:7,precoGp:30,critico:"20/x3",propriedades:["pesada","duas mãos"],finesse:false,ranged:false,versatile:null,tags:["marcial","corpo a corpo","pesada","duas mãos"]},
-  azagaia:{nome:"Azagaia",categoria:"simples",tipo:"corpo a corpo/à distância",dano:"1d6",alcance:"9/36 m",peso:2,precoGp:0.5,critico:"20/x2",propriedades:["arremesso"],finesse:false,ranged:true,versatile:null,tags:["simples","arremesso","à distância"]},
-  arco_curto:{nome:"Arco curto",categoria:"simples",tipo:"à distância",dano:"1d6",alcance:"24/96 m",peso:2,precoGp:25,critico:"20/x3",propriedades:["duas mãos","munição"],finesse:false,ranged:true,versatile:null,tags:["simples","à distância","duas mãos"]},
-  arco_longo:{nome:"Arco longo",categoria:"marcial",tipo:"à distância",dano:"1d8",alcance:"45/180 m",peso:2,precoGp:50,critico:"20/x3",propriedades:["pesada","duas mãos","munição"],finesse:false,ranged:true,versatile:null,tags:["marcial","à distância","duas mãos"]},
-  besta_leve:{nome:"Besta leve",categoria:"simples",tipo:"à distância",dano:"1d8",alcance:"24/96 m",peso:5,precoGp:25,critico:"19-20/x2",propriedades:["munição","duas mãos"],finesse:false,ranged:true,versatile:null,tags:["simples","à distância","duas mãos"]}
+  clava:_arma("Clava","simples",true,"1d4","contundente",2,0.1,["leve"]),
+  adaga:_arma("Adaga","simples",true,"1d4","perfurante",1,2,["acuidade","leve","arremesso 6/18"],{alcancePes:20,alcanceLongoPes:60}),
+  tacape:_arma("Tacape","simples",true,"1d8","contundente",10,0.2,["duas mãos"]),
+  machadinha:_arma("Machadinha","simples",true,"1d6","cortante",2,5,["leve","arremesso 6/18"],{alcancePes:20,alcanceLongoPes:60}),
+  azagaia:_arma("Azagaia","simples",true,"1d6","perfurante",2,0.5,["arremesso 9/36"],{alcance:"adjacente (arremesso 9/36 m)",alcancePes:30,alcanceLongoPes:120}),
+  martelo_leve:_arma("Martelo leve","simples",true,"1d4","contundente",2,2,["leve","arremesso 6/18"],{alcancePes:20,alcanceLongoPes:60}),
+  maca:_arma("Maça","simples",true,"1d6","contundente",4,5,[]),
+  bordao:_arma("Bordão","simples",true,"1d6","contundente",4,0.2,["versátil 1d8"],{versatile:"1d8"}),
+  foice_curta:_arma("Foice curta","simples",true,"1d4","cortante",2,1,["leve"]),
+  lanca:_arma("Lança","simples",true,"1d6","perfurante",3,1,["arremesso 6/18","versátil 1d8"],{versatile:"1d8",alcancePes:20,alcanceLongoPes:60}),
+  besta_leve:_arma("Besta leve","simples",false,"1d8","perfurante",5,25,["munição","carga","duas mãos"],{ranged:true,alcance:"24/96 m",alcancePes:80,alcanceLongoPes:320}),
+  dardo:_arma("Dardo","simples",false,"1d4","perfurante",0.25,0.05,["acuidade","arremesso 6/18"],{ranged:true,alcance:"6/18 m",alcancePes:20,alcanceLongoPes:60}),
+  arco_curto:_arma("Arco curto","simples",false,"1d6","perfurante",2,25,["munição","duas mãos"],{ranged:true,alcance:"24/96 m",alcancePes:80,alcanceLongoPes:320}),
+  funda:_arma("Funda","simples",false,"1d4","contundente",0,0.1,["munição"],{ranged:true,alcance:"9/36 m",alcancePes:30,alcanceLongoPes:120}),
+  machado_batalha:_arma("Machado de batalha","marcial",true,"1d8","cortante",4,10,["versátil 1d10"],{versatile:"1d10"}),
+  mangual:_arma("Mangual","marcial",true,"1d8","contundente",2,10,[]),
+  glaive:_arma("Glaive","marcial",true,"1d10","cortante",6,20,["pesada","alcance estendido","duas mãos"],{alcance:"adjacente (3 m)"}),
+  machado_grande:_arma("Machado grande","marcial",true,"1d12","cortante",7,30,["pesada","duas mãos"]),
+  espada_grande:_arma("Espada grande","marcial",true,"2d6","cortante",6,50,["pesada","duas mãos"]),
+  alabarda:_arma("Alabarda","marcial",true,"1d10","cortante",6,20,["pesada","alcance estendido","duas mãos"],{alcance:"adjacente (3 m)"}),
+  lanca_montaria:_arma("Lança de montaria","marcial",true,"1d12","perfurante",6,10,["alcance estendido","especial"],{alcance:"adjacente (3 m)"}),
+  espada_longa:_arma("Espada longa","marcial",true,"1d8","cortante",3,15,["versátil 1d10"],{versatile:"1d10"}),
+  malho:_arma("Malho","marcial",true,"2d6","contundente",10,10,["pesada","duas mãos"]),
+  maca_estrela:_arma("Maça estrela","marcial",true,"1d8","perfurante",4,15,[]),
+  pique:_arma("Pique","marcial",true,"1d10","perfurante",18,5,["pesada","alcance estendido","duas mãos"],{alcance:"adjacente (3 m)"}),
+  rapieira:_arma("Rapieira","marcial",true,"1d8","perfurante",2,25,["acuidade"]),
+  cimitarra:_arma("Cimitarra","marcial",true,"1d6","cortante",3,25,["acuidade","leve"]),
+  espada_curta:_arma("Espada curta","marcial",true,"1d6","perfurante",2,10,["acuidade","leve"]),
+  tridente:_arma("Tridente","marcial",true,"1d6","perfurante",4,5,["arremesso 6/18","versátil 1d8"],{versatile:"1d8",alcancePes:20,alcanceLongoPes:60}),
+  picareta_guerra:_arma("Picareta de guerra","marcial",true,"1d8","perfurante",2,5,[]),
+  martelo_guerra:_arma("Martelo de guerra","marcial",true,"1d8","contundente",2,15,["versátil 1d10"],{versatile:"1d10"}),
+  chicote:_arma("Chicote","marcial",true,"1d4","cortante",3,2,["acuidade","alcance estendido"],{alcance:"adjacente (3 m)"}),
+  zarabatana:_arma("Zarabatana","marcial",false,"1","perfurante",1,10,["munição","carga"],{ranged:true,alcance:"7,5/30 m",alcancePes:25,alcanceLongoPes:100}),
+  besta_mao:_arma("Besta de mão","marcial",false,"1d6","perfurante",3,75,["munição","leve","carga"],{ranged:true,alcance:"9/36 m",alcancePes:30,alcanceLongoPes:120}),
+  rede:_arma("Rede","marcial",false,"0","—",3,1,["especial","arremesso 1,5/4,5"],{ranged:true,alcance:"1,5/4,5 m",alcancePes:5,alcanceLongoPes:15}),
+  besta_pesada:_arma("Besta pesada","marcial",false,"1d10","perfurante",18,50,["munição","pesada","carga","duas mãos"],{ranged:true,alcance:"30/120 m",alcancePes:100,alcanceLongoPes:400}),
+  arco_longo:_arma("Arco longo","marcial",false,"1d8","perfurante",2,50,["munição","pesada","duas mãos"],{ranged:true,alcance:"45/180 m",alcancePes:150,alcanceLongoPes:600})
 };
 
 const ITEM_CATALOG = {
@@ -433,8 +475,8 @@ const CLASS_FEATURES = {
   ],
   guerreiro:[
     {level:1,nome:"Estilo de Luta",resumo:"Escolhe um estilo marcial permanente."},
-    {level:1,nome:"Surto de Ação",resumo:"Recupera fôlego para agir além do normal em combate."},
-    {level:2,nome:"Segundo Fôlego",resumo:"Recupera PV com um impulso de resistência."},
+    {level:1,nome:"Segundo Fôlego",resumo:"Recupera PV com um impulso de resistência."},
+    {level:2,nome:"Surto de Ação",resumo:"Recupera fôlego para agir além do normal em combate."},
     {level:3,nome:"Arquétipo Marcial",resumo:"Escolhe sua subclasse de guerreiro."},
     {level:5,nome:"Ataque Extra",resumo:"Pode atacar duas vezes com a ação de Ataque."}
   ],
@@ -797,8 +839,8 @@ const CLASS_RESOURCE_RULES = {
   paladino:[{id:'canalizar_divindade',nome:'Canalizar Divindade',recarga:'Descanso curto',formula:n=> n>=3?1:0}],
   patrulheiro:[{id:'sentido_primevo',nome:'Sentido Primevo',recarga:'Usa espaço de magia',formula:n=> n>=3?1:0}]
 };
-function getSubclassUnlockLevel(classe){ return SUBCLASS_UNLOCK_LEVEL[classe] || 99; }
-function getSubclassOptions(classe){ return SUBCLASS_OPTIONS[classe] || []; }
+function getSubclassUnlockLevel(classe){ if(getRulesEdition()==='2024' && CLASSES[classe]) return 3; return SUBCLASS_UNLOCK_LEVEL[classe] || 99; }
+function getSubclassOptions(classe){ const todas=SUBCLASS_OPTIONS[classe] || []; return getRulesEdition()==='2024' ? todas.filter(s=>s.source!=='XGtE') : todas; }
 function getSubclassByKey(classe, key){ return getSubclassOptions(classe).find(s=>s.key===key) || null; }
 function getSubclassFeaturesForLevel(classe, key, nivel){ const sub=getSubclassByKey(classe,key); return sub ? (sub.features||[]).filter(f=>f.level <= (nivel||1)) : []; }
 function getClassResources(classe, nivel, personagem){
@@ -824,6 +866,40 @@ function dedupeFeatureList(lista){
 Object.entries(COMPLETE_CLASS_FEATURE_PATCH).forEach(([classe, extras])=>{
   CLASS_FEATURES[classe] = dedupeFeatureList([...(CLASS_FEATURES[classe]||[]), ...extras]);
 });
+/* Correções do catálogo de habilidades de classe (auditoria): remove duplicatas por nome alternativo,
+   traduz nomes em inglês e inclui habilidades do PHB que faltavam. Nomes e níveis conferidos no PHB 2014. */
+const CLASS_FEATURE_FIXES = {
+  remover:{
+    barbaro:["Fúrias por descanso","Crítico Brutal (1 dado)"],
+    bardo:["Especialização adicional"],
+    bruxo:["Outro Patrono","Benção do Pacto"],
+    clerigo:["Conjuração Divina","Destruir Mortos-Vivos (ND 1/2)"],
+    druida:["Conjuração Druídica","Idioma Druídico","Forma Selvagem aprimorada"],
+    feiticeiro:["Conjuração Inata","Fonte da Magia"],
+    mago:["Conjuração Arcana"],
+    paladino:["Conjuração Sagrada","Mãos Curativas"],
+    patrulheiro:["Conjuração do Patrulheiro"]
+  },
+  renomear:{ bardo:{"Jack of All Trades":"Pau pra Toda Obra"} },
+  incluir:{
+    monge:[
+      {level:3,nome:"Desviar Projéteis",resumo:"Usa a reação para reduzir o dano de ataques à distância."},
+      {level:7,nome:"Mente Tranquila",resumo:"Encerra enfeitiçado ou amedrontado em si mesmo com uma ação."},
+      {level:13,nome:"Língua do Sol e da Lua",resumo:"Entende todos os idiomas falados e é entendido por qualquer criatura."},
+      {level:15,nome:"Corpo Atemporal",resumo:"Não envelhece de forma mágica e dispensa comida e água."}
+    ],
+    ladino:[{level:15,nome:"Mente Escorregadia",resumo:"Proficiência em salvaguardas de Sabedoria."}],
+    patrulheiro:[{level:18,nome:"Sentidos Selvagens",resumo:"Percebe criaturas invisíveis próximas e ataca sem desvantagem contra elas."}]
+  }
+};
+Object.keys(CLASS_FEATURES).forEach(classe=>{
+  const rem = new Set((CLASS_FEATURE_FIXES.remover[classe]||[]));
+  const ren = CLASS_FEATURE_FIXES.renomear[classe]||{};
+  const base = (CLASS_FEATURES[classe]||[]).filter(f=>!rem.has(f.nome)).map(f=>ren[f.nome]?Object.assign({},f,{nome:ren[f.nome]}):f);
+  const lista = dedupeFeatureList([...base, ...(CLASS_FEATURE_FIXES.incluir[classe]||[])]);
+  CLASS_FEATURES[classe] = lista.map((f,i)=>({f,i})).sort((a,b)=>(a.f.level-b.f.level)||(a.i-b.i)).map(x=>x.f);
+});
+
 Object.entries(COMPLETE_SUBCLASS_FEATURE_PATCH).forEach(([classe, patch])=>{
   const bucket = SUBCLASS_OPTIONS[classe] || [];
   bucket.forEach(sub=>{
@@ -1270,4 +1346,78 @@ function getSpellDetailForCharacter(classe, name, subclasse=null, nivel=1){
     resumo: summary,
     classesRelacionadas: [classe].filter(Boolean)
   };
+}
+
+
+/* ===== Tipo de ficha: D&D 5e (2014, PHB + Xanathar) × D&D 2024 (5.5, Livro do Jogador 2024) =====
+   Os catálogos BACKGROUNDS e RACES são trocados no lugar quando a edição muda (aplicarCatalogoRegras),
+   assim toda a interface e a validação continuam lendo as mesmas variáveis. */
+const RULESETS = {
+  "2014":{label:"D&D 5e (2014) — PHB + Xanathar",livro:"PHB",curto:"5e 2014"},
+  "2024":{label:"D&D 2024 (5.5) — Livro do Jogador 2024",livro:"PHB 2024",curto:"2024 (5.5)"}
+};
+function getRulesEdition(){ return (typeof state!=="undefined" && state && state.regras==="2024") ? "2024" : "2014"; }
+
+const BACKGROUNDS_2014 = JSON.parse(JSON.stringify(BACKGROUNDS));
+const RACES_2014 = JSON.parse(JSON.stringify(RACES));
+
+/* 2024: o antecedente dá +2/+1 ou +1/+1/+1 entre 3 atributos, 1 talento de origem, 2 perícias e 1 ferramenta;
+   a espécie não dá bônus de atributo. Todo personagem conhece Comum e mais 2 idiomas à escolha. */
+function _bg24(nome,atributos,talento,pericias,ferramentas){ return {nome,pericias,idiomas:2,ferramentas,caracteristica:"Talento de origem: "+talento,atributosOpcoes:atributos,talentoOrigem:talento}; }
+const BACKGROUNDS_2024 = {
+  acolito:_bg24("Acólito",["inteligencia","sabedoria","carisma"],"Iniciado em Magia (Clérigo)",["Intuição","Religião"],["Suprimentos de calígrafo"]),
+  artesao:_bg24("Artesão",["forca","destreza","inteligencia"],"Artífice",["Investigação","Persuasão"],["Ferramentas de artesão (uma à escolha)"]),
+  artista:_bg24("Artista",["forca","destreza","carisma"],"Músico",["Acrobacia","Atuação"],["Instrumento musical (um à escolha)"]),
+  charlatao:_bg24("Charlatão",["destreza","constituicao","carisma"],"Habilidoso",["Enganação","Prestidigitação"],["Kit de falsificação"]),
+  criminoso:_bg24("Criminoso",["destreza","constituicao","inteligencia"],"Alerta",["Prestidigitação","Furtividade"],["Ferramentas de ladrão"]),
+  eremita:_bg24("Eremita",["constituicao","sabedoria","carisma"],"Curandeiro",["Medicina","Religião"],["Kit de herbalismo"]),
+  fazendeiro:_bg24("Fazendeiro",["forca","constituicao","sabedoria"],"Durão",["Adestrar Animais","Natureza"],["Ferramentas de carpinteiro"]),
+  guarda:_bg24("Guarda",["forca","inteligencia","sabedoria"],"Alerta",["Atletismo","Percepção"],["Conjunto de jogo (um à escolha)"]),
+  guia:_bg24("Guia",["destreza","constituicao","sabedoria"],"Iniciado em Magia (Druida)",["Furtividade","Sobrevivência"],["Ferramentas de cartógrafo"]),
+  marinheiro:_bg24("Marinheiro",["forca","destreza","sabedoria"],"Brigão de Taverna",["Acrobacia","Percepção"],["Ferramentas de navegador"]),
+  mercador:_bg24("Mercador",["constituicao","inteligencia","carisma"],"Sortudo",["Adestrar Animais","Persuasão"],["Ferramentas de navegador"]),
+  nobre:_bg24("Nobre",["forca","inteligencia","carisma"],"Habilidoso",["História","Persuasão"],["Conjunto de jogo (um à escolha)"]),
+  sabio:_bg24("Sábio",["constituicao","inteligencia","sabedoria"],"Iniciado em Magia (Mago)",["Arcanismo","História"],["Suprimentos de calígrafo"]),
+  escriba:_bg24("Escriba",["destreza","inteligencia","sabedoria"],"Habilidoso",["Investigação","Percepção"],["Suprimentos de calígrafo"]),
+  soldado:_bg24("Soldado",["forca","destreza","constituicao"],"Atacante Selvagem",["Atletismo","Intimidação"],["Conjunto de jogo (um à escolha)"]),
+  viajante:_bg24("Viajante",["destreza","sabedoria","carisma"],"Sortudo",["Intuição","Furtividade"],["Ferramentas de ladrão"])
+};
+function _sp24(nome,desloc,traits){ return {nome,bonusAtributos:{},idiomas:["Comum"],traits,deslocamento:desloc}; }
+const RACES_2024 = {
+  aasimar:_sp24("Aasimar",30,["Resistência Celestial","Visão no Escuro","Mãos Curativas","Portador da Luz","Revelação Celestial"]),
+  draconato:_sp24("Draconato",30,["Ancestral Dracônico","Arma de Sopro","Resistência a Dano","Visão no Escuro","Voo Dracônico"]),
+  anao:_sp24("Anão",30,["Visão no Escuro","Resiliência Anã","Robustez Anã","Perícia com Pedras"]),
+  elfo:_sp24("Elfo",30,["Visão no Escuro","Ancestral Feérico","Linhagem Élfica","Sentidos Aguçados","Transe"]),
+  gnomo:_sp24("Gnomo",30,["Visão no Escuro","Astúcia Gnômica","Linhagem Gnômica"]),
+  golias:_sp24("Golias",35,["Ancestral Gigante","Forma Grande","Compleição Poderosa"]),
+  halfling:_sp24("Halfling",30,["Bravura","Agilidade Halfling","Sorte Halfling","Furtividade Natural"]),
+  humano:_sp24("Humano",30,["Engenhoso","Habilidoso","Versátil"]),
+  orc:_sp24("Orc",30,["Surto de Adrenalina","Visão no Escuro","Resistência Implacável"]),
+  tiefling:_sp24("Tiefling",30,["Visão no Escuro","Legado Ínfero","Presença Sobrenatural"])
+};
+
+function _trocarCatalogo(alvo, origem){
+  Object.keys(alvo).forEach(k => delete alvo[k]);
+  Object.entries(JSON.parse(JSON.stringify(origem))).forEach(([k,v]) => alvo[k]=v);
+}
+/* Troca BACKGROUNDS/RACES de acordo com a edição escolhida. Idempotente. */
+function aplicarCatalogoRegras(edicao){
+  const ed = edicao==="2024" ? "2024" : "2014";
+  if(aplicarCatalogoRegras._atual === ed) return ed;
+  _trocarCatalogo(BACKGROUNDS, ed==="2024" ? BACKGROUNDS_2024 : BACKGROUNDS_2014);
+  _trocarCatalogo(RACES, ed==="2024" ? RACES_2024 : RACES_2014);
+  aplicarCatalogoRegras._atual = ed;
+  return ed;
+}
+/* Converte a escolha de bônus do antecedente (2024) em { atributo: bônus }. Retorna null se incompleta. */
+function calcularBonusOrigem2024(origemKey, escolha){
+  const bg = BACKGROUNDS_2024[origemKey]; if(!bg || !escolha) return null;
+  const ok = a => bg.atributosOpcoes.includes(a);
+  if(escolha.formato==="1_1_1"){
+    const tres = (escolha.tres||[]);
+    if(tres.length!==3 || new Set(tres).size!==3 || !tres.every(ok)) return null;
+    return Object.fromEntries(tres.map(a=>[a,1]));
+  }
+  if(!escolha.mais2 || !escolha.mais1 || escolha.mais2===escolha.mais1 || !ok(escolha.mais2) || !ok(escolha.mais1)) return null;
+  return {[escolha.mais2]:2,[escolha.mais1]:1};
 }

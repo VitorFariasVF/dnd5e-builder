@@ -77,7 +77,9 @@ const FOUNDRY_BACKGROUND_EN_MAP = {
   charlatao: 'Charlatan',
   artesao_guilda: 'Guild Artisan',
   guild_artisan: 'Guild Artisan',
-  forasteiro: 'Outlander'
+  forasteiro: 'Outlander',
+  sabio: 'Sage',
+  heroi_povo: 'Folk Hero'
 };
 
 const FOUNDRY_WEAPON_EN_MAP = {
@@ -107,7 +109,22 @@ const FOUNDRY_WEAPON_EN_MAP = {
   besta_pesada: 'Heavy Crossbow',
   besta_de_mao: 'Hand Crossbow',
   dardo: 'Dart',
-  funda: 'Sling'
+  funda: 'Sling',
+  tacape: 'Greatclub',
+  mangual: 'Flail',
+  espada_grande: 'Greatsword',
+  lanca_montaria: 'Lance',
+  maca_estrela: 'Morningstar',
+  cimitarra: 'Scimitar',
+  tridente: 'Trident',
+  picareta_guerra: 'War Pick',
+  chicote: 'Whip',
+  zarabatana: 'Blowgun',
+  rapieira: 'Rapier',
+  maca: 'Mace',
+  machado_batalha: 'Battleaxe',
+  martelo_guerra: 'Warhammer',
+  besta_mao: 'Hand Crossbow'
 };
 
 const FOUNDRY_ARMOR_EN_MAP = {
@@ -123,7 +140,14 @@ const FOUNDRY_ARMOR_EN_MAP = {
   cota_de_malha: 'Chain Mail',
   talas: 'Splint Armor',
   placas: 'Plate Armor',
-  escudo: 'Shield'
+  escudo: 'Shield',
+  acolchoada: 'Padded Armor',
+  gibao_peles: 'Hide Armor',
+  camisa_malha: 'Chain Shirt',
+  cota_escamas: 'Scale Mail',
+  cota_aneis: 'Ring Mail',
+  cota_malha: 'Chain Mail',
+  meia_armadura: 'Half Plate Armor'
 };
 
 const FOUNDRY_SPELL_EN_MAP = {
@@ -256,6 +280,9 @@ function montarPayloadExportacao(){
 
   return {
     schema: 'mini-foundry-offline-1',
+    regras: getRulesEdition(),
+    talentoOrigem: p.talentoOrigem || '',
+    bonusOrigem2024: p.bonusOrigem2024 || null,
     nome: p.nome || '',
     jogador: p.jogador || '',
     modo: state.modo,
@@ -339,11 +366,6 @@ function baixarTexto(texto, nomeArquivo, mime){
     alert('Não foi possível gerar o arquivo JSON. Verifique o console do navegador.');
     return false;
   }
-}
-
-function gerarIdFoundry(prefix='id'){
-  if(globalThis.crypto?.randomUUID) return `${prefix}.${crypto.randomUUID()}`;
-  return `${prefix}.${Date.now().toString(36)}.${Math.random().toString(36).slice(2,10)}`;
 }
 
 function slugFoundry(texto, fallback='entry'){
@@ -449,9 +471,14 @@ function createCompendiumFlags(match, extra={}){
 }
 
 
-function buildFoundrySource(book='PHB', rules='2014'){
-  const normalizedBook = book === 'XGtE' ? "Xanathar's Guide to Everything" : book;
-  
+/* A edição vem do tipo de ficha escolhido (state.regras); o argumento `rules` é ignorado de propósito
+   para que o ator nunca misture 2014 e 2024. */
+function buildFoundrySource(book='PHB', rules){
+  const edicao = getRulesEdition();
+  const livro = book === 'PHB 2024' ? 'PHB' : book;
+  const normalizedBook = livro === 'XGtE' ? "Xanathar's Guide to Everything" : (edicao === '2024' && livro === 'PHB' ? "Player's Handbook (2024)" : livro);
+  rules = edicao;
+
   return {
     book: normalizedBook,
     page: '',
@@ -510,7 +537,10 @@ function getFoundryWeaponBaseItem(weaponKey){
     malho:'maul', martelo_de_guerra:'warhammer', martelo_leve:'lighthammer', moca:'mace',
     alabarda:'halberd', glaive:'glaive', pique:'pike', arco_curto:'shortbow', arco_longo:'longbow',
     besta_leve:'lightcrossbow', besta_pesada:'heavycrossbow', besta_de_mao:'handcrossbow',
-    dardo:'dart', funda:'sling'
+    dardo:'dart', funda:'sling', tacape:'greatclub', mangual:'flail', espada_grande:'greatsword',
+    lanca_montaria:'lance', maca_estrela:'morningstar', cimitarra:'scimitar', tridente:'trident',
+    picareta_guerra:'warpick', chicote:'whip', zarabatana:'blowgun', rapieira:'rapier', maca:'mace',
+    machado_batalha:'battleaxe', martelo_guerra:'warhammer', besta_mao:'handcrossbow'
   };
   return map[weaponKey] || '';
 }
@@ -520,7 +550,9 @@ function getFoundryArmorBaseItem(armorKey){
     acolchoada:'paddedarmor', couro:'leatherarmor', couro_batido:'studdedleatherarmor',
     gibao_de_peles:'hidearmor', camisa_de_malha:'chainshirt', brunea:'scalemail',
     peitoral:'breastplate', meia_armadura:'halfplatearmor', cota_de_aneis:'ringmail',
-    cota_de_malha:'chainmail', talas:'splintarmor', placas:'platearmor', escudo:'shield'
+    cota_de_malha:'chainmail', talas:'splintarmor', placas:'platearmor', escudo:'shield',
+    acolchoada:'paddedarmor', gibao_peles:'hidearmor', camisa_malha:'chainshirt', cota_escamas:'scalemail',
+    cota_aneis:'ringmail', cota_malha:'chainmail', meia_armadura:'halfplatearmor'
   };
   return map[armorKey] || '';
 }
@@ -685,11 +717,7 @@ function getWeaponAbilityCode(weapon){
 }
 
 function isWeaponProficient(personagem, weapon){
-  const profs = ((personagem.proficienciasClasseEfetivas || (typeof getEffectiveClassProficiencies==='function' ? getEffectiveClassProficiencies(personagem) : personagem.proficienciasClasse)) || []).join(' | ').toLowerCase();
-  const categoria = String(weapon?.categoria || '').toLowerCase();
-  if(categoria.includes('simples') && profs.includes('armas simples')) return true;
-  if(categoria.includes('marcial') && profs.includes('armas marciais')) return true;
-  return false;
+  return personagemEhProficienteComArma(weapon, personagem);
 }
 
 function isArmorProficient(personagem, armor){
@@ -846,505 +874,7 @@ function getFoundryTraits(personagem){
   };
 }
 
-function buildFoundryWeaponItem(personagem, weaponKey, equipped=false){
-  const weapon = WEAPONS[weaponKey];
-  if(!weapon) return null;
-  const englishName = getEnglishWeaponName(weaponKey, weapon);
-  const compendiumMatch = createCompendiumMatch('weapon', weapon.nome, englishName, {
-    category: getWeaponTypeValue(weapon),
-    sourceKey: weaponKey
-  });
-  const props = [];
-  if(weapon.finesse) props.push('fin');
-  if(weapon.propriedades?.some(p => /leve/i.test(p))) props.push('lgt');
-  if(weapon.propriedades?.some(p => /pesada/i.test(p))) props.push('hvy');
-  if(weapon.propriedades?.some(p => /arremesso/i.test(p))) props.push('thr');
-  if(weapon.propriedades?.some(p => /duas mãos/i.test(p))) props.push('two');
-  if(weapon.versatile) props.push('ver');
-  if(weapon.propriedades?.some(p => /munição/i.test(p))) props.push('amm');
-  const dmg = String(weapon.dano || '1d6');
-  const [dmgNum, dmgDie] = dmg.includes('d') ? dmg.split('d') : ['1','6'];
-  const vers = weapon.versatile ? String(weapon.versatile) : '';
-  const versatile = vers && vers.includes('d') ? (() => {
-    const [n,d] = vers.split('d');
-    return { number: Number(n || 1), denomination: Number(d || 8), bonus: '', types: [], custom: { enabled: false, formula: '' }, scaling: { mode: '', number: null, formula: '' } };
-  })() : { types: [], custom: { enabled: false }, scaling: { number: 1 } };
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('weapon'),
-    name: englishName || weapon.nome,
-    type: 'weapon',
-    img: getFoundryItemImage('weapon'),
-    system: {
-      activities: {},
-      uses: { spent: null, recovery: [] },
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(weapon.nome)}</p><p>Item exportado pelo construtor offline.</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource(weapon.source || 'PHB', '2024'),
-      identified: true,
-      unidentified: { description: '' },
-      container: null,
-      quantity: getInventoryQuantityByName(personagem, weapon.nome),
-      weight: { value: Number(weapon.peso || 0), units: 'lb' },
-      price: { value: Number(weapon.precoGp || 0), denomination: 'gp' },
-      rarity: '',
-      attunement: '',
-      attuned: false,
-      equipped: !!equipped,
-      crew: { value: [] },
-      ammunition: weapon.propriedades?.some(p => /munição/i.test(p)) ? { type: '' } : {},
-      armor: {},
-      damage: {
-        base: { number: Number(dmgNum || 1), denomination: Number(dmgDie || 6), bonus: '', types: [String(weapon.tipoDano || '').toLowerCase() || 'bludgeoning'], custom: { enabled: false, formula: '' }, scaling: { mode: '', number: null, formula: '' } },
-        versatile
-      },
-      properties: props,
-      proficient: isWeaponProficient(personagem, weapon) ? 1 : 0,
-      range: { value: Number(weapon.alcance || 5), long: weapon.alcanceLongo ? Number(weapon.alcanceLongo) : null, units: 'ft', reach: null },
-      type: { value: getWeaponTypeValue(weapon), baseItem: getFoundryWeaponBaseItem(weaponKey) }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { sourceKey: weaponKey, translatedFrom: weapon.nome, categoria: weapon.categoria, tipo: weapon.tipo, critico: weapon.critico, propriedadesOriginais: weapon.propriedades || [] })
-  });
-}
 
-function buildFoundryArmorItem(personagem, armorKey, equipped=false){
-  const armor = ARMORS[armorKey];
-  if(!armor || armorKey === 'sem_armadura') return null;
-  const englishName = getEnglishArmorName(armorKey, armor);
-  const compendiumMatch = createCompendiumMatch('equipment', armor.nome, englishName, { equipmentType: 'armor', armorType: getArmorSubtypeValue(armor), sourceKey: armorKey });
-  const props = [];
-  if(armor.desvantagemFurtividade) props.push('stealthDisadvantage');
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('armor'),
-    name: englishName || armor.nome,
-    type: 'equipment',
-    img: getFoundryItemImage('equipment'),
-    system: {
-      activities: {},
-      uses: { spent: null, recovery: [] },
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(armor.nome)}</p><p>Armadura exportada pelo construtor offline.</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource(armor.source || 'PHB', '2024'),
-      identified: true,
-      unidentified: { description: '' },
-      container: null,
-      quantity: getInventoryQuantityByName(personagem, armor.nome),
-      weight: { value: Number(armor.peso || 0), units: 'lb' },
-      price: { value: Number(armor.precoGp || 0), denomination: 'gp' },
-      rarity: '',
-      attunement: '',
-      attuned: false,
-      equipped: !!equipped,
-      crew: { value: [] },
-      armor: { value: Number(armor.baseCA || 10), dex: armor.dex === 'max2' ? 2 : armor.dex === 'none' ? 0 : null },
-      proficient: isArmorProficient(personagem, armor) ? 1 : 0,
-      properties: props,
-      strength: Number(armor.forcaMin || 0) || 0,
-      type: { value: getArmorSubtypeValue(armor), baseItem: getFoundryArmorBaseItem(armorKey) }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { sourceKey: armorKey, translatedFrom: armor.nome, tags: armor.tags || [] })
-  });
-}
-
-
-
-function buildFoundryShieldItem(personagem, equipped=false){
-  if(!personagem.combate?.escudo) return null;
-  const shieldName = 'Escudo';
-  const englishName = getEnglishArmorName('escudo', { nome: shieldName });
-  const compendiumMatch = createCompendiumMatch('equipment', shieldName, englishName, { equipmentType: 'shield', armorType: 'shield', sourceKey: 'escudo' });
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('shield'),
-    name: englishName || shieldName,
-    type: 'equipment',
-    img: getFoundryItemImage('equipment'),
-    system: {
-      activities: {},
-      uses: { spent: null, recovery: [] },
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(shieldName)}</p><p>Escudo exportado pelo construtor offline.</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource('PHB', '2024'),
-      identified: true,
-      unidentified: { description: '' },
-      container: null,
-      quantity: 1,
-      weight: { value: 6, units: 'lb' },
-      price: { value: 10, denomination: 'gp' },
-      rarity: '', attunement: '', attuned: false, equipped: !!equipped, crew: { value: [] },
-      armor: { value: 2, dex: null },
-      proficient: ((personagem.proficienciasClasseEfetivas || (typeof getEffectiveClassProficiencies==='function' ? getEffectiveClassProficiencies(personagem) : personagem.proficienciasClasse)) || []).some(p => /escudos/i.test(p)) ? 1 : 0,
-      properties: [], strength: 0,
-      type: { value: 'shield', baseItem: 'shield' }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { generated: true, role: 'shield', translatedFrom: shieldName })
-  });
-}
-function buildFoundryGenericItem(item, index){
-  const compendiumMatch = createCompendiumMatch('loot', item.nome, item.nome, { sourceKey: `loot-${index}` });
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry(`loot${index}`),
-    name: item.nome,
-    type: 'loot',
-    img: getFoundryItemImage('loot'),
-    system: {
-      activities: {},
-      uses: { spent: null, recovery: [] },
-      description: buildFoundryDescription('<div class="ddb"><p>Item exportado pelo construtor offline.</p></div>'),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource('PHB', '2014'),
-      identified: true,
-      unidentified: { description: '' },
-      container: null,
-      quantity: Number(item.quantidade || 1),
-      weight: { value: Number(item.peso || 0), units: 'lb' },
-      price: { value: Number(item.precoGp || 0), denomination: 'gp' },
-      rarity: '', attunement: '', attuned: false, equipped: false, crew: { value: [] }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { original: item })
-  });
-}
-
-function buildFoundrySpellItem(personagem, name, level=0){
-  const englishName = getEnglishSpellName(name);
-  const compendiumMatch = createCompendiumMatch('spell', name, englishName, { level, sourceKey: slugFoundry(name, `spell-${level}`) });
-  const prep = inferSpellPreparationMode(personagem, level);
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry(level === 0 ? 'cantrip' : `spell${level}`),
-    name: englishName || name,
-    type: 'spell',
-    img: getFoundryItemImage('spell'),
-    system: {
-      activities: {},
-      uses: { spent: 0, recovery: [] },
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(name)}</p><p>Magia exportada pelo construtor offline.</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource(spellIsFromXanathar(name, personagem?.classe) ? 'XGtE' : 'PHB', '2014'),
-      level: Number(level || 0),
-      school: { value: '' },
-      properties: [],
-      materials: { value: '', consumed: false, cost: 0, supply: 0 },
-      preparation: { mode: prep.mode || 'prepared', prepared: !!prep.prepared },
-      range: { value: null, long: null, units: '' },
-      target: { value: null, width: null, units: '', type: '' },
-      activation: { type: '', value: null, condition: '' },
-      duration: { value: null, units: 'inst', special: '' }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { importedBy: 'sheet-builder', translatedFrom: name, spellLevelGuess: level })
-  });
-}
-
-function buildFoundryFeatureItem(feature, originType, personagem){
-  const className = getEnglishClassName(personagem?.classe);
-  const featureType = originType === 'subclass-feature' ? 'subclass' : 'feat';
-  const englishName = feature.en || feature.nome;
-  const compendiumMatch = createCompendiumMatch('feat', feature.nome, englishName, { featureType, className, level: feature.level || 0, sourceKey: slugFoundry(feature.nome, originType) });
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry(originType),
-    name: englishName || feature.nome,
-    type: 'feat',
-    img: getFoundryItemImage('feat'),
-    system: {
-      activities: {},
-      uses: { spent: 0, recovery: [] },
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p>${feature.resumo || ''}</p><p><strong>Nome original:</strong> ${escaparHtml(feature.nome)}</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource(getFeatureSourceBook(feature, originType, personagem), getFeatureSourceBook(feature, originType, personagem) === 'PHB 2024' ? '2024' : '2014'),
-      crewed: false, enchant: {},
-      prerequisites: { items: [], level: feature.level || null, repeatable: false },
-      properties: [], requirements: feature.level ? `Level ${feature.level}` : '',
-      type: { value: originType === 'subclass-feature' ? 'class' : 'feat', subtype: '' }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { originType, level: feature.level || null, translatedFrom: feature.nome })
-  });
-}
-
-function buildFoundryResourceFeature(resourceKey, resourceValue, personagem){
-  const compendiumMatch = createCompendiumMatch('feat', resourceValue.nome || resourceKey, resourceValue.nome || resourceKey, { featureType: 'resource', className: getEnglishClassName(personagem?.classe), sourceKey: resourceKey });
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('resource'),
-    name: resourceValue.nome || resourceKey,
-    type: 'feat',
-    img: getFoundryItemImage('feat'),
-    system: {
-      activities: {},
-      uses: { spent: Math.max(0, Number(resourceValue.max || 0) - Number(resourceValue.atual || 0)), max: String(resourceValue.max || ''), recovery: resourceValue.recarga ? [{ period: /curto/i.test(resourceValue.recarga) ? 'sr' : 'lr', type: 'recoverAll' }] : [] },
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p>${resourceValue.detalhe || ''}</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource(getResourceSourceBook(personagem), getResourceSourceBook(personagem) === 'PHB 2024' ? '2024' : '2014'),
-      crewed: false, enchant: {}, prerequisites: { items: [], repeatable: false }, properties: [], requirements: '',
-      type: { value: 'class', subtype: '' }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { resourceKey, original: resourceValue })
-  });
-}
-
-function buildFoundryClassItem(personagem){
-  const classe = CLASSES[personagem.classe] || {};
-  const englishName = getEnglishClassName(personagem.classe);
-  const compendiumMatch = createCompendiumMatch('class', classe.nome || 'Classe', englishName, { sourceKey: personagem.classe, level: Number(personagem.nivel || 1) });
-  const ability = getSpellcastingAbilityCode(personagem);
-  const classIdentifier = compendiumMatch.slugs[0];
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('class'),
-    name: englishName || classe.nome || 'Class',
-    type: 'class',
-    img: getFoundryItemImage('class'),
-    effects: [],
-    system: {
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(classe.nome || personagem.classe || 'Classe')}</p><p>Classe exportada pelo construtor offline.</p></div>`),
-      identifier: classIdentifier,
-      source: buildFoundrySource(classe.source || 'PHB', classe.source === 'PHB 2024' ? '2024' : '2014'),
-      startingEquipment: [],
-      wealth: '',
-      hd: { denomination: `d${Number(classe.dadoVida || personagem.dadoVida || 8)}`, spent: 0, additional: '' },
-      levels: Number(personagem.nivel || 1),
-      primaryAbility: { value: ability ? [ability] : [], all: false },
-      properties: [],
-      spellcasting: { progression: getFoundrySpellProgression(personagem), ability, preparation: { formula: getFoundrySpellPreparationFormula(personagem) } }
-    },
-    flags: createCompendiumFlags(compendiumMatch, { sourceKey: personagem.classe, translatedFrom: classe.nome || personagem.classe, nivel: personagem.nivel })
-  });
-}
-
-function buildFoundrySubclassItem(personagem){
-  if(!personagem.subclasse) return null;
-  const subclasses = getSubclassOptions(personagem.classe);
-  const sub = subclasses.find(s => s.key === personagem.subclasse);
-  if(!sub) return null;
-  const englishName = sub.en || sub.nome;
-  const sourceBook = sub.source || 'PHB';
-  const compendiumMatch = createCompendiumMatch('subclass', sub.nome, englishName, { className: getEnglishClassName(personagem.classe), classIdentifier: getFoundryClassIdentifier(personagem), sourceKey: personagem.subclasse });
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('subclass'),
-    name: englishName || sub.nome,
-    type: 'subclass',
-    img: getFoundryItemImage('subclass'),
-    effects: [],
-    system: {
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(sub.nome)}</p><p>Subclasse exportada pelo construtor offline.</p></div>`),
-      source: buildFoundrySource(sourceBook, sourceBook === 'PHB 2024' ? '2024' : '2014'),
-      identifier: compendiumMatch.slugs[0],
-      classIdentifier: getFoundryClassIdentifier(personagem),
-      spellcasting: { progression: 'none', preparation: {} }
-    },
-    flags: createCompendiumFlags(compendiumMatch, { sourceKey: personagem.subclasse, translatedFrom: sub.nome, parentClass: personagem.classe })
-  });
-}
-
-function buildFoundrySpeciesItem(personagem){
-  const race = RACES[personagem.raca];
-  if(!race) return null;
-  const englishName = getEnglishRaceName(personagem.raca);
-  const senses = getFoundrySenses(personagem);
-  const compendiumMatch = createCompendiumMatch('species', race.nome, englishName, { sourceKey: personagem.raca });
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('race'),
-    name: englishName || race.nome,
-    type: 'race',
-    img: getFoundryItemImage('race'),
-    effects: [],
-    system: {
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(race.nome)}</p><p>Traços: ${(race.traits || []).join(', ') || '—'}</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource(race.source || 'PHB', race.source === 'PHB 2024' ? '2024' : '2014'),
-      movement: { burrow: '0', climb: '0', fly: '0', swim: '0', walk: String(personagem.deslocamento || 30), units: 'ft', hover: false, ignoredDifficultTerrain: [] },
-      senses: { ranges: { blindsight: senses.blindsight || null, darkvision: senses.darkvision || null, tremorsense: senses.tremorsense || null, truesight: senses.truesight || null }, units: 'ft', special: '' },
-      type: { value: 'humanoid' }
-    },
-    flags: createCompendiumFlags(compendiumMatch, { sourceKey: personagem.raca, translatedFrom: race.nome, traits: race.traits || [] })
-  });
-}
-
-function buildFoundryBackgroundItem(personagem){
-  const bg = BACKGROUNDS[personagem.origem];
-  if(!bg) return null;
-  const englishName = getEnglishBackgroundName(personagem.origem);
-  const compendiumMatch = createCompendiumMatch('background', bg.nome, englishName, { sourceKey: personagem.origem });
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry('background'),
-    name: englishName || bg.nome,
-    type: 'background',
-    img: getFoundryItemImage('background'),
-    effects: [],
-    system: {
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(bg.nome)}</p><p>Característica: ${escaparHtml(bg.caracteristica || '—')}</p></div>`),
-      source: buildFoundrySource(bg.source || 'PHB', bg.source === 'PHB 2024' ? '2024' : '2014'),
-      identifier: compendiumMatch.slugs[0],
-      startingEquipment: []
-    },
-    flags: createCompendiumFlags(compendiumMatch, { sourceKey: personagem.origem, translatedFrom: bg.nome, pericias: bg.pericias || [], ferramentas: bg.ferramentas || [] })
-  });
-}
-
-function montarFoundryItems(personagem){
-  const items = [];
-  const classItem = buildFoundryClassItem(personagem);
-  if(classItem) items.push(classItem);
-  const subclassItem = buildFoundrySubclassItem(personagem);
-  if(subclassItem) items.push(subclassItem);
-  const speciesItem = buildFoundrySpeciesItem(personagem);
-  if(speciesItem) items.push(speciesItem);
-  const backgroundItem = buildFoundryBackgroundItem(personagem);
-  if(backgroundItem) items.push(backgroundItem);
-
-  for(const feature of (personagem.habilidadesClasseAtivas || [])) items.push(buildFoundryFeatureItem(feature, 'class-feature', personagem));
-  for(const feature of (personagem.habilidadesSubclasseAtivas || [])) items.push(buildFoundryFeatureItem(feature, 'subclass-feature', personagem));
-  for(const [key, value] of Object.entries(personagem.recursosClasse || {})) items.push(buildFoundryResourceFeature(key, value, personagem));
-
-  const primaryWeapon = buildFoundryWeaponItem(personagem, personagem.combate?.armaPrincipal, true);
-  const secondaryWeapon = buildFoundryWeaponItem(personagem, personagem.combate?.armaSecundaria, true);
-  if(primaryWeapon) items.push(primaryWeapon);
-  if(secondaryWeapon && secondaryWeapon.name !== primaryWeapon?.name) items.push(secondaryWeapon);
-
-  const armorItem = buildFoundryArmorItem(personagem, personagem.combate?.armadura, true);
-  if(armorItem) items.push(armorItem);
-  const shieldItem = buildFoundryShieldItem(personagem, true);
-  if(shieldItem) items.push(shieldItem);
-
-  const reservedNames = new Set([
-    primaryWeapon?.name,
-    primaryWeapon?.flags?.dnd5eSheetBuilder?.translatedFrom,
-    secondaryWeapon?.name,
-    secondaryWeapon?.flags?.dnd5eSheetBuilder?.translatedFrom,
-    armorItem?.name,
-    armorItem?.flags?.dnd5eSheetBuilder?.translatedFrom,
-    shieldItem?.name,
-    shieldItem?.flags?.dnd5eSheetBuilder?.translatedFrom
-  ].filter(Boolean).map(v => normalizeLookupText(v)));
-
-  (personagem.inventario?.itens || []).forEach((item, index) => {
-    const normalized = slugFoundry(item.nome, `item-${index}`);
-    if(reservedNames.has(normalizeLookupText(item.nome)) || /escudo/i.test(item.nome)) return;
-    if(items.some(existing => existing.system?.identifier === normalized)) return;
-    items.push(buildFoundryGenericItem(item, index));
-  });
-
-  (personagem.magia?.listaTruques || []).forEach(name => items.push(buildFoundrySpellItem(personagem, name, 0)));
-  (personagem.magia?.listaMagias || []).forEach(name => {
-    const level = deriveSpellLevelFromName(name);
-    items.push(buildFoundrySpellItem(personagem, getSpellNameWithoutLevelTag(name), level));
-  });
-
-  return items;
-}
-
-function montarFoundryActor(){
-  const p = state.personagem;
-  const items = montarFoundryItems(p);
-  const raceId = getFoundryItemIdByType(items, 'race');
-  const backgroundId = getFoundryItemIdByType(items, 'background');
-  const classId = getFoundryItemIdByType(items, 'class');
-  const senses = getFoundrySenses(p);
-  const biographyParts = [
-    p.personalidade?.descricaoGeral ? `<p><strong>Descrição geral:</strong> ${escaparHtml(p.personalidade.descricaoGeral)}</p>` : '',
-    p.personalidade?.aparencia ? `<p><strong>Aparência:</strong> ${escaparHtml(p.personalidade.aparencia)}</p>` : '',
-    p.personalidade?.historia ? `<p><strong>História:</strong> ${escaparHtml(p.personalidade.historia)}</p>` : '',
-    (p.personalidade?.tracos || []).length ? `<p><strong>Traços:</strong> ${p.personalidade.tracos.map(escaparHtml).join(' | ')}</p>` : '',
-    (p.personalidade?.ideais || []).length ? `<p><strong>Ideais:</strong> ${p.personalidade.ideais.map(escaparHtml).join(' | ')}</p>` : '',
-    (p.personalidade?.vinculos || []).length ? `<p><strong>Vínculos:</strong> ${p.personalidade.vinculos.map(escaparHtml).join(' | ')}</p>` : '',
-    (p.personalidade?.defeitos || []).length ? `<p><strong>Defeitos:</strong> ${p.personalidade.defeitos.map(escaparHtml).join(' | ')}</p>` : ''
-  ].filter(Boolean).join('') || '<p></p>';
-
-  return {
-    folder: null,
-    name: p.nome || 'Personagem sem nome',
-    type: 'character',
-    img: 'icons/svg/mystery-man.svg',
-    system: {
-      currency: {
-        pp: Number(p.inventario?.moedas?.pp || 0),
-        gp: Number(p.inventario?.moedas?.gp || 0),
-        ep: Number(p.inventario?.moedas?.ep || 0),
-        sp: Number(p.inventario?.moedas?.sp || 0),
-        cp: Number(p.inventario?.moedas?.cp || 0)
-      },
-      abilities: getFoundryAbilities(p),
-      bonuses: {
-        mwak: { attack: '', damage: '' },
-        rwak: { attack: '', damage: '' },
-        msak: { attack: '', damage: '' },
-        rsak: { attack: '', damage: '' },
-        abilities: { check: '', save: '', skill: '' },
-        spell: { dc: '' }
-      },
-      skills: getFoundrySkillMap(p),
-      tools: getFoundryToolMap(p),
-      spells: getFoundrySpells(p),
-      attributes: {
-        ac: { calc: 'default', flat: null, formula: '' },
-        init: { ability: 'dex', roll: buildFoundryRoll(), bonus: '' },
-        movement: {
-          units: 'ft',
-          hover: false,
-          ignoredDifficultTerrain: [],
-          walk: String(p.deslocamento || 30),
-          burrow: '0',
-          climb: '0',
-          fly: '0',
-          swim: '0'
-        },
-        attunement: { max: 3 },
-        senses: {
-          ranges: {
-            blindsight: senses.blindsight || 0,
-            darkvision: senses.darkvision || 0,
-            tremorsense: senses.tremorsense || 0,
-            truesight: senses.truesight || 0
-          },
-          units: 'ft',
-          special: ''
-        },
-        spellcasting: getSpellcastingAbilityCode(p),
-        exhaustion: 0,
-        concentration: { ability: '', roll: buildFoundryRoll(), bonuses: { save: '' }, limit: 1 },
-        loyalty: {},
-        hp: { max: null, temp: 0, tempmax: 0, value: Number(p.pvMax || 1), bonuses: { level: '', overall: '' } },
-        death: { roll: buildFoundryRoll(), success: 0, failure: 0, bonuses: { save: '' } },
-        inspiration: false
-      },
-      bastion: { name: '', description: '' },
-      details: {
-        biography: { value: biographyParts, public: biographyParts },
-        alignment: '',
-        ideal: (p.personalidade?.ideais || []).join(' | '),
-        bond: (p.personalidade?.vinculos || []).join(' | '),
-        flaw: (p.personalidade?.defeitos || []).join(' | '),
-        race: raceId,
-        background: backgroundId,
-        originalClass: classId,
-        xp: { value: Number(p.xp || 0) },
-        appearance: p.personalidade?.aparencia || '',
-        trait: (p.personalidade?.tracos || []).join('\n'),
-        gender: '',
-        eyes: '',
-        height: '',
-        faith: '',
-        hair: '',
-        skin: '',
-        age: '',
-        weight: ''
-      },
-      traits: getFoundryTraits(p),
-      resources: fillActorResources(p),
-      favorites: []
-    },
-    prototypeToken: buildFoundryToken(p, senses),
-    items
-  };
-}
 
 function exportarFoundryActorJSON(){
   const actor = montarFoundryActor();
@@ -1364,51 +894,10 @@ function exportarJSON(){
 window.exportarFoundryActorJSON = exportarFoundryActorJSON;
 window.exportarBackupJSON = exportarBackupJSON;
 window.exportarJSON = exportarJSON;
-window.exportarPDF = exportarPDF;
 
 function escaparHtml(valor){
   return String(valor ?? '').replace(/[&<>\"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 }
-
-function gerarHtmlFicha(){
-  const p = state.personagem;
-  const payload = montarPayloadExportacao();
-  const atributos = ATTRIBUTE_LIST.map(attr => {
-    const label = escaparHtml(ATTRIBUTE_LABELS[attr]);
-    const score = payload.atributos[attr] ?? 10;
-    const mod = valorFormatadoBonus(payload.modificadores[attr] || 0);
-    return `<div class="attr-card"><div class="attr-label">${label}</div><div class="attr-score">${score}</div><div class="attr-mod">Mod ${mod}</div></div>`;
-  }).join('');
-  const atributosResumo = `<div class="quick-stats"><div class="quick-card hp"><span>PV Máx.</span><strong>${payload.combate.pvMax || 1}</strong><small>Vida</small></div><div class="quick-card"><span>CA</span><strong>${payload.combate.ca || 10}</strong><small>Defesa</small></div><div class="quick-card"><span>Iniciativa</span><strong>${valorFormatadoBonus(payload.combate.iniciativa || 0)}</strong><small>Destreza</small></div><div class="quick-card"><span>Desloc.</span><strong>${payload.combate.deslocamento || 0}m</strong><small>Movimento</small></div></div>`;
-  const combateResumo = `<div class="combat-grid"><div class="combat-card hp-card"><span>PV Máximo</span><strong>${payload.combate.pvMax || 1}</strong><small>Dado de vida + Constituição por nível</small></div><div class="combat-card"><span>Classe de Armadura</span><strong>${payload.combate.ca || 10}</strong><small>${escaparHtml(payload.combate.armadura || 'Sem armadura')}${payload.combate.escudo ? ' + escudo' : ''}</small></div><div class="combat-card"><span>Iniciativa</span><strong>${valorFormatadoBonus(payload.combate.iniciativa || 0)}</strong><small>Modificador de Destreza</small></div><div class="combat-card"><span>Ataques/ação</span><strong>${payload.combate.ataquesPorAcao || 1}</strong><small>Progressão da classe</small></div></div><p class="compact-line"><strong>Armas:</strong> ${escaparHtml(payload.combate.armaPrincipal || '-')} / ${escaparHtml(payload.combate.armaSecundaria || '-')}</p>`;
-  const pericias = Object.entries(payload.pericias).map(([nome,bonus]) => `<tr><td>${escaparHtml(nome)}</td><td>${valorFormatadoBonus(bonus)}</td></tr>`).join('');
-  const saves = Object.entries(payload.saves).map(([nome,bonus]) => `<tr><td>${escaparHtml(nome)}</td><td>${valorFormatadoBonus(bonus)}</td></tr>`).join('');
-  const inventario = payload.inventario.itens.map(item => `<tr><td>${escaparHtml(item.nome)}</td><td>${item.quantidade}</td><td>${item.pesoTotal}</td></tr>`).join('') || `<tr><td colspan="3">Nenhum item</td></tr>`;
-  const ataques = (payload.combate.ataques || []).map(a => `<tr><td>${escaparHtml(a.nome)}</td><td>${valorFormatadoBonus(a.bonusAtaque || 0)}</td><td>${escaparHtml(a.dano || '-')}${a.danoVersatil ? ` / ${escaparHtml(a.danoVersatil)}` : ''}</td><td>${escaparHtml(a.atributo || '-')}</td></tr>`).join('') || `<tr><td colspan="4">Nenhum ataque</td></tr>`;
-  const habilidadesClasse = (payload.habilidadesClasse || []).map(f => `<li><strong>${escaparHtml(f.nome)}</strong> <span class="muted">(nível ${f.level})</span><br><small>${escaparHtml(f.resumo)}</small></li>`).join('') || `<li>Nenhuma habilidade listada.</li>`;
-  const habilidadesSubclasse = (payload.habilidadesSubclasse || []).map(f => `<li><strong>${escaparHtml(f.nome)}</strong> <span class="muted">(nível ${f.level})</span><br><small>${escaparHtml(f.resumo)}</small></li>`).join('') || `<li>Nenhum traço de subclasse listado.</li>`;
-  const recursosClasse = Object.values(payload.recursosClasse || {}).map(r => `<li><strong>${escaparHtml(r.nome)}</strong>: ${r.atual}/${r.max} <span class="muted">(${escaparHtml(r.recarga)})</span>${r.detalhe?`<br><small class="muted">${escaparHtml(r.detalhe)}</small>`:''}</li>`).join('') || `<li>Nenhum recurso rastreável.</li>`;
-  const efeitosDerivados = (payload.efeitosDerivados || []).map(e => `<li><strong>${escaparHtml(e.titulo)}</strong>: ${escaparHtml(e.valor)}${e.detalhe?`<br><small class="muted">${escaparHtml(e.detalhe)}</small>`:''}</li>`).join('') || `<li>Nenhum efeito derivado adicional.</li>`;
-  const magias = !payload.magias.ehConjurador ? `<p>Classe sem conjuração.</p>` : `<p><strong>CD:</strong> ${payload.magias.cd} | <strong>Ataque:</strong> ${valorFormatadoBonus(payload.magias.ataque || 0)}</p><p><strong>Espaços:</strong> ${(payload.magias.espacos || []).map((v,i)=>v?`${i+1}º ${payload.magias.espacosAtuais[i]||0}/${v}`:'').filter(Boolean).join(' • ') || 'Nenhum'}</p><p><strong>Truques:</strong> ${(payload.magias.truques || []).join(', ') || 'Nenhum'}</p><p><strong>Magias:</strong> ${(payload.magias.selecionadas || []).join(', ') || 'Nenhuma'}</p>`;
-  const personalidade = `<p><strong>Traços:</strong> ${(p.personalidade.tracos || []).join(' | ') || '-'}</p><p><strong>Ideais:</strong> ${(p.personalidade.ideais || []).join(' | ') || '-'}</p><p><strong>Vínculos:</strong> ${(p.personalidade.vinculos || []).join(' | ') || '-'}</p><p><strong>Defeitos:</strong> ${(p.personalidade.defeitos || []).join(' | ') || '-'}</p><p><strong>Descrição:</strong> ${escaparHtml(p.personalidade.descricaoGeral || '-')}</p><p><strong>Aparência:</strong> ${escaparHtml(p.personalidade.aparencia || '-')}</p><p><strong>História:</strong> ${escaparHtml(p.personalidade.historia || '-')}</p>`;
-  const status = p.validacaoResumo?.status === 'oficial' ? '✔ personagem válido' : (p.validacaoResumo?.status === 'customizado' ? '⚠ personagem customizado' : '⚠ revisão pendente');
-
-  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ficha D&D 5e</title><style>
-    :root{--ink:#111827;--muted:#4b5563;--line:#cbd5e1;--soft:#f8fafc;--accent:#111827} *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;margin:24px;color:var(--ink);font-size:12px;line-height:1.35} h1,h2{margin:0 0 10px} h1{font-size:26px;letter-spacing:.2px} h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;border-bottom:2px solid var(--ink);padding-bottom:4px}.header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}.sheet{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.section{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;background:#fff;break-inside:avoid}.boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.attr-card{border:2px solid var(--ink);border-radius:12px;min-height:78px;text-align:center;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:linear-gradient(#fff,#f8fafc)}.attr-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;padding:6px 4px 3px;background:var(--ink);color:#fff;white-space:nowrap}.attr-score{font-size:30px;font-weight:800;line-height:1;padding:7px 4px 4px}.attr-mod{font-size:12px;font-weight:700;color:var(--ink);border-top:1px solid var(--line);padding:4px;background:#fff}.quick-stats,.combat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.quick-card,.combat-card{border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center;background:var(--soft)}.quick-card span,.combat-card span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}.quick-card strong,.combat-card strong{display:block;font-size:22px;line-height:1.05;margin:3px 0}.quick-card small,.combat-card small{display:block;color:var(--muted);font-size:9px}.quick-card.hp,.hp-card{border:2px solid var(--ink);background:#fff}.hp-card strong{font-size:28px}.compact-line{margin:8px 0 0}.box{border:1px solid #444;border-radius:8px;padding:10px;text-align:center} table{width:100%;border-collapse:collapse} td,th{border-bottom:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}.muted{color:#666}@media print{body{margin:10mm;font-size:11px}.section{box-shadow:none}.attr-card{min-height:72px}.attr-score{font-size:28px}.quick-card strong,.combat-card strong{font-size:20px}button{display:none}}
-  </style></head><body><div class="header"><div><h1>${escaparHtml(payload.nome || 'Personagem sem nome')}</h1><p><strong>Jogador:</strong> ${escaparHtml(payload.jogador || '-')} | <strong>Classe:</strong> ${escaparHtml(payload.classe)} | <strong>Subclasse:</strong> ${escaparHtml(payload.subclasse || '-')} | <strong>Raça:</strong> ${escaparHtml(payload.raca)} | <strong>Nível:</strong> ${payload.nivel}</p><p><strong>Origem:</strong> ${escaparHtml(payload.origem)} | <strong>Modo:</strong> ${escaparHtml(payload.modo || '-')}</p></div><div><strong>${status}</strong></div></div><div class="sheet"><div><section class="section"><h2>Atributos</h2><div class="boxes">${atributos}</div>${atributosResumo}</section><section class="section"><h2>Combate</h2>${combateResumo}</section><section class="section"><h2>Ataques</h2><table><thead><tr><th>Arma</th><th>Bônus</th><th>Dano</th><th>Atributo</th></tr></thead><tbody>${ataques}</tbody></table></section><section class="section"><h2>Perícias</h2><table><tbody>${pericias}</tbody></table></section><section class="section"><h2>Resistências</h2><table><tbody>${saves}</tbody></table></section></div><div><section class="section"><h2>Habilidades de Classe</h2><ul>${habilidadesClasse}</ul></section><section class="section"><h2>Subclasse</h2><ul>${habilidadesSubclasse}</ul></section><section class="section"><h2>Recursos</h2><ul>${recursosClasse}</ul></section><section class="section"><h2>Efeitos Derivados</h2><ul>${efeitosDerivados}</ul></section><section class="section"><h2>Escolhas de Classe</h2><ul>${(payload.opcoesClasseDetalhadas||[]).map(v=>`<li>${escaparHtml(v)}</li>`).join('') || '<li>Nenhuma escolha adicional registrada.</li>'}</ul></section><section class="section"><h2>Magias</h2>${magias}</section><section class="section"><h2>Inventário</h2><table><thead><tr><th>Item</th><th>Qtd</th><th>Peso</th></tr></thead><tbody>${inventario}</tbody></table><p><strong>Peso:</strong> ${payload.inventario.pesoTotal}/${payload.inventario.capacidadeCarga}</p></section><section class="section"><h2>Personalidade</h2>${personalidade}</section></div></div><script>window.onload=()=>window.print();</script></body></html>`;
-}
-
-function exportarPDF(){
-  const popup = window.open('', '_blank');
-  if(!popup){
-    alert('Permita pop-ups para exportar a ficha em PDF pelo diálogo de impressão do navegador.');
-    return;
-  }
-  popup.document.open();
-  popup.document.write(gerarHtmlFicha());
-  popup.document.close();
-}
-
 
 function getSpellExportDetail(personagem, name, level){
   if(typeof getSpellDetailForCharacter === 'function') return getSpellDetailForCharacter(personagem?.classe, `${name}${level ? ` (${level}º)` : ''}`, personagem?.subclasse, personagem?.nivel || 1);
@@ -1419,40 +908,6 @@ function mapSpellSchoolValue(detail){
   const school = String(detail?.escola || '').toLowerCase();
   const map = { evocação:'evo', evocacao:'evo', abjuração:'abj', abjuracao:'abj', conjuração:'con', conjuracao:'con', adivinhação:'div', adivinhacao:'div', encantamento:'enc', ilusão:'ill', ilusao:'ill', necromancia:'nec', transmutação:'trs', transmutacao:'trs' };
   return map[school] || '';
-}
-
-function buildFoundrySpellItem(personagem, name, level=0){
-  const englishName = getEnglishSpellName(name);
-  const compendiumMatch = createCompendiumMatch('spell', name, englishName, { level, sourceKey: slugFoundry(name, `spell-${level}`) });
-  const prep = inferSpellPreparationMode(personagem, level);
-  const detail = getSpellExportDetail(personagem, name, level);
-  const sourceBook = detail?.fonte || (spellIsFromXanathar(name, personagem?.classe) ? 'XGtE' : 'PHB');
-  const durationUnits = detail?.duracao && /inst/i.test(detail.duracao) ? 'inst' : '';
-  return finalizeFoundryDocument({
-    _id: gerarIdFoundry(level === 0 ? 'cantrip' : `spell${level}`),
-    name: englishName || name,
-    type: 'spell',
-    img: getFoundryItemImage('spell'),
-    system: {
-      activities: {},
-      uses: { spent: 0, recovery: [] },
-      advancement: {},
-      description: buildFoundryDescription(`<div class="ddb"><p><strong>Nome original:</strong> ${escaparHtml(name)}</p><p>${escaparHtml(detail?.resumo || 'Magia exportada pelo construtor offline.')}</p><p><strong>Escola:</strong> ${escaparHtml(detail?.escola || 'Variada')} • <strong>Fonte:</strong> ${escaparHtml(sourceBook)}</p><p><strong>Ritual:</strong> ${detail?.ritual ? 'Sim' : 'Não'} • <strong>Concentração:</strong> ${detail?.concentracao ? 'Sim' : 'Não'} • <strong>Duração:</strong> ${escaparHtml(detail?.duracao || 'Conforme magia')}</p></div>`),
-      identifier: compendiumMatch.slugs[0],
-      source: buildFoundrySource(sourceBook, sourceBook === 'PHB 2024' ? '2024' : '2014'),
-      level: Number(level || 0),
-      school: { value: mapSpellSchoolValue(detail) },
-      properties: [detail?.ritual ? 'ritual' : '', detail?.concentracao ? 'concentration' : ''].filter(Boolean),
-      materials: { value: '', consumed: false, cost: 0, supply: 0 },
-      preparation: { mode: prep.mode || 'prepared', prepared: !!prep.prepared },
-      range: { value: null, long: null, units: '' },
-      target: { value: null, width: null, units: '', type: '' },
-      activation: { type: '', value: null, condition: '' },
-      duration: { value: null, units: durationUnits, special: detail?.duracao || '' }
-    },
-    effects: [],
-    flags: createCompendiumFlags(compendiumMatch, { importedBy: 'sheet-builder', translatedFrom: name, spellLevelGuess: level, sourceBook, resumo: detail?.resumo || '' })
-  });
 }
 
 
@@ -1632,7 +1087,8 @@ function buildFoundryWeaponItem(personagem, weaponKey, equipped = false){
   if(!weapon) return null;
   const englishName = getEnglishWeaponName(weaponKey, weapon);
   const dmg = String(weapon.dano || '1d6');
-  const [dmgNum, dmgDie] = dmg.includes('d') ? dmg.split('d') : ['1', '6'];
+  const dmgFixo = !dmg.includes('d');
+  const [dmgNum, dmgDie] = dmgFixo ? ['1', '0'] : dmg.split('d');
   const vers = weapon.versatile ? String(weapon.versatile) : '';
   const versatile = vers && vers.includes('d')
     ? (() => {
@@ -1656,6 +1112,8 @@ function buildFoundryWeaponItem(personagem, weaponKey, equipped = false){
   if(weapon.versatile) props.push('ver');
   if(weapon.propriedades?.some(p => /munição/i.test(p))) props.push('amm');
   if(weapon.propriedades?.some(p => /carga/i.test(p))) props.push('lod');
+  if(weapon.propriedades?.some(p => /alcance estendido/i.test(p))) props.push('rch');
+  if(weapon.propriedades?.some(p => /especial/i.test(p))) props.push('spc');
   const activityId = gerarIdFoundry();
   return finalizeFoundryDocument({
     _id: gerarIdFoundry(),
@@ -1680,7 +1138,7 @@ function buildFoundryWeaponItem(personagem, weaponKey, equipped = false){
       attuned: false,
       equipped: !!equipped,
       crew: { value: [] },
-      ammunition: weapon.propriedades?.some(p => /munição/i.test(p)) ? { type: weaponKey === 'besta_leve' ? 'crossbowBolt' : '' } : {},
+      ammunition: weapon.propriedades?.some(p => /munição/i.test(p)) ? { type: /besta/.test(weaponKey) ? 'crossbowBolt' : (/arco/.test(weaponKey) ? 'arrow' : (weaponKey === 'zarabatana' ? 'blowgunNeedle' : (weaponKey === 'funda' ? 'slingBullet' : ''))) } : {},
       armor: {},
       damage: {
         base: {
@@ -1688,7 +1146,7 @@ function buildFoundryWeaponItem(personagem, weaponKey, equipped = false){
           denomination: Number(dmgDie || 6),
           bonus: '',
           types: [mapDamageTypeFoundry(weapon.tipoDano)],
-          custom: { enabled: false, formula: '' },
+          custom: { enabled: dmgFixo, formula: dmgFixo ? dmg : '' },
           scaling: { mode: '', number: null, formula: '' }
         },
         versatile
@@ -1697,10 +1155,10 @@ function buildFoundryWeaponItem(personagem, weaponKey, equipped = false){
       properties: props,
       proficient: isWeaponProficient(personagem, weapon) ? 1 : 0,
       range: {
-        value: Number(weapon.alcance || (weapon.ranged ? 20 : 5) || 5),
-        long: weapon.alcanceLongo ? Number(weapon.alcanceLongo) : null,
+        value: Number(weapon.alcancePes || 5),
+        long: weapon.alcanceLongoPes ? Number(weapon.alcanceLongoPes) : null,
         units: 'ft',
-        reach: null
+        reach: weapon.propriedades?.some(p => /alcance estendido/i.test(p)) ? 10 : null
       },
       type: { value: getWeaponTypeValue(weapon), baseItem: getFoundryWeaponBaseItem(weaponKey) }
     },
@@ -2056,6 +1514,7 @@ function montarFoundryItems(personagem){
   if(speciesItem) items.push(speciesItem);
   const backgroundItem = buildFoundryBackgroundItem(personagem);
   if(backgroundItem) items.push(backgroundItem);
+  if(personagem.talentoOrigem) items.push(buildFoundryFeatureItem({ nome: personagem.talentoOrigem, en: personagem.talentoOrigem, resumo: 'Talento de origem concedido pelo antecedente (D&D 2024).', level: 0 }, 'origin-feat', personagem));
   for(const feature of (personagem.habilidadesClasseAtivas || [])) items.push(buildFoundryFeatureItem(feature, 'class-feature', personagem));
   for(const feature of (personagem.habilidadesSubclasseAtivas || [])) items.push(buildFoundryFeatureItem(feature, 'subclass-feature', personagem));
   const raceObj = RACES[personagem.raca];
@@ -2081,7 +1540,19 @@ function montarFoundryItems(personagem){
     const level = deriveSpellLevelFromName(name);
     items.push(buildFoundrySpellItem(personagem, getSpellNameWithoutLevelTag(name), level));
   });
-  return items;
+  return dedupFoundryItems(items.filter(Boolean));
+}
+
+/* Remove itens repetidos (mesmo tipo e nome) e o item "Aumento de Valor de Habilidade", que não é um recurso jogável. */
+function dedupFoundryItems(items){
+  const vistos = new Set();
+  return items.filter(item => {
+    if(item.type === 'feat' && /^aumento de valor de habilidade$/i.test(String(item.name || '').trim())) return false;
+    const chave = `${item.type}|${normalizeLookupText(item.name)}`;
+    if(['class', 'subclass', 'race', 'background'].includes(item.type) || vistos.has(chave)) return item.type !== 'feat' && !vistos.has(chave) ? true : (vistos.has(chave) ? false : true);
+    vistos.add(chave);
+    return true;
+  });
 }
 
 function montarFoundryActor(){
@@ -2135,7 +1606,7 @@ function montarFoundryActor(){
         exhaustion: 0,
         concentration: { ability: '', roll: buildFoundryRoll(), bonuses: { save: '' }, limit: 1 },
         loyalty: {},
-        hp: { max: null, temp: 0, tempmax: 0, value: Number(p.pvMax || 1), bonuses: { level: '', overall: '' } },
+        hp: { max: Number(p.pvMax || 1), temp: 0, tempmax: 0, value: Number(p.pvMax || 1), bonuses: { level: '', overall: '' } },
         death: { roll: buildFoundryRoll(), success: 0, failure: 0, bonuses: { save: '' } },
         inspiration: false
       },

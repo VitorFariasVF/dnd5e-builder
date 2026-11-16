@@ -12,6 +12,13 @@ const requiredFiles = [
   'rules-engine.js',
   'storage.js',
   'export.js',
+  'export-pdf.js',
+  'export-roll20.js',
+  'vf/tokens.css',
+  'vf/components.css',
+  'vf/motion.css',
+  'vf/motion.js',
+  'vf/tool.js',
   'ui.js',
   'main.js',
   'README.md'
@@ -30,13 +37,24 @@ const cssRefs = [...index.matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)
 const missingRequired = requiredFiles.filter(file => !fs.existsSync(path.join(root, file)));
 const missingRefs = [...scriptRefs, ...cssRefs].filter(file => !fs.existsSync(path.join(root, file)));
 
+const dupFns = [];
+for (const f of ['export.js','export-pdf.js','export-roll20.js']) {
+  const nomes = [...fs.readFileSync(path.join(root, f), 'utf8').matchAll(/^function ([A-Za-z0-9_]+)\(/gm)].map(m => m[1]);
+  nomes.forEach((n, i) => { if (nomes.indexOf(n) !== i) dupFns.push(f + ':' + n); });
+}
+const allNames = {};
+for (const f of ['export.js','export-pdf.js','export-roll20.js']) {
+  for (const m of fs.readFileSync(path.join(root, f), 'utf8').matchAll(/^function ([A-Za-z0-9_]+)\(/gm)) { if (allNames[m[1]] && allNames[m[1]] !== f) dupFns.push(allNames[m[1]] + '/' + f + ':' + m[1]); allNames[m[1]] = f; }
+}
+
 const checks = [
   { name: 'arquivos obrigatórios presentes', ok: missingRequired.length === 0, detail: missingRequired },
   { name: 'referências do index existem', ok: missingRefs.length === 0, detail: missingRefs },
   { name: 'viewport responsivo configurado', ok: /<meta\s+name="viewport"/.test(index), detail: [] },
   { name: 'container principal presente', ok: /id="app"/.test(index), detail: [] },
   { name: 'CSS possui media query responsiva', ok: /@media/.test(css), detail: [] },
-  { name: 'export.js preservado no hash esperado', ok: sha256('export.js') === '7da5fe287d5f56b42c75d7868d761845ee464db06c093be947c0ac6924d11f32', detail: [sha256('export.js')] }
+  { name: 'export*.js sem funções definidas mais de uma vez', ok: dupFns.length === 0, detail: dupFns },
+  { name: 'index.html usa o padrão VF Tools (tokens, components, motion, tema)', ok: /vf\/tokens\.css/.test(index) && /vf\/components\.css/.test(index) && /vf\/motion\.css/.test(index) && /id="theme"/.test(index) && /data-theme="dark"/.test(index), detail: [] },
 ];
 
 const failed = checks.filter(c => !c.ok);
