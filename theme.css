@@ -1,0 +1,95 @@
+/* Tema D&D + movimento funcional (usa só tokens VF). Todo movimento some com prefers-reduced-motion. */
+
+/* ---- Stepper com progresso ---- */
+.stepper{margin:0 0 var(--s5)}
+.stepper-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);margin-bottom:var(--s3)}
+.stepper-label{font-size:.85rem;color:var(--muted);letter-spacing:.02em}
+.stepper-label b{color:var(--text);font-family:var(--font-display);font-weight:600;font-size:1rem}
+.stepper-track{position:relative;height:6px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+.stepper-fill{position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 60%,var(--text)));transform-origin:left;transform:scaleX(var(--p,0));transition:transform .5s var(--ease)}
+.stepper-dots{display:flex;justify-content:space-between;margin-top:var(--s3);padding:0;list-style:none}
+.stepper-dots li{display:flex}
+#app .stepper-dots button{all:unset;box-sizing:border-box;width:28px;height:28px;min-height:28px;display:grid;place-items:center;border-radius:50%;font-size:.72rem;font-weight:600;color:var(--muted);border:1.5px solid var(--line);background:var(--surface);cursor:default;transition:transform .2s var(--ease),border-color .2s,background .2s,color .2s}
+#app .stepper-dots button.feito{border-color:var(--accent);color:var(--accent);cursor:pointer}
+#app .stepper-dots button.feito:hover{transform:translateY(-2px);background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+#app .stepper-dots button.feito:focus-visible,.menu-acoes summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app .stepper-dots button.atual{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);transform:scale(1.18);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+@media (max-width:640px){#app .stepper-dots button{width:20px;height:20px;min-height:20px;font-size:.58rem}.stepper-dots{margin-inline:4px}}
+
+/* ---- Menu de ações (tira os 4 botões do topo) ---- */
+.menu-acoes{position:relative}
+.menu-acoes summary{list-style:none;cursor:pointer;padding:6px 14px;min-height:40px;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--r-pill);font-size:.85rem;color:var(--text);background:var(--surface);transition:border-color .2s,transform .2s var(--ease)}
+.menu-acoes summary::-webkit-details-marker{display:none}
+.menu-acoes summary:hover{border-color:var(--accent)}
+.menu-acoes[open] summary{border-color:var(--accent)}
+.menu-lista{position:absolute;right:0;top:calc(100% + 6px);z-index:20;min-width:200px;display:grid;gap:2px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 12px 32px rgba(0,0,0,.35);animation:tema-pop .18s var(--ease) both}
+#app .menu-lista button{width:100%;justify-content:flex-start;text-align:left;background:transparent;border:0;color:var(--text);min-height:40px;border-radius:var(--r-sm)}
+#app .menu-lista button:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+#app .menu-lista button.perigo{color:var(--danger)}
+.menu-lista hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+
+/* ---- Card, direção da etapa, divisor ornamental ---- */
+#app .card{position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 5%,var(--surface)),var(--surface) 180px)}
+#app .card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7}
+#app .card h2{display:flex;align-items:center;gap:var(--s3);font-family:var(--font-display)}
+.d20-mini{width:22px;height:22px;flex:none;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linejoin:round}
+.orn{display:flex;align-items:center;gap:var(--s3);color:var(--accent);margin:var(--s4) 0;opacity:.85}
+.orn::before,.orn::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+.orn svg{width:16px;height:16px;fill:currentColor}
+
+/* ---- Escudos de atributo ---- */
+.escudos{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--s3);margin:var(--s4) 0}
+@media (max-width:760px){.escudos{grid-template-columns:repeat(3,1fr)}}
+.escudo-w{text-align:center;opacity:0;animation:tema-rise .45s var(--ease) both;animation-delay:calc(var(--i)*55ms);transition:transform .25s var(--ease)}
+.escudo-w:hover{transform:translateY(-4px)}
+.escudo-w svg{width:100%;max-width:92px;height:auto;display:block;margin:0 auto;overflow:visible}
+.escudo-w .e-borda{fill:var(--surface);stroke:var(--accent);stroke-width:2.4}
+.escudo-w .e-int{fill:none;stroke:var(--accent);stroke-width:.8;opacity:.5}
+.escudo-w text{font-family:var(--font-display);fill:var(--text);text-anchor:middle}
+.escudo-w .e-rot{font-size:8.5px;letter-spacing:.08em;fill:var(--muted);font-family:var(--font)}
+.escudo-w .e-mod{font-size:30px;font-weight:700}
+.escudo-w .e-val{font-size:12px;fill:var(--accent)}
+
+/* ---- Brasão de classe ---- */
+.brasao-classe{display:flex;align-items:center;gap:var(--s4);margin:var(--s4) 0;padding:var(--s4);border:1px solid var(--line);border-radius:var(--r-md);background:color-mix(in srgb,var(--accent) 6%,transparent);animation:tema-rise .45s var(--ease) both}
+.brasao-classe svg{width:64px;height:64px;flex:none;color:var(--accent);transition:transform .6s var(--ease)}
+.brasao-classe:hover svg{transform:rotate(8deg) scale(1.06)}
+.brasao-classe b{font-family:var(--font-display);font-size:1.25rem;display:block}
+.brasao-classe span{color:var(--muted);font-size:.9rem}
+
+/* ---- Toasts (substituem alert) ---- */
+.toasts{position:fixed;z-index:10000;left:16px;right:16px;bottom:20px;margin:0 auto;max-width:460px;display:grid;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;padding:12px 16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--accent);border-left-width:4px;color:var(--text);box-shadow:0 12px 32px rgba(0,0,0,.4);font-size:.92rem;animation:tema-toast-in .3s var(--ease) both}
+.toast.erro{border-color:var(--danger)}
+.toast.sai{animation:tema-toast-out .25s var(--ease) both}
+
+/* ---- Micro-interações ---- */
+#app button:not(.stepper-dots button){transition:transform .15s var(--ease),box-shadow .2s,background .2s,border-color .2s}
+#app button:not(:disabled):not(.stepper-dots button):hover{transform:translateY(-1px)}
+#app button:not(:disabled):not(.stepper-dots button):active{transform:translateY(0) scale(.98)}
+#app select,#app input{transition:border-color .2s,box-shadow .2s}
+#app select:focus,#app input:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.info-box,.alert{animation:tema-rise .35s var(--ease) both}
+.passo-voltar{animation-name:tema-slide-volta!important}
+.passo-avanca{animation-name:tema-slide-vai!important}
+.title .d20-t{width:.8em;height:.8em;stroke:var(--accent);fill:none;stroke-width:1.5;vertical-align:-.05em;margin-right:.25em;animation:tema-giro .9s var(--ease) .3s both}
+
+@keyframes tema-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes tema-pop{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes tema-slide-vai{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes tema-slide-volta{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes tema-giro{from{transform:rotate(-200deg) scale(.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes tema-toast-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes tema-toast-out{to{opacity:0;transform:translateY(8px)}}
+
+@media (prefers-reduced-motion:reduce){
+  .stepper-fill{transition:none}
+  .escudo-w{opacity:1;animation:none}
+  .menu-lista,.toast,.brasao-classe,.info-box,.alert,.title .d20-t,.passo-voltar,.passo-avanca{animation:none!important}
+  #app button,.escudo-w,.brasao-classe svg{transition:none!important}
+  #app button:hover,#app button:active,.escudo-w:hover{transform:none!important}
+}
+@media print{.toasts,.stepper,.menu-acoes{display:none}}
+/* área de toque maior que o círculo visível */
+#app .stepper-dots button{position:relative}
+#app .stepper-dots button::after{content:"";position:absolute;inset:-10px -3px}

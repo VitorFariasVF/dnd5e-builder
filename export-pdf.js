@@ -4,6 +4,39 @@
    então funciona offline. As cores seguem o tema claro do VF Tools (pergaminho + âmbar). */
 
 const PDF_CORES = { papel:'#f7f1e7', superficie:'#fffaf1', tinta:'#201a14', suave:'#5e5446', linha:'#ddd2c0', ouro:'#8a5200', ouroClaro:'#c98a1f' };
+const PDF_CORES_BASE = Object.assign({}, PDF_CORES);
+/* Cor de destaque por classe (tons escuros: contraste ≥ 4,5:1 sobre o pergaminho). */
+const PDF_ACENTOS = { barbaro:'#9a2a14', bardo:'#8c2f6b', bruxo:'#5b3a9a', clerigo:'#7a5a00', druida:'#2f6b2a', feiticeiro:'#a0420f', guerreiro:'#475569', ladino:'#334155', mago:'#2f45a8', monge:'#0f6a78', paladino:'#8a5200', patrulheiro:'#1f6b4f' };
+function pdfAplicarAcento(classeKey){
+  Object.assign(PDF_CORES, PDF_CORES_BASE);
+  const c = PDF_ACENTOS[classeKey]; if(!c) return;
+  const n = parseInt(c.slice(1), 16), mix = v => Math.round(v + (255 - v) * .28).toString(16).padStart(2, '0');
+  PDF_CORES.ouro = c; PDF_CORES.ouroClaro = '#' + mix(n >> 16) + mix((n >> 8) & 255) + mix(n & 255);
+}
+/* Ícones (24×24, traço) para vitais e seções. */
+const PDF_ICONES = {
+  'PV máximo':'<path d="M12 21s-8-5-8-11a4.500 4.500 0 0 1 8-2.800A4.500 4.500 0 0 1 20 10c0 6-8 11-8 11z"/>',
+  'Armadura':'<path d="M12 3 20 6v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/>',
+  'Iniciativa':'<path d="M13 2 5 14h6l-1 8 8-12h-6z"/>',
+  'Deslocamento':'<path d="M4 17h9l3-4 4 1v3H4zM8 17v-5h4"/>',
+  'Proficiência':'<path d="m12 3 2.700 5.600 6.100.9-4.400 4.300 1 6.100L12 17l-5.400 2.900 1-6.100L3.200 9.500l6.100-.9z"/>',
+  'Perícias':'<circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/>',
+  'Resistências':'<path d="M12 3 20 6v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  'Ataques':'<path d="M5 19 19 5M14 4h6v6M5 19l-2 2M7 13l4 4"/>',
+  'Habilidades de classe':'<path d="m12 3 2.700 5.600 6.100.9-4.400 4.300 1 6.100L12 17l-5.400 2.900 1-6.100L3.200 9.500l6.100-.9z"/>',
+  'Subclasse':'<path d="M12 3v8M12 11 6 17M12 11l6 6M6 17v4M18 17v4"/>',
+  'Recursos':'<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>',
+  'Magias':'<path d="M12 2 14 9l7 3-7 3-2 7-2-7-7-3 7-3z"/>',
+  'Traços e talentos':'<path d="M5 19c0-9 6-14 15-14 0 9-5 15-14 15M5 19l8-8"/>',
+  'Inventário':'<path d="M6 8h12l2 12H4zM9 8V6a3 3 0 0 1 6 0v2"/>',
+  'Personalidade':'<circle cx="12" cy="12" r="9"/><path d="M8 14s1.500 2.500 4 2.500S16 14 16 14M9 9.500h.01M15 9.500h.01"/>',
+  'Aparência':'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
+  'História':'<path d="M6 3h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2zM6 17a2 2 0 0 1 2-2h11M10 8h6"/>'
+};
+function pdfIcone(nome, cls){
+  const g = PDF_ICONES[nome];
+  return g ? `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round" stroke-linejoin="round">${g}</svg>` : '';
+}
 const PDF_ABREV = { forca:'FOR', destreza:'DES', constituicao:'CON', inteligencia:'INT', sabedoria:'SAB', carisma:'CAR' };
 
 /* Símbolos de classe (24×24, traço) — desenhos próprios, simples e genéricos. */
@@ -51,7 +84,7 @@ function pdfEscudoAtributo(attr, valor, mod){
 }
 
 function pdfSecao(titulo, corpo, extra=''){
-  return `<section class="secao ${extra}"><h2><svg class="rombo" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 L10 5 L5 10 L0 5 Z" fill="currentColor"/></svg>${escaparHtml(titulo)}</h2>${corpo}</section>`;
+  return `<section class="secao ${extra}"><h2>${pdfIcone(titulo, 'icone') || '<svg class="rombo" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 L10 5 L5 10 L0 5 Z" fill="currentColor"/></svg>'}${escaparHtml(titulo)}</h2>${corpo}</section>`;
 }
 function pdfLista(itens, vazio){
   const l = (itens || []).filter(Boolean);
@@ -117,10 +150,20 @@ const PDF_CSS = `
   .pontos{letter-spacing:.2em;color:var(--ouro)}
   .rodape{position:absolute;left:0;right:0;bottom:9.500mm;text-align:center;font-size:7pt;color:var(--suave);letter-spacing:.04em}
   .historia{white-space:pre-wrap}
+  /* tema: pergaminho, faixa de título, ícones, capitular */
+  .pagina{background:radial-gradient(ellipse at 50% 45%,transparent 58%,color-mix(in srgb,var(--ouro) 9%,transparent) 100%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),var(--papel)}
+  .topo{padding:3mm 4mm;border-radius:2mm;background:linear-gradient(90deg,color-mix(in srgb,var(--ouro) 14%,transparent),transparent 75%);border-left:1.800mm solid var(--ouro)}
+  .linha-classe{display:inline-block;color:var(--papel)!important;background:var(--ouro);padding:.8mm 6mm;margin-bottom:1.500mm!important;font-style:normal!important;letter-spacing:.04em;clip-path:polygon(0 0,100% 0,calc(100% - 3mm) 50%,100% 100%,0 100%,3mm 50%)}
+  .secao h2 .icone{width:4.200mm;height:4.200mm;color:var(--ouro);flex:none}
+  .vital{position:relative}
+  .vital .v-ico{position:absolute;left:2mm;top:2mm;width:4mm;height:4mm;color:var(--ouro);opacity:.85}
+  .vital.pv .v-ico{color:#f0b254}
+  .historia::first-letter{float:left;font:600 30pt/.85 var(--serifa);color:var(--ouro);padding:1mm 1.500mm 0 0}
   @media print{html{background:var(--papel)}.barra{display:none}.pagina{margin:0;box-shadow:none}}`;
 
 function gerarHtmlFicha(){
   const p = state.personagem;
+  pdfAplicarAcento(p.classe);
   const d = montarPayloadExportacao();
   const ed = RULESETS[getRulesEdition()];
   const proficientes = new Set(p.periciasFinaisEfetivas || p.periciasFinais || []);
@@ -139,7 +182,7 @@ function gerarHtmlFicha(){
     ['Iniciativa', valorFormatadoBonus(d.combate.iniciativa || 0), 'Destreza', ''],
     ['Deslocamento', `${desloc.pes} pés`, `${desloc.metros} m`, ''],
     ['Proficiência', valorFormatadoBonus(pb), `Perc. passiva ${percepcaoPassiva}`, '']
-  ].map(([r, v, s, c]) => `<div class="vital ${c}"><span>${r}</span><strong>${v}</strong><small>${s}</small></div>`).join('');
+  ].map(([r, v, s, c]) => `<div class="vital ${c}">${pdfIcone(r, 'v-ico')}<span>${r}</span><strong>${v}</strong><small>${s}</small></div>`).join('');
 
   const saves = Object.entries(d.saves).map(([nome, bonus]) => `<tr><td>${savesProf.has(nome) ? '●' : '○'}</td><td>${escaparHtml(nome)}</td><td class="num">${valorFormatadoBonus(bonus)}</td></tr>`).join('');
   const pericias = Object.entries(d.pericias).map(([nome, bonus]) => `<tr><td>${proficientes.has(nome) ? '●' : '○'}</td><td>${escaparHtml(nome)} <span class="pequeno">(${PDF_ABREV[SKILLS[nome]] || ''})</span></td><td class="num">${valorFormatadoBonus(bonus)}</td></tr>`).join('');
@@ -163,7 +206,7 @@ function gerarHtmlFicha(){
   const moldura = `<div class="moldura"></div>${['se', 'sd', 'ie', 'id'].map(c => `<svg class="canto ${c}" aria-hidden="true"><use href="#canto"/></svg>`).join('')}<svg class="marca" aria-hidden="true"><use href="#d20"/></svg>`;
   const rodape = n => `<div class="rodape">D&amp;D 5e Builder · VF Tools · ${escaparHtml(ed.curto)} · página ${n}</div>`;
 
-  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escaparHtml(d.nome || 'Ficha')} — Ficha D&amp;D 5e</title><style>${PDF_CSS}</style></head><body>
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escaparHtml(d.nome || 'Ficha')} — Ficha D&amp;D 5e</title><style>${PDF_CSS}:root{--ouro:${PDF_CORES.ouro}}</style></head><body>
   ${pdfDefs()}
   <div class="barra"><span>Pré-visualização da ficha (A4)</span><button type="button" onclick="window.print()">Imprimir / Salvar PDF</button></div>
   <article class="pagina">${moldura}<div class="conteudo">

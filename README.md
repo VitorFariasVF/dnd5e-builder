@@ -431,3 +431,7 @@ Enquanto não houver um arquivo `LICENSE`, considere isso como pendente de defin
 ### **📦 [Ver o código no GitHub](https://github.com/VitorFariasVF/dnd5e-builder)**
 
 </div>
+
+## Interface e tema
+
+`theme.css` e `ui-theme.js` (carregados depois de `style.css`/`ui.js`) adicionam o stepper com progresso, o menu de ações, os escudos de atributo, o brasão de classe, os toasts e as animações funcionais (desligadas com `prefers-reduced-motion`). Detalhes e pendências em `AUDITORIA_UX.md`.
