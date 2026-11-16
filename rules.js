@@ -1019,7 +1019,10 @@ function getHexbladeFavoredWeaponLabel(personagem){
 }
 function compileResourceRule(rule, n, mods){
   const formula = typeof rule.formula === 'number' ? String(rule.formula) : String(rule.formula || '0');
-  const recarga = typeof rule.recarga === 'function' ? rule.recarga(n, mods) : (String(rule.recarga||''));
+  let recarga = typeof rule.recarga === 'function' ? rule.recarga(n, mods) : (String(rule.recarga||''));
+  if(typeof rule.recarga === 'string' && /[?<>=]/.test(rule.recarga)){
+    try { recarga = String(Function('n','mods', `return (${rule.recarga});`)(n, mods)); } catch(e) { recarga = 'Descanso longo'; }
+  }
   let max = 0;
   try { max = Number(Function('n','mods','SPELL_SLOTS', `return (${formula});`)(n, mods, SPELL_SLOTS)); } catch(e) { max = 0; }
   return {id:rule.id,nome:rule.nome,max:Math.max(0, Math.floor(max)),atual:Math.max(0, Math.floor(max)),recarga,detalhe: rule.detalhe || ''};

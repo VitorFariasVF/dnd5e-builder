@@ -93,3 +93,9 @@
 /* área de toque maior que o círculo visível */
 #app .stepper-dots button{position:relative}
 #app .stepper-dots button::after{content:"";position:absolute;inset:-10px -3px}
+
+/* erro de validação */
+.aviso-etapa{margin:var(--s3) 0;animation:tema-shake .4s var(--ease) both}
+#app .campo-erro{border-color:var(--danger);box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 25%,transparent)}
+@keyframes tema-shake{20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+@media (prefers-reduced-motion:reduce){.aviso-etapa{animation:none!important}}

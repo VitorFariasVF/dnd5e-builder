@@ -20,7 +20,19 @@
     t.addEventListener("click", fim);
   }
   window.mostrarToast = toast;
-  window.alert = function(msg){ toast(msg, true); };
+  /* Erro de validação: faixa fixa no topo da etapa (fica até corrigir), rola até ela e destaca o campo citado. */
+  const CAMPOS = [[/subclasse/i, "subclasse"], [/classe/i, "classe"], [/ra[çc]a/i, "raca"], [/origem/i, "origem"]];
+  window.alert = function(msg){
+    const card = typeof app !== "undefined" && app.querySelector(".card");
+    if(!card){ toast(msg, true); return; }
+    card.querySelectorAll(".aviso-etapa").forEach(n => n.remove());
+    const a = document.createElement("div");
+    a.className = "alert error aviso-etapa"; a.setAttribute("role", "alert"); a.textContent = String(msg);
+    const h2 = card.querySelector("h2"); (h2 || card.firstChild).insertAdjacentElement("afterend", a);
+    a.scrollIntoView({ behavior: reduz() ? "auto" : "smooth", block: "center" });
+    const alvo = (CAMPOS.find(([re]) => re.test(msg)) || [])[1], el = alvo && document.getElementById(alvo);
+    if(el){ el.classList.add("campo-erro"); setTimeout(() => el.focus({ preventScroll: true }), 350); el.addEventListener("change", () => { el.classList.remove("campo-erro"); a.remove(); }, { once: true }); }
+  };
 
   /* ---- stepper ---- */
   function stepperHtml(){
