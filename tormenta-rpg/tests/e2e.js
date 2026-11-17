@@ -13,9 +13,10 @@ const path = require("path");
 const URL_APP = "file://" + path.resolve(__dirname, "..", "index.html");
 const SAIDA = fs.mkdtempSync(path.join(os.tmpdir(), "trpg-e2e-"));
 
+let falhasDePasso = 0;
 async function passo(page, nome, fn){
   try { await fn(); return true; }
-  catch(err){ console.log("  ERRO em " + nome + ": " + err.message.split("\n")[0]); return false; }
+  catch(err){ falhasDePasso++; console.log("  ERRO em " + nome + ": " + err.message.split("\n")[0]); return false; }
 }
 
 async function semRolagemLateral(page){
@@ -63,9 +64,33 @@ async function rodar(browser, largura, altura){
   });
   await passo(page, "medir 1", () => medir(1));
 
+  await passo(page, "raça: sugestões e ajuste do anão", async () => {
+    await page.fill("#raca", "Anão");
+    const r = await page.evaluate(() => ({
+      sugestoes: document.querySelectorAll("#raca-sugestoes option").length,
+      detalhe: document.querySelector("[data-saida='detalhe:raca']").textContent
+    }));
+    if(r.sugestoes !== 8) throw new Error("sugestões de raça: " + r.sugestoes);
+    if(!/CON \+4, SAB \+2, DES -2/.test(r.detalhe)) throw new Error("ajuste do anão no detalhe: " + r.detalhe.slice(0, 120));
+  });
   await passo(page, "raça livre", async () => {
     await page.fill("#raca", "Raça de teste");
     await page.click("[data-acao=avancar]");
+  });
+  await passo(page, "classe: sugestões, detalhe e modo estrito", async () => {
+    await page.fill("#classe", "Guerreiro");
+    const livre = await page.evaluate(() => ({
+      sugestoes: document.querySelectorAll("#classe-sugestoes option").length,
+      detalhe: document.querySelector("[data-saida='detalhe:classe']").textContent
+    }));
+    if(livre.sugestoes !== 13) throw new Error("sugestões de classe: " + livre.sugestoes);
+    if(!/PV: 20 no 1º nível/.test(livre.detalhe) || !/BBA: \+1 no 1º nível/.test(livre.detalhe)) throw new Error("detalhe da classe: " + livre.detalhe.slice(0, 120));
+    const opcoes = await page.evaluate(() => { state.modo = "estrito"; trpgRender(); return document.querySelectorAll("#classe option").length; });
+    if(opcoes !== 14) throw new Error("opções no modo estrito: " + opcoes);
+    await page.selectOption("#classe", "guerreiro");
+    const det = await page.textContent("[data-saida='detalhe:classe']");
+    if(!/Guerreiro/.test(det) || !/Fonte:/.test(det)) throw new Error("detalhe após escolha: " + det.slice(0, 120));
+    await page.evaluate(() => { state.modo = "livre"; trpgRender(); });
   });
   await passo(page, "classe livre", async () => {
     await page.fill("#classe", "Classe de teste");
@@ -144,7 +169,7 @@ async function rodar(browser, largura, altura){
   const a = await rodar(browser, 1100, 900);
   const b = await rodar(browser, 360, 740);
   await browser.close();
-  const falhou = a.comRolagem + b.comRolagem + a.erros + b.erros;
+  const falhou = a.comRolagem + b.comRolagem + a.erros + b.erros + falhasDePasso;
   console.log("\nresultado: " + (falhou ? "FALHAS " + falhou : "sem erro de console e sem rolagem lateral em 1100px e 360px"));
   process.exitCode = falhou ? 1 : 0;
 })().catch(err => { console.error(err); process.exitCode = 1; });

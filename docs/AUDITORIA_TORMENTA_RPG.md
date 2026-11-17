@@ -86,3 +86,5 @@ Fluxo completo em 1100px e 360px, erros de console, rolagem lateral, alvos de 40
 4. Só então decidir sobre cor de classe no PDF e sobre a exportação de VTT, se existir VTT verificado.
 
 > **Atualização (verificação independente):** o ano da edição d20 é conflitante (2003 ou 2005) e a base D&D 3.5 tem uma fonte só. Veja `VERIFICACAO_TORMENTA_RPG.md`.
+
+> **Atualização (frente de dados):** classes (13), perícias (19), talentos (13), círculos de magia e BBA foram preenchidos a partir do compêndio do VTT fvtt-trpg (GPL-3, licença dos dados não confirmada; só números, nomes e listas) e da wiki tsrd, cada item com `fonte`. Seguem vazios: bases de resistência, magias por dia, equipamento, raças (exceto o anão), custo de compra. Veja `COBERTURA.md`.

@@ -8,6 +8,10 @@
 .trpg-lista{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
 .trpg-lista .card-nested{display:grid;gap:8px;padding:12px}
 
+.trpg-lista-simples{margin:8px 0;padding-left:1.2em;display:grid;gap:6px;overflow-wrap:anywhere}
+.trpg-lista-simples small{color:var(--muted)}
+.trpg-detalhe{font-size:.95rem;overflow-wrap:anywhere}
+
 .trpg-atributos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .trpg-atr{display:grid;gap:6px;min-width:0}
 .trpg-atr output{font-size:.9rem;color:var(--muted)}

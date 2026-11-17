@@ -54,15 +54,15 @@ function trpgFichaHtml(){
     </header>
     <div class="atributos">${escudos}</div>
     <div class="vitais">
-      <div class="vital pv"><span>PV máximo</span><strong>${trpgEsc(pvMax)}</strong><small>atuais: ${trpgEsc(pvAtual)}</small></div>
+      <div class="vital pv"><span>PV máximo</span><strong>${trpgEsc(pvMax)}</strong><small>atuais: ${trpgEsc(pvAtual)}${d.pvSugerido === null ? "" : " · sugerido pela classe: " + trpgEsc(d.pvSugerido)}</small></div>
       <div class="vital"><span>Armadura (CA)</span><strong>${trpgEsc(d.ca === null ? "—" : d.ca)}</strong><small>10 + bônus + Des + tamanho</small></div>
       <div class="vital"><span>Iniciativa</span><strong>${trpgEsc(trpgFormatarBonus(d.iniciativa))}</strong><small>hipótese, NÃO VERIFICADO</small></div>
       <div class="vital"><span>Deslocamento</span><strong>${trpgEsc(p.derivados.deslocamento || "—")}</strong><small>a confirmar</small></div>
-      <div class="vital"><span>Ataque base</span><strong>—</strong><small>${naoDefinido}</small></div>
+      <div class="vital"><span>Ataque base</span><strong>${trpgEsc(d.bba === null ? "—" : trpgFormatarBonus(d.bba))}</strong><small>${d.bba === null ? naoDefinido : "BBA da classe (fonte de comunidade)"}</small></div>
     </div>
     ${trpgSecaoPdf("Identidade", `<dl class="pares"><dt>Aparência</dt><dd>${trpgEsc(p.aparencia || "—")}</dd><dt>História</dt><dd>${trpgEsc(p.historia || "—")}</dd></dl>`)}
-    ${trpgSecaoPdf("Raça e classe", `<p>${trpgEsc(TRPG_PENDENTES.racas)}</p><p>${trpgEsc(TRPG_PENDENTES.classes)}</p>`)}
-    ${trpgSecaoPdf("Testes de resistência", `<p class="suave">${naoDefinido}</p>`)}
+    ${trpgSecaoPdf("Raça e classe", `<p>${trpgEsc(trpgDetalheRaca(p.raca))}</p><p>${trpgEsc(trpgDetalheClasse(p.classe))}</p><p class="suave">${trpgEsc(TRPG_PENDENTES.racas)}</p><p class="suave">${trpgEsc(TRPG_PENDENTES.classes)}</p>`)}
+    ${trpgSecaoPdf("Testes de resistência", `<p class="suave">${naoDefinido}. Os talentos de resistência (Fortitude Maior, Reflexos Rápidos, Vontade de Ferro) somam +2 cada.</p>`)}
     <p class="rodape">Regras de guias de fãs, não conferidas com o livro oficial. Fórmulas: ${trpgEsc(TRPG_REGRAS.modificador.fonte)}. Página 1 de 2.</p>
   </div></div>`;
   const pagina2 = `<div class="pagina"><div class="moldura" aria-hidden="true"></div><div class="conteudo">
@@ -71,7 +71,7 @@ function trpgFichaHtml(){
     ${trpgSecaoPdf("Talentos", trpgLinhasPdf(p.talentos, "Nenhum talento registrado."))}
     ${trpgSecaoPdf("Magias", trpgLinhasPdf(p.magias, "Nenhuma magia registrada."))}
     ${trpgSecaoPdf("Equipamento", trpgLinhasPdf(p.equipamento, "Nenhum item registrado."))}
-    ${trpgSecaoPdf("Dinheiro", `<p>${trpgEsc(p.dinheiro)} (unidade a confirmar: NÃO VERIFICADO)</p>`)}
+    ${trpgSecaoPdf("Dinheiro", `<p>${trpgEsc(p.dinheiro)} ${trpgEsc(TRPG_DINHEIRO_INICIAL.moeda)}. Inicial sugerido: ${trpgEsc(TRPG_DINHEIRO_INICIAL.valor)} (fonte única, wiki de fãs).</p>`)}
     ${trpgSecaoPdf("Observações", `<p class="suave">${trpgEsc(TRPG_PENDENTES.vtt)}</p>`)}
     <p class="rodape">Regras de guias de fãs, não conferidas com o livro oficial. Gerado no VF Tools. Dados de regra com fonte registrada em docs/AUDITORIA_TORMENTA_RPG.md.</p>
   </div></div>`;

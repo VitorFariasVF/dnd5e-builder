@@ -64,3 +64,5 @@ Não abertos (cópias não autorizadas, ignoradas): PDFs de archive.org, movimen
 2. Resolver o ano (2003 ou 2005) e confirmar qual edição o projeto deve seguir. A revisada de 2015 é outro livro e não deve ser misturada.
 3. Confirmar a licença pelo texto do próprio livro.
 4. Lead para uma próxima sessão: o pacote de VTT de Tormenta RPG (github.com/mclemente/fvtt-trpg, citado na página do Foundry) tem um compêndio de classes. Não foi possível ler: o repositório não está liberado nesta sessão, e a licença não é conhecida. Se for usado, primeiro é preciso confirmar a licença e comparar com o livro.
+
+> **Atualização (frente de dados):** classes (13), perícias (19), talentos (13), círculos de magia e BBA foram preenchidos a partir do compêndio do VTT fvtt-trpg (GPL-3, licença dos dados não confirmada; só números, nomes e listas) e da wiki tsrd, cada item com `fonte`. Seguem vazios: bases de resistência, magias por dia, equipamento, raças (exceto o anão), custo de compra. Veja `COBERTURA.md`.

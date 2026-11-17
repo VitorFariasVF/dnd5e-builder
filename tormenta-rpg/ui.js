@@ -67,30 +67,43 @@ function trpgCorpoEtapa(n){
         <option value="estrito"${state.modo === "estrito" ? " selected" : ""}>Estrito: raça e classe da lista</option></select>
       <label for="aparencia">Aparência</label><textarea id="aparencia" data-campo="aparencia">${v(p.aparencia)}</textarea>
       <label for="historia">História</label><textarea id="historia" data-campo="historia">${v(p.historia)}</textarea>`;
-    case 2: return trpgCampoOpcoes("raca", "Raça", TRPG_RACAS, p.raca, TRPG_PENDENTES.racas);
-    case 3: return trpgCampoOpcoes("classe", "Classe", TRPG_CLASSES, p.classe, TRPG_PENDENTES.classes);
+    case 2: return trpgCampoOpcoes("raca", "Raça", TRPG_RACAS, p.raca, TRPG_PENDENTES.racas,
+      `<p class="muted trpg-detalhe" data-saida="detalhe:raca"></p>`);
+    case 3: return trpgCampoOpcoes("classe", "Classe", TRPG_CLASSES, p.classe, TRPG_PENDENTES.classes,
+      `<p class="muted trpg-detalhe" data-saida="detalhe:classe"></p>`);
     case 4: return `${trpgNaoVerificado(TRPG_PENDENTES.atributos)}
       <p class="muted">Digite os valores de cada atributo (inteiro de 1 a 30). Os modificadores são calculados pela fórmula do d20 SRD 3.5.</p>
+      <ul class="trpg-lista-simples">${TRPG_METODOS_ATRIBUTOS.map(m => `<li><b>${trpgEsc(m.nome)}</b>: ${trpgEsc(m.regra)}. <small>${trpgEsc(m.fonte)}</small></li>`).join("")}</ul>
+      <p class="muted trpg-detalhe" data-saida="detalhe:raca-ajuste"></p>
       <div class="trpg-atributos">${TRPG_ATRIBUTOS.map(a => `<div class="trpg-atr">
         <label for="atr-${a.id}">${a.nome} (${a.abrev})</label>
         <input id="atr-${a.id}" type="number" inputmode="numeric" min="1" max="30" step="1" data-campo="atr:${a.id}" value="${v(p.atributos[a.id])}">
         <output data-saida="mod:${a.id}">Modificador</output></div>`).join("")}</div>`;
     case 5: return `${trpgNaoVerificado(TRPG_PENDENTES.pericias)}
       <p>Pontos por nível: <output data-saida="pontos">a definir</output></p>
+      <p class="muted">Graduações (fonte única, wiki de fãs): ${trpgEsc(TRPG_REGRAS.graduacoes.formula)}. Máximo por nível: NÃO VERIFICADO.</p>
+      <p class="muted">Perícias do livro básico (fonte de comunidade): ${TRPG_PERICIAS.map(x => `${trpgEsc(x.nome)} (${trpgEsc(trpgAbrevAtr(x.atributo))})`).join(", ")}.</p>
       <label for="disponiveis">Pontos de perícia disponíveis (deixe vazio se não souber)</label>
       <input id="disponiveis" type="number" inputmode="numeric" min="0" step="1" data-campo="disponiveis" value="${v(p.pericias.pontosDisponiveis)}">
       <label for="gastas">Graduações gastas</label>
       <input id="gastas" type="number" inputmode="numeric" min="0" step="1" data-campo="gastas" value="${v(p.pericias.graduacoesGastas)}">`;
     case 6: return `${trpgNaoVerificado(TRPG_PENDENTES.talentos)}
+      <p class="muted">Talentos principais verificados (fonte de comunidade):</p>
+      <ul class="trpg-lista-simples">${Object.values(TRPG_TALENTOS).map(t => `<li><b>${trpgEsc(t.nome)}</b>${t.pre.length ? " (pré-requisito: " + trpgEsc(t.pre.join("; ")) + ")" : ""}: ${trpgEsc(t.beneficio)}</li>`).join("")}</ul>
+      <p class="muted trpg-detalhe" data-saida="detalhe:talentos-classe"></p>
       <label for="talentos">Talentos (um por linha)</label><textarea id="talentos" data-campo="talentos">${v(p.talentos)}</textarea>`;
     case 7: return `${trpgNaoVerificado(TRPG_PENDENTES.magias)}
+      <p class="muted trpg-detalhe" data-saida="detalhe:magias"></p>
       <label for="magias">Magias (uma por linha)</label><textarea id="magias" data-campo="magias">${v(p.magias)}</textarea>`;
     case 8: return `${trpgNaoVerificado(TRPG_PENDENTES.equipamento)}
       <label for="equipamento">Equipamento (um item por linha)</label><textarea id="equipamento" data-campo="equipamento">${v(p.equipamento)}</textarea>
-      <label for="dinheiro">Dinheiro (unidade a confirmar)</label>
+      <p class="muted">Dinheiro inicial de 1º nível: ${trpgEsc(TRPG_DINHEIRO_INICIAL.valor)} ${trpgEsc(TRPG_DINHEIRO_INICIAL.moeda)}. Fonte: ${trpgEsc(TRPG_DINHEIRO_INICIAL.fonte)}.</p>
+      <label for="dinheiro">Dinheiro (${trpgEsc(TRPG_DINHEIRO_INICIAL.moeda)})</label>
       <input id="dinheiro" type="number" inputmode="numeric" min="0" step="1" data-campo="dinheiro" value="${v(p.dinheiro)}">`;
-    case 9: return `${trpgNaoVerificado("Bônus base de ataque e testes de resistência dependem da classe e não são calculados. PV e deslocamento são digitados à mão até a regra ser verificada.")}
+    case 9: return `${trpgNaoVerificado("Base de Fortitude, Reflexos e Vontade por classe não foi verificada. PV sugerido e BBA vêm da classe (fonte de comunidade). O PV máximo continua manual.")}
       <p>Classe de Armadura: <output data-saida="ca">—</output> · Iniciativa: <output data-saida="ini">—</output></p>
+      <p>PV sugerido pela classe: <output data-saida="pvsug">—</output> · BBA no nível: <output data-saida="bba">—</output></p>
+      <p>Testes de resistência (Fort, Ref, Von): <output data-saida="resist">—</output></p>
       <label for="armadura">Bônus de armadura</label><input id="armadura" type="number" inputmode="numeric" step="1" data-campo="armadura" value="${v(p.derivados.armadura)}">
       <label for="escudo">Bônus de escudo</label><input id="escudo" type="number" inputmode="numeric" step="1" data-campo="escudo" value="${v(p.derivados.escudo)}">
       <label for="tamanho">Modificador de tamanho</label><input id="tamanho" type="number" inputmode="numeric" step="1" data-campo="tamanho" value="${v(p.derivados.tamanho)}">
@@ -102,15 +115,72 @@ function trpgCorpoEtapa(n){
   }
 }
 
-function trpgCampoOpcoes(campo, rotulo, tabela, valor, pendencia){
+/* Campo de raça ou classe. Modo livre: texto livre com as opções verificadas como sugestão (datalist).
+   Modo estrito: lista (só o que está na tabela). O detalhe da opção escolhida aparece embaixo (trpgAtualizarSaidas). */
+function trpgCampoOpcoes(campo, rotulo, tabela, valor, pendencia, extra){
   const chaves = Object.keys(tabela);
-  if(!chaves.length){
-    return `${trpgNaoVerificado(pendencia)}
-      <label for="${campo}">${rotulo} (texto livre, até a tabela ser verificada)</label>
-      <input id="${campo}" data-campo="${campo}" value="${trpgEsc(valor)}" autocomplete="off">`;
+  const aviso = trpgNaoVerificado(pendencia);
+  if(!chaves.length || state.modo === "livre"){
+    const lista = campo + "-sugestoes";
+    const ops = chaves.map(k => `<option value="${trpgEsc(tabela[k].nome)}"></option>`).join("");
+    return `${aviso}
+      <label for="${campo}">${rotulo} (texto livre; as opções verificadas aparecem como sugestão)</label>
+      <input id="${campo}" data-campo="${campo}" list="${lista}" value="${trpgEsc(valor)}" autocomplete="off">
+      <datalist id="${lista}">${ops}</datalist>${extra || ""}`;
   }
   const ops = chaves.map(k => `<option value="${trpgEsc(k)}"${k === valor ? " selected" : ""}>${trpgEsc(tabela[k].nome || k)}</option>`).join("");
-  return `<label for="${campo}">${rotulo}</label><select id="${campo}" data-campo="${campo}"><option value="">Escolha</option>${ops}</select>`;
+  return `${aviso}<label for="${campo}">${rotulo}</label><select id="${campo}" data-campo="${campo}"><option value="">Escolha</option>${ops}</select>${extra || ""}`;
+}
+
+/* Textos de detalhe (sempre com fonte ou NÃO VERIFICADO). Recebem o valor do campo: chave ou nome. */
+function trpgAbrevAtr(id){
+  const a = TRPG_ATRIBUTOS.find(x => x.id === id);
+  return a ? a.abrev : id;
+}
+
+function trpgNomeAtr(id){
+  const a = TRPG_ATRIBUTOS.find(x => x.id === id);
+  return a ? a.nome : id;
+}
+
+function trpgRacaDados(valor){
+  if(!valor) return null;
+  if(TRPG_RACAS[valor]) return TRPG_RACAS[valor];
+  const alvo = String(valor).trim().toLowerCase();
+  const chave = Object.keys(TRPG_RACAS).find(k => TRPG_RACAS[k].nome.toLowerCase() === alvo);
+  return chave ? TRPG_RACAS[chave] : null;
+}
+
+function trpgTextoAjustes(r){
+  if(!r || !r.ajustes) return "NÃO VERIFICADO";
+  return Object.keys(r.ajustes).map(k => `${trpgAbrevAtr(k)} ${r.ajustes[k] > 0 ? "+" : ""}${r.ajustes[k]}`).join(", ");
+}
+
+function trpgDetalheRaca(valor){
+  if(!valor) return "Escolha uma raça para ver os ajustes e a fonte.";
+  const r = trpgRacaDados(valor);
+  if(!r) return "Raça fora da lista verificada: ajustes, tamanho e traços NÃO VERIFICADOS.";
+  return `${r.nome}. Ajustes: ${trpgTextoAjustes(r)} (${r.ajustesFonte}). Tamanho, deslocamento e traços: NÃO VERIFICADO. Fonte: ${r.fonte}.`;
+}
+
+function trpgDetalheClasse(valor){
+  if(!valor) return "Escolha uma classe para ver a regra do livro básico e a fonte.";
+  const c = trpgClasseDados(valor);
+  if(!c) return "Classe fora da lista verificada: PV, BBA e perícias NÃO VERIFICADOS.";
+  const d = c.dadoDeVida;
+  return `${c.nome}. PV: ${d.inicial} no 1º nível e +${d.porNivel} por nível seguinte, mais o modificador de Constituição. Perícias treinadas: ${c.pericias.treinadasBase} + Inteligência por nível. BBA: +${c.bba[0]} no 1º nível e +${c.bba[19]} no 20º. Resistências base: NÃO VERIFICADO. Fonte: ${c.fonte}.`;
+}
+
+function trpgDetalheMagias(valor){
+  if(!valor) return "Escolha uma classe na etapa 3 para ver os círculos de magia.";
+  const c = trpgClasseDados(valor);
+  if(!c) return "Classe fora da lista verificada: círculos NÃO VERIFICADOS.";
+  if(!c.conjuracao) return `${c.nome} não conjura magias na regra do compêndio do VTT.`;
+  const lista = Object.keys(c.conjuracao.circulos).map(Number).sort((a, b) => a - b)
+    .map(k => `círculo ${k} a partir do nível ${c.conjuracao.circulos[k]}`).join("; ");
+  const nivel = state.personagem.nivel;
+  const agora = trpgCirculosDisponiveis(c, nivel) || [];
+  return `Atributo de conjuração: ${trpgNomeAtr(c.conjuracao.atributo)}. Círculos: ${lista}. No nível ${nivel}: círculos ${agora.join(", ") || "nenhum"}. Magias por dia: NÃO VERIFICADO. Fonte: ${c.fonte}.`;
 }
 
 function trpgHtmlResumo(){
@@ -123,9 +193,11 @@ function trpgHtmlResumo(){
     ["CA", d.ca === null ? "—" : String(d.ca)],
     ["Iniciativa (hipótese)", trpgFormatarBonus(d.iniciativa)],
     ["PV máximo (manual)", p.derivados.pvMaximo === null ? "—" : String(p.derivados.pvMaximo)],
+    ["PV sugerido pela classe", d.pvSugerido === null ? "—" : String(d.pvSugerido)],
+    ["BBA no nível", d.bba === null ? "—" : trpgFormatarBonus(d.bba)],
     ["Talentos", String(p.talentos || "").split(/\r?\n/).filter(x => x.trim()).length + " registrado(s)"],
     ["Magias", String(p.magias || "").split(/\r?\n/).filter(x => x.trim()).length + " registrada(s)"],
-    ["Dinheiro", String(p.dinheiro)]
+    ["Dinheiro", String(p.dinheiro) + " " + TRPG_DINHEIRO_INICIAL.moeda + " (inicial sugerido: " + TRPG_DINHEIRO_INICIAL.valor + ")"]
   ];
   return `<dl class="trpg-resumo">${linhas.map(([k, val]) => `<dt>${trpgEsc(k)}</dt><dd>${trpgEsc(val)}</dd>`).join("")}</dl>
     <p class="muted">Edição: ${trpgEsc(TRPG_META.edicao)}. Fontes: ${trpgEsc(TRPG_META.fonteEdicao)}</p>
@@ -139,14 +211,27 @@ function trpgHtmlResumo(){
 function trpgAtualizarSaidas(){
   const app = trpgApp(); if(!app) return;
   const p = state.personagem, d = trpgDerivados(p);
+  const classe = trpgClasseDados(p.classe);
   app.querySelectorAll("[data-saida]").forEach(el => {
     const k = el.dataset.saida;
     if(k.startsWith("mod:")) el.textContent = "Modificador " + trpgFormatarBonus(d.modificadores[k.slice(4)]);
     else if(k === "ca") el.textContent = d.ca === null ? "—" : String(d.ca);
     else if(k === "ini") el.textContent = trpgFormatarBonus(d.iniciativa);
     else if(k === "pontos"){
-      const pts = trpgPontosPorNivel({ base: null, inteligencia: p.atributos.inteligencia });
-      el.textContent = pts === null ? "a definir (base da classe NÃO VERIFICADA)" : String(pts);
+      el.textContent = d.pontosPorNivel === null ? "a definir (escolha a classe e confira a Inteligência)" : d.pontosPorNivel + " por nível";
+    }
+    else if(k === "pvsug") el.textContent = d.pvSugerido === null ? "— (escolha a classe, o nível e a Constituição)" : String(d.pvSugerido);
+    else if(k === "bba") el.textContent = d.bba === null ? "—" : trpgFormatarBonus(d.bba);
+    else if(k === "resist") el.textContent = d.resistencias === null ? "—" : "a definir (base NÃO VERIFICADA)";
+    else if(k === "detalhe:raca") el.textContent = trpgDetalheRaca(p.raca);
+    else if(k === "detalhe:classe") el.textContent = trpgDetalheClasse(p.classe);
+    else if(k === "detalhe:magias") el.textContent = trpgDetalheMagias(p.classe);
+    else if(k === "detalhe:talentos-classe") el.textContent = classe ? "Talentos adicionais da classe (fonte de comunidade): " + classe.talentosAdicionais.join("; ") + "." : "Talentos adicionais: escolha uma classe verificada para vê-los.";
+    else if(k === "detalhe:raca-ajuste"){
+      const r = trpgRacaDados(p.raca);
+      if(!r) el.textContent = "Ajuste racial: escolha a raça na etapa 2.";
+      else if(!r.ajustes) el.textContent = "Ajuste racial de " + r.nome + ": " + r.ajustesFonte + ".";
+      else el.textContent = "Ajuste racial de " + r.nome + ": " + trpgTextoAjustes(r) + " (" + r.ajustesFonte + "). Não é aplicado automaticamente: some-o aos valores digitados.";
     }
   });
 }

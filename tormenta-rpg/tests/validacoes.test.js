@@ -43,9 +43,11 @@ teste("raça e classe no modo livre aceitam texto livre", () => {
   aceito('trpgValidarEtapa(3, Object.assign(estadoPadrao().personagem, {classe: "Qualquer"}), "livre")');
 });
 
-teste("raça e classe no modo estrito são recusadas enquanto a tabela estiver vazia (NÃO VERIFICADO)", () => {
+teste("raça e classe no modo estrito: fora da lista é recusado; item da lista é aceito", () => {
   const erros = avaliar(ctx, 'trpgValidarEtapa(2, Object.assign(estadoPadrao().personagem, {raca: "X"}), "estrito")');
-  assert.ok(erros.length === 1 && /NÃO VERIFICADO/.test(erros[0].msg));
+  assert.ok(erros.length === 1 && erros[0].campo === "raca" && /da lista/.test(erros[0].msg), JSON.stringify(erros));
+  aceito('trpgValidarEtapa(2, Object.assign(estadoPadrao().personagem, {raca: "anao"}), "estrito")');
+  aceito('trpgValidarEtapa(3, Object.assign(estadoPadrao().personagem, {classe: "mago"}), "estrito")');
   recusado('trpgValidarEtapa(3, estadoPadrao().personagem, "estrito")', "classe");
 });
 

@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 
 const RAIZ = path.resolve(__dirname, "..");
-const ARQUIVOS_JS = ["rules.js", "state.js", "validator.js", "engine.js", "storage.js", "export.js", "export-pdf.js", "ui.js", "main.js"];
+const ARQUIVOS_JS = ["rules.js", "rules-classes.js", "rules-racas.js", "rules-geral.js", "state.js", "validator.js", "engine.js", "storage.js", "export.js", "export-pdf.js", "ui.js", "main.js"];
 
 function criarAmbiente(){
   const dados = new Map();
