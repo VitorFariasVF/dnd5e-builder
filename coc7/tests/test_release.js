@@ -9,7 +9,7 @@ const assert = require('assert');
 const { chamar, val } = criarAmbiente();
 const { teste, fim } = criarRunner('test_release.js');
 
-const ARQUIVOS_JS = ['rules.js', 'engine.js', 'state.js', 'validator.js', 'storage.js', 'export.js', 'export-pdf.js', 'ui.js', 'main.js'];
+const ARQUIVOS_JS = ['rules.js', 'rules-ocupacoes.js', 'engine.js', 'state.js', 'validator.js', 'storage.js', 'export.js', 'export-pdf.js', 'ui.js', 'main.js'];
 const index = fs.readFileSync(path.join(DIR, 'index.html'), 'utf8');
 
 teste('index.html usa o data-tool próprio e o padrão VF Tools', () => {
