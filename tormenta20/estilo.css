@@ -1,0 +1,29 @@
+/* Tormenta20 — ajustes locais sobre o padrão VF Tools (vf/tokens.css, vf/components.css, core/style.css, core/theme.css).
+   Só tokens: nenhuma cor solta. A cor da classe entra por --t20-cor (definida na etapa). */
+
+#app .card{border-top:3px solid var(--t20-cor,var(--accent))}
+#app .info-box{border-left:3px solid var(--t20-cor,var(--line))}
+#app .t20-pericia{min-height:44px}
+#app .t20-pericia.off{opacity:.55}
+#app .t20-pericia input:disabled{cursor:not-allowed}
+.table-wrap{width:100%;max-width:100%}
+.table-like th{font-weight:600;color:var(--muted)}
+.score{font-size:1.5rem;font-family:var(--font-display);margin:var(--s1) 0}
+.badge.wip{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.hint{color:var(--muted);font-size:.85rem;margin:var(--s2) 0 var(--s3)}
+.chip-no{color:var(--danger)}
+.t20-msg{min-height:1.2em;color:var(--muted);font-size:.9rem;margin-top:var(--s2)}
+.t20-msg:empty{display:none}
+#app .point-buy-row button{min-width:44px}
+
+/* Atributos: em telas estreitas cada linha vira um bloco com rótulos (sem rolagem lateral). */
+@media (max-width:560px){
+  .t20-atributos thead{display:none}
+  .t20-atributos,.t20-atributos tbody,.t20-atributos tr,.t20-atributos th,.t20-atributos td{display:block;width:100%}
+  .t20-atributos tr{border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s2) var(--s3);margin-bottom:var(--s3);background:var(--surface)}
+  .t20-atributos th{border:0;padding:0 0 var(--s2);font-weight:700;color:var(--text)}
+  .t20-atributos td{border:0;padding:var(--s1) 0;display:flex;justify-content:space-between;align-items:center;gap:var(--s2);text-align:right}
+  .t20-atributos td::before{content:attr(data-rotulo);color:var(--muted);font-size:.85rem;text-align:left}
+  .t20-atributos td input{max-width:7rem}
+}
+@media (prefers-reduced-motion:reduce){#app .t20-pericia{transition:none}}
