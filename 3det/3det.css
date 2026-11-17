@@ -1,0 +1,57 @@
+/* Ajustes da 3DeT Victory sobre o padrão VF Tools (vf/*.css e core/*.css). Cores só por var(--...). */
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.botao-arquivo{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);cursor:pointer;font-weight:600;position:relative}
+.botao-arquivo:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Contador fixo de pontos: fica visível ao rolar a etapa */
+.tdt-contador{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;padding:10px 14px;margin:0 0 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);font-size:.9rem}
+.tdt-contador:focus{outline:2px solid var(--accent);outline-offset:2px}
+
+.tdt-lista{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.tdt-lista .card-nested{display:grid;gap:8px;padding:12px;min-width:0;overflow-wrap:anywhere}
+.tdt-lista [hidden]{display:none}
+.tdt-lista-simples{margin:8px 0;padding-left:1.2em;display:grid;gap:6px;overflow-wrap:anywhere}
+.tdt-lista-simples small{color:var(--muted)}
+.tdt-lista .alert{margin:0}
+
+.tdt-atributos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tdt-atr{display:grid;gap:6px;min-width:0}
+.tdt-recursos{display:flex;flex-wrap:wrap;gap:12px 20px;list-style:none;padding:0;margin:12px 0}
+
+.tdt-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.tdt-check{display:flex;align-items:center;gap:8px;min-height:44px;min-width:0;cursor:pointer}
+.tdt-check input{width:20px;height:20px;min-height:20px;margin:0;flex:none}
+.tdt-fieldset{border:1px solid var(--line);border-radius:var(--r-md);padding:12px;margin:12px 0;min-width:0}
+.tdt-fieldset legend{padding:0 6px;font-weight:600}
+
+.tdt-controles{display:grid;gap:6px;min-width:0}
+.tdt-detalhe{font-size:.95rem;overflow-wrap:anywhere}
+.tdt-sub{font:500 1.05rem var(--font-display);margin:20px 0 8px}
+
+.tdt-resumo{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);gap:8px 16px;margin:12px 0}
+.tdt-resumo dt{font-weight:700;color:var(--muted)}
+.tdt-resumo dd{margin:0;min-width:0;overflow-wrap:anywhere}
+
+.stepper-dots{flex-wrap:wrap;justify-content:center;gap:6px}
+/* Bolinhas visuais continuam pequenas; a área de toque (pseudo-elemento do tema) passa a ter 40px nos dois lados */
+#app .stepper-dots button::after{inset:-10px}
+
+/* 360px: nada de rolagem lateral; campos ocupam a largura da coluna; alvos de toque de 40px */
+input,select,textarea{max-width:100%;min-height:40px}
+input,select,textarea,.card,.alert{box-sizing:border-box;min-width:0}
+.card{max-width:100%;overflow-wrap:anywhere}
+.actions{flex-wrap:wrap}
+.actions button,.stepper-dots button{min-width:40px;min-height:40px}
+
+@media (max-width:360px){
+  .tdt-atributos{grid-template-columns:minmax(0,1fr)}
+  .tdt-resumo{grid-template-columns:minmax(0,1fr)}
+  .tdt-resumo dt{margin-top:6px}
+  .tdt-checks{grid-template-columns:minmax(0,1fr)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}

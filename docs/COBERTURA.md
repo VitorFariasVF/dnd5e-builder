@@ -10,6 +10,7 @@ Dois números por sistema, com métodos diferentes. **Ambos são aproximados** n
 | Call of Cthulhu 7ª | ≈ 80% | ≈ 55% | Quick-Start em japonês, wikis e Roll20 |
 | Tormenta20 | ≈ 55% | ≈ 15% | Guias de fãs |
 | Tormenta RPG (d20) | ≈ 35% | ≈ 30% | Compêndio do VTT fvtt-trpg, wiki tsrd e d20 SRD 3.5 |
+| 3DeT Victory | ≈ 60% | ≈ 50% | Playtest 2023 e Kit Introdutório da Jambô (oficiais, gratuitos) |
 
 O percentual de regras conferidas do D&D caiu em relação à rodada anterior (92%) porque o conjunto de itens cresceu com dados de fonte única (subclasses, sub-raças e o 2024).
 
@@ -24,3 +25,5 @@ O percentual de regras conferidas do D&D caiu em relação à rodada anterior (9
 
 ## Como subir esses números
 Livros ou PDFs oficiais, ou o conteúdo das wikis tsrd e tormenta-collab (que deram erro de acesso). Cada item preenchido entra com a página registrada.
+
+**3DeT Victory:** efeito da maioria das vantagens e desvantagens, arquétipos Aberrante/Abissal/Alien, custo do Anão, kits, 3D&T Alpha, e conferência com o livro final (a base é o Playtest). Percentuais aproximados.

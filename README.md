@@ -3,7 +3,7 @@
 # ⚔️ Criador de fichas RPG
 
 **Fichas de RPG em HTML, CSS e JavaScript puro: offline, sem cadastro e sem backend.**
-D&D 5e (pronto), Tormenta20, Tormenta RPG e Call of Cthulhu 7ª edição (em andamento).
+D&D 5e (pronto), Tormenta20, Tormenta RPG, Call of Cthulhu 7ª edição e 3DeT Victory (em andamento).
 
 [![Demo Online](https://img.shields.io/badge/🚀%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge)](https://vitorfariasvf.github.io/rpg-sheet-builder/)
 [![Código](https://img.shields.io/badge/📦%20Código-GitHub-111827?style=for-the-badge)](https://github.com/VitorFariasVF/rpg-sheet-builder)
@@ -23,10 +23,11 @@ O `index.html` da raiz é um **hub** que leva a cada sistema. Cada sistema é um
 | **Call of Cthulhu 7ª edição** | [`coc7/`](coc7/) | Trabalho em andamento | ≈ 80% | ≈ 55% |
 | **Tormenta20** | [`tormenta20/`](tormenta20/) | Trabalho em andamento | ≈ 55% | ≈ 15% |
 | **Tormenta RPG** (d20 original) | [`tormenta-rpg/`](tormenta-rpg/) | Trabalho em andamento | ≈ 35% | ≈ 30% |
+| **3DeT Victory** | [`3det/`](3det/) | Trabalho em andamento | ≈ 60% | ≈ 50% |
 
 \* Valores aproximados. O método e o que falta em cada sistema estão em [`docs/COBERTURA.md`](docs/COBERTURA.md).
 
-> **Sobre as regras.** Tormenta20, Tormenta RPG e Call of Cthulhu foram montados a partir de **guias de fãs, wikis e material gratuito**, não do livro oficial. Cada dado leva a sua fonte e o que não foi confirmado em duas fontes aparece como **NÃO VERIFICADO** na tela. Cada página desses três sistemas e o rodapé do PDF avisam isso. Confira no seu exemplar do livro antes de usar em mesa. Os sistemas guardam só mecânica (números, fórmulas, nomes) e descrições curtas em palavras próprias, nunca texto de livro nem arte.
+> **Sobre as regras.** Tormenta20, Tormenta RPG, Call of Cthulhu e 3DeT Victory foram montados a partir de **guias de fãs, wikis e material gratuito** (o 3DeT Victory, do Playtest e do Kit Introdutório oficiais da Jambô), não do livro oficial. Cada dado leva a sua fonte e o que não foi confirmado em duas fontes aparece como **NÃO VERIFICADO** na tela. Cada página desses três sistemas e o rodapé do PDF avisam isso. Confira no seu exemplar do livro antes de usar em mesa. Os sistemas guardam só mecânica (números, fórmulas, nomes) e descrições curtas em palavras próprias, nunca texto de livro nem arte.
 
 ---
 
@@ -42,6 +43,7 @@ O `index.html` da raiz é um **hub** que leva a cada sistema. Cada sistema é um
 /tormenta20/index.html Tormenta20
 /tormenta-rpg/index.html Tormenta RPG
 /coc7/index.html       Call of Cthulhu 7ª edição
+/3det/index.html       3DeT Victory
 ```
 
 Fluxo em todos os sistemas: escolher o modo (estrito, com validação das regras, ou livre) → montar a ficha por etapas → revisar o resumo → exportar. Os dados ficam só no navegador, com histórico, duplicação e importação do backup.
@@ -63,6 +65,10 @@ Investigador completo: características (rolar ou distribuir), ajustes de idade,
 ## 🛡️ Tormenta20
 
 Fluxo em 12 etapas do nível 1 ao 20, com 14 classes, 17 raças, 194 poderes e magias por círculo. Onde o dado é incerto, a ficha mostra "não verificado" e aceita o valor digitado à mão. Equipamento e magias de 2º a 5º círculo ainda estão incompletos. Exporta backup JSON (esquema 2), PDF e um rascunho de ator para Foundry (não testado).
+
+## ⚡ 3DeT Victory
+
+Fluxo de 7 etapas com os 3 atributos (Poder, Habilidade e Resistência), PA, PM e PV calculados, 12 perícias, cerca de 60 vantagens, 33 desvantagens e 24 arquétipos, com orçamento de 10 pontos e limite de −2 em desvantagens. Os números vêm do Playtest e do Kit Introdutório gratuitos da Jambô, não do livro final. Só as vantagens e desvantagens do Kit têm o efeito descrito. Não cobre o 3D&T Alpha nem os kits, e não exporta para VTT. Exporta backup JSON e PDF.
 
 ## 📜 Tormenta RPG (d20)
 
