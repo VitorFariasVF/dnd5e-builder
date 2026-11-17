@@ -11,9 +11,9 @@ const { criarAmbiente, criarRunner, DIR } = require('./ambiente');
 const { ctx, val, chamar } = criarAmbiente();
 const { teste, fim } = criarRunner('test_ocupacoes.js');
 
-const ORIGINAIS_ANTES = val('COC_OCUPACOES');
-vm.runInContext(fs.readFileSync(path.join(DIR, 'rules-ocupacoes.js'), 'utf8'), ctx, { filename: 'rules-ocupacoes.js' });
+/* rules-ocupacoes.js já vem no núcleo do ambiente; as 10 primeiras são as originais de rules.js. */
 const OCUP = val('COC_OCUPACOES');
+const ORIGINAIS_ANTES = OCUP.slice(0, 10);
 
 const CARAC = val('COC_CARACTERISTICAS').map(c => c.id);
 const PERICIAS = val('COC_PERICIAS').map(p => p.id);

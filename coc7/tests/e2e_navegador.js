@@ -201,14 +201,14 @@ async function controles(browser){
   await avancar();
   verifica((await etapa()).includes('Etapa 3 de 10'), 'rolagem das oito avança para a idade');
 
-  /* Idade 17: faixa 15-19 (redução de EDU -5 fixa e FOR ou TAM -5 à escolha, sem teste de EDU). */
+  /* Idade 17: faixa 15-19 (EDU -5 fixa e 5 pontos divididos entre FOR e TAM, sem teste de EDU). */
   await pagina.fill('#idade', '17');
   await pagina.locator('#idade').press('Tab');
   await pagina.waitForTimeout(120);
-  verifica(await pagina.locator('#idade-esc-0').count() === 1, 'idade 17 mostra a escolha de FOR ou TAM');
+  verifica(await pagina.locator('#idade-esc-0').count() === 1, 'idade 17 mostra a divisão de FOR e TAM');
   await avancar();
-  verifica((await etapa()).includes('Etapa 3 de 10') && await pagina.locator('.alert.error').count() > 0, 'idade 17 sem a escolha de redução é recusada');
-  await pagina.selectOption('#idade-esc-0', 'tam');
+  verifica((await etapa()).includes('Etapa 3 de 10') && await pagina.locator('.alert.error').count() > 0, 'idade 17 sem a divisão é recusada');
+  await pagina.selectOption('#idade-esc-0', '2');
   await pagina.waitForTimeout(120);
   await avancar();
   verifica((await etapa()).includes('Etapa 4 de 10'), 'idade 17 com a escolha avança para ocupação');

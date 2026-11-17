@@ -79,10 +79,13 @@ teste('Etapa 3 recusa idade 14 e 91', () => {
   if(!comCampo(v(edita(i => i.idade = 14), 3).erros, "idade")) throw new Error("14");
   if(!comCampo(v(edita(i => i.idade = 91), 3).erros, "idade")) throw new Error("91");
 });
-teste('Etapa 3 aceita idade 15 com a escolha de FOR ou TAM', () => {
-  const e = edita(i => { i.idade = 15; i.escolhasIdade = ["tam"]; i.melhoriasEdu = []; });
+teste('Etapa 3 aceita idade 15 com a divisão de 5 pontos entre FOR e TAM (x = 2)', () => {
+  const e = edita(i => { i.idade = 15; i.escolhasIdade = [2]; i.melhoriasEdu = []; });
   const r = v(e, 3);
   if(r.erros.length) throw new Error(JSON.stringify(r.erros));
+});
+teste('Etapa 3 recusa divisão de 15 anos com valor fora de 0 a 5', () => {
+  if(!comCampo(v(edita(i => { i.idade = 15; i.escolhasIdade = [7]; i.melhoriasEdu = []; }), 3).erros, "idade-esc-0")) throw new Error("aceitou 7");
 });
 teste('Etapa 3 recusa idade 15 sem a escolha de redução', () => {
   if(!comCampo(v(edita(i => { i.idade = 15; i.escolhasIdade = []; }), 3).erros, "idade-esc-0")) throw new Error("aceitou");
@@ -131,9 +134,18 @@ teste('Etapa 5 recusa crédito fora da faixa do Professor (20 a 70)', () => {
   const r = v(edita(i => { i.pontosOcupacao.credito = 75; i.pontosOcupacao.biblioteca = 30; }), 5);
   if(!comTexto(r.erros, "Crédito 75% fora da faixa")) throw new Error(JSON.stringify(r.erros));
 });
-teste('Etapa 5 recusa perícia acima de 90%', () => {
-  const r = v(edita(i => { i.pontosOcupacao.biblioteca = 75; i.pontosOcupacao.historia = 0; i.pontosOcupacao.natureza = 15; }), 5);
-  if(!comTexto(r.erros, "passou de 90")) throw new Error(JSON.stringify(r.erros));
+teste('Etapa 5: perícia acima de 90% é só aviso "regra não confirmada" (não bloqueia, modo estrito)', () => {
+  const r = v(edita(i => { i.pontosOcupacao.biblioteca = 75; i.pontosOcupacao.historia = 0; i.pontosOcupacao.natureza = 30; i.pontosOcupacao.psicologia = 55; }), 5);
+  if(r.erros.length) throw new Error(JSON.stringify(r.erros));
+  if(!comTexto(r.avisos, "passou de 90") || !comTexto(r.avisos, "regra não confirmada")) throw new Error(JSON.stringify(r.avisos));
+});
+teste('Etapa 5: o mesmo aviso de 90% no modo livre fica nos avisos', () => {
+  const r = v(edita(i => { i.pontosOcupacao.biblioteca = 75; i.pontosOcupacao.historia = 0; i.pontosOcupacao.natureza = 30; i.pontosOcupacao.psicologia = 55; }, "livre"), 5);
+  if(r.erros.length || !comTexto(r.avisos, "regra não confirmada")) throw new Error(JSON.stringify(r));
+});
+teste('Etapa 6: perícia de interesse acima de 90% também é só aviso', () => {
+  const r = v(edita(i => { i.pontosInteresse.escalar = 75; i.pontosInteresse.furtividade = 30; i.pontosInteresse.briga = 40; i.pontosInteresse.esquivar = 5; }), 6);
+  if(r.erros.length || !comTexto(r.avisos, "regra não confirmada")) throw new Error(JSON.stringify(r));
 });
 teste('Etapa 5 recusa pontos em perícia que não é da ocupação (Briga)', () => {
   const r = v(edita(i => { i.pontosOcupacao.briga = 10; i.pontosOcupacao.historia = 20; }), 5);

@@ -119,6 +119,7 @@ function etapaModo(){
     <div class="history-actions"><button type="button" class="small" data-acao="hist-abrir" data-id="${esc(h.id)}">Abrir</button><button type="button" class="small secondary" data-acao="hist-copia" data-id="${esc(h.id)}">Duplicar</button><button type="button" class="small danger" data-acao="hist-excluir" data-id="${esc(h.id)}">Excluir</button></div></li>`).join("")}</ul>` : "";
   return `<h2>Modo e identidade</h2>
     <p class="lead small">Comece pelo modo. O estrito valida cada etapa antes de seguir. O livre mostra os problemas como avisos e deixa avançar.</p>
+    <div class="alert warning" role="note"><b>Processo de criação: regra completa.</b> Interesse pessoal = INT × 2, fórmulas de ocupação, ajustes de idade e movimento condicional seguem a regra completa (Keeper Rulebook). O Quick-Start oficial só é fonte onde coincide. Os dois modos usam a mesma regra; o modo muda só se os erros bloqueiam ou viram aviso. O teto de 90% por perícia é aviso nos dois modos (regra não confirmada).</div>
     <fieldset class="rules-pick"><legend>Modo de criação</legend>
       ${radioOpcao("modo", "estrito", "Estrito: bloqueia o avanço enquanto houver erro", estado.modo, "modo", "texto", "modo-estrito")}
       ${radioOpcao("modo", "livre", "Livre: avisa e deixa avançar (aceita valores manuais)", estado.modo, "modo", "texto", "modo-livre")}
@@ -175,18 +176,24 @@ function etapaIdade(){
   }
   const faixa = cocFaixaIdade(i);
   const { lista } = efeitosIdade(i);
-  const escolhas = lista.filter(e => e.tipo === "escolha");
+  const escolhas = lista.filter(ehEscolha);
   corpo += `<h3>${esc(faixa.rotulo)}</h3>
     <div class="alert warning" role="status">Fontes desta faixa: ${esc(faixa.fonte)} Confira no livro antes de usar.</div>`;
   if(escolhas.length){
     corpo += `<h4>Reduções escolhidas</h4><div class="grid-2">` + escolhas.map((e, k) => {
+      if(e.tipo === "divisao"){
+        const [a, b] = e.alvos.map(id => cocCaracteristica(id));
+        const opts = `<option value="">Escolha…</option>` + Array.from({ length: e.total + 1 }, (_, x) =>
+          `<option value="${x}"${String(inv.escolhasIdade[k]) === String(x) ? " selected" : ""}>${esc(a.sigla)} −${x} · ${esc(b.sigla)} −${e.total - x}</option>`).join("");
+        return `<div><label for="idade-esc-${k}">${esc(e.faixa)}: dividir ${e.total} pontos entre ${esc(a.nome)} e ${esc(b.nome)}</label><select id="idade-esc-${k}" data-set="investigador.escolhasIdade.${k}" data-tipo="int" data-rerender="1">${opts}</select></div>`;
+      }
       const opts = `<option value="">Escolha…</option>` + e.opcoes.map(o => `<option value="${o}"${inv.escolhasIdade[k] === o ? " selected" : ""}>${esc((cocCaracteristica(o) || { nome: o }).nome)}</option>`).join("");
       return `<div><label for="idade-esc-${k}">${esc(e.faixa)}: reduzir ${esc(e.rotulo)} em ${Math.abs(e.valor)}</label><select id="idade-esc-${k}" data-set="investigador.escolhasIdade.${k}" data-tipo="texto" data-rerender="1">${opts}</select></div>`;
     }).join("") + `</div>`;
   }
   const testes = testesEdu(inv);
   if(testes.length){
-    corpo += `<h4>Testes de melhoria de EDU</h4><p class="hint">${esc(COC_MELHORIA_EDU.regra)}. Regra ${esc(COC_NV)}: confira no livro.</p>`;
+    corpo += `<h4>Testes de melhoria de EDU</h4><p class="hint">${esc(COC_MELHORIA_EDU.regra)}. Fonte: ${esc(COC_MELHORIA_EDU.fonte)}.</p>`;
     corpo += testes.map(t => {
       const res = t.d100 == null ? "não rolado" : `${t.d100} ${t.passou ? "(passou da EDU " + t.eduAntes + ")" : "(não passou da EDU " + t.eduAntes + ")"}`;
       const d10 = t.passou ? `<button type="button" class="small secondary" data-acao="rolar-d10" data-i="${t.i}" id="melhoria-${t.i}-d10">Rolar 1d10${t.d10 != null ? " (" + t.d10 + ")" : ""}</button>` : "";
@@ -264,7 +271,7 @@ function etapaInteresse(){
   }).join("");
   return `<h2>Interesse pessoal</h2>
     <p>Pontos de interesse: <b data-live="gasto-int">${r.gastoInteresse}</b> de <b data-live="pool-int">${r.poolInteresse}</b> distribuídos.</p>
-    <p class="hint">Use para perícias que não são de ocupação. Pool: INT × 2 (confirmado em 2 fontes; o Quick-Start oficial usa outro método).</p>
+    <p class="hint">Use para perícias que não são de ocupação. Regra completa: INT × 2 (confirmado em 2 fontes). O Quick-Start usa outro método (4 perícias +20), que o app não usa.</p>
     <table><thead><tr><th>Perícia</th><th class="n">Base</th><th class="n">Pontos</th><th class="n">Total</th></tr></thead><tbody>${linhas}</tbody></table>`;
 }
 
@@ -301,7 +308,7 @@ function etapaDerivados(){
       <div><b>Pontos de vida</b> <span data-live="pv">${d.pv}</span><p class="hint">(CON + TAM) ÷ 10, arredondado para baixo</p></div>
       <div><b>Sanidade inicial</b> <span data-live="san">${d.sanInicial}</span><p class="hint">Igual ao POD. Máximo <span data-live="sanmax">${d.sanMax}</span></p></div>
       <div><b>Pontos de magia</b> <span data-live="pm">${d.pm}</span><p class="hint">POD ÷ 5</p></div>
-      <div><b>Movimento</b> <span data-live="mov">${d.mov}</span><p class="hint">Base 8 (Quick-Start). −1 a cada faixa de 40 anos em diante. Regra completa com MOV condicional: conflito, não aplicada</p></div>
+      <div><b>Movimento</b> <span data-live="mov">${d.mov}</span><p class="hint">Regra completa: 7, 8 ou 9 conforme FOR e DES em relação a TAM, depois −1 por faixa de 40 anos (acumulado). Ordem antes ou depois da idade: não verificada</p></div>
       <div><b>Dano</b> <span data-live="dano">${esc(d.danoConhecido ? d.dano : "não calc.")}</span></div>
       <div><b>Corpo</b> <span data-live="corpo">${esc(d.danoConhecido ? d.corpo : "—")}</span></div>
     </div>
@@ -319,6 +326,12 @@ function etapaResumo(){
   const o = cocOcupacao(inv.ocupacaoId);
   const pericias = calcPericias(inv).filter(p => p.total > 0);
   const r = validarEtapa(estado, 10);
+  const ficha = cocFichaCombate(inv);
+  const fichaHtml = `<h3>Ficha de jogo: combate</h3>
+    <p class="hint">${ficha.dbConhecido ? `DB deste investigador: ${esc(ficha.db)}.` : `DB não calculado: FOR+TAM acima de 204 (${esc(COC_NV)}).`} Os valores já incluem os pontos da perícia.</p>
+    <table><thead><tr><th>Perícia</th><th class="n">Total</th></tr></thead><tbody>${ficha.combate.map(c => `<tr><td>${esc(c.nome)}</td><td class="n">${c.total}%</td></tr>`).join("")}</tbody></table>
+    <div style="overflow-x:auto"><table><thead><tr><th>Arma</th><th>Perícia</th><th class="n">Valor</th><th>Dano</th><th>Alcance</th><th class="n">Tiros</th></tr></thead><tbody>${ficha.armas.map(a => `<tr><td>${esc(a.nome)}</td><td>${esc(a.pericia)}</td><td class="n">${a.valorPericia}%</td><td>${esc(a.dano)}${a.usaDb ? " + DB" : ""}</td><td>${esc(a.alcance)}</td><td class="n">${a.tiros == null ? "—" : a.tiros}</td></tr>`).join("")}</tbody></table></div>
+    <p class="hint">Mecânica apenas. Fonte das armas: ${esc(COC_ARMAS_FONTE)}.</p>`;
   const linhas = COC_CARACTERISTICAS.map(c => {
     const fin = caracteristicasFinais(inv);
     return `<span>${c.sigla} ${fin ? fin[c.id] : "—"}</span>`;
@@ -331,18 +344,21 @@ function etapaResumo(){
     `Perícias: ${COC_PERICIAS_FONTE}`,
     `Dano e Corpo: ${COC_DANO_FONTE}`,
     `Pontos de vida, Sanidade, Pontos de magia, Sorte e Movimento: ${COC_FONTE_DERIVADOS}`,
-    `Movimento base 8: ${COC_MOV_BASE.fonte}`,
-    `Pontos de interesse pessoal: ${COC_INTERESSE.fonte}`
+    `Movimento: ${COC_MOV.fonte}`,
+    `Pontos de interesse pessoal: ${COC_INTERESSE.fonte}`,
+    `Armas e ficha de combate: ${COC_ARMAS_FONTE}`
   ];
   const naoVerificados = [
-    `Idade: valores de FOR, CON, DES e APA a partir de 50 anos, testes de EDU e valores de 15 a 19 anos (ver as faixas acima).`,
-    `Teste de melhoria de EDU: ${COC_MELHORIA_EDU.regra} (${COC_MELHORIA_EDU.fonte}).`,
-    `Movimento condicional por FOR e DES em relação ao TAM: fontes em conflito, não aplicado.`,
-    `Sanidade máxima 99 − Mitos: ${COC_NV} (1 fonte).`,
+    `Idade: +5 pontos entre FOR e TAM aos 20 anos (1 fonte, não aplicado).`,
+    `Idade: se o MOV compara FOR, DES e TAM antes ou depois dos ajustes de idade (ordem não verificada; o app usa depois).`,
+    `Sanidade máxima 99 − Mitos: ${COC_NV} (só posts de fórum).`,
     COC_DANO_ACIMA_NV + ".",
     `Teto de ${COC_TETO_PERICIA.valor}% por perícia na criação: ${COC_TETO_PERICIA.fonte}.`,
-    `Ocupações, exceto Jornalista: fórmula, crédito e perícias de 1 fonte. ${COC_NV}.`,
-    `Bases de perícia de Arte e Ofício, Arqueologia, Psicanálise e Idioma (outro): 1 fonte. ${COC_NV}.`
+    `Ocupações, exceto Jornalista: fórmula, crédito e perícias de 1 fonte. ${COC_NV}.`
+  ];
+  const simplificacoes = [
+    `Idade de 40 anos em diante: um alvo por faixa para FOR, CON ou DES (o livro pode permitir dividir; não confirmado).`,
+    `Idade de 15 a 19 anos: os 5 pontos são divididos entre FOR e TAM, com a escolha feita no passo da idade.`
   ];
   return `<h2>Resumo</h2>
     ${faixaAviso(r.erros, "erro")}${faixaAviso(r.avisos, "aviso")}
@@ -352,8 +368,10 @@ function etapaResumo(){
     ${d ? `<p>PV ${d.pv} · Sanidade ${d.sanInicial} (máx. ${d.sanMax}) · Sorte ${inv.sorte ?? "—"} · PM ${d.pm} · MOV ${d.mov} · Dano ${esc(d.danoConhecido ? d.dano : "não calc.")} · Corpo ${esc(d.danoConhecido ? d.corpo : "—")}</p>` : ""}
     <h3>Perícias com valor</h3>
     <table><thead><tr><th>Perícia</th><th class="n">Total</th><th class="n">½</th><th class="n">⅕</th></tr></thead><tbody>${pericias.map(p => `<tr><td>${esc(p.nome)}${p.espec ? " (" + esc(p.espec) + ")" : ""}</td><td class="n">${p.total}</td><td class="n">${p.metade}</td><td class="n">${p.quinto}</td></tr>`).join("")}</tbody></table>
+    ${fichaHtml}
     <details class="fontes"><summary>Fontes e pontos não verificados</summary>
       <h4>Fontes</h4><ul>${fontes.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
+      <h4>Simplificações do app</h4><ul>${simplificacoes.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
       <h4>Não verificado</h4><ul>${naoVerificados.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
     </details>
     <div class="actions">

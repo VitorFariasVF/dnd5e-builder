@@ -58,7 +58,9 @@ teste('Dados de regra têm fonte ou NÃO VERIFICADO (características, faixas de
   val('COC_CARACTERISTICAS').forEach(c => assert.ok(c.fonte && c.fonte.length > 5, c.id));
   val('COC_FAIXAS_IDADE').forEach(f => assert.ok(f.fonte, f.rotulo));
   assert.ok(val('COC_DANO_FONTE').length > 5);
-  assert.ok(val('COC_PERICIAS_FONTE').includes("NÃO VERIFICADO"));
+  assert.ok(val('COC_PERICIAS_FONTE').length > 5, "fonte das perícias");
+  assert.ok(val('COC_FONTE_DERIVADOS').includes("NÃO VERIFICADO"), "Sanidade máxima segue NÃO VERIFICADO");
+  assert.ok(val('COC_TETO_PERICIA.aviso') === "regra não confirmada", "teto é aviso");
 });
 teste('Dossiê em PDF tem exatamente 2 páginas A4 no HTML', () => {
   const html = chamar('gerarHtmlDossie', estadoExemplo());

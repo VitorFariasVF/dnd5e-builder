@@ -28,17 +28,27 @@ function limitesCaracteristica(id){
 function faixasAplicaveis(idade){
   return COC_FAIXAS_IDADE.filter(f => f.min >= 40 ? idade >= f.min : (idade >= f.min && idade <= f.max));
 }
-/* Lista de efeitos na ordem de aplicação. Efeitos "escolha" recebem um índice de escolha. */
+/* Efeitos que pedem escolha do jogador: "escolha" (um alvo) e "divisao" (repartir o total). */
+function ehEscolha(e){ return e.tipo === "escolha" || e.tipo === "divisao"; }
+/* Lista de efeitos na ordem de aplicação. Efeitos de escolha recebem um índice (escolhasIdade[índice]). */
 function efeitosIdade(idade){
   const lista = [];
   let escolhas = 0;
   for(const f of faixasAplicaveis(idade)){
     for(const e of f.efeitos){
-      if(e.tipo === "escolha") lista.push(Object.assign({}, e, { faixa: f.rotulo, indiceEscolha: escolhas++ }));
+      if(ehEscolha(e)) lista.push(Object.assign({}, e, { faixa: f.rotulo, indiceEscolha: escolhas++ }));
       else lista.push(Object.assign({}, e, { faixa: f.rotulo }));
     }
   }
   return { lista, escolhas };
+}
+/* Quanto do total de uma divisão vai para o primeiro alvo. Inválido (vazio, fora de 0 a total) devolve null: nada é aplicado. */
+function valorDivisao(escolhas, indice, total){
+  const v = (escolhas || [])[indice];
+  if(v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  if(!Number.isInteger(n) || n < 0 || n > total) return null;
+  return n;
 }
 /* Testes de melhoria de EDU acumulam por todas as faixas já atingidas (20 a 39 também vale para 45 anos). */
 function melhoriasEduEsperadas(idade){
@@ -51,7 +61,7 @@ function sorteDuasRolagens(idade){
   return faixasAplicaveis(idade).some(f => f.sorteDuasRolagens);
 }
 
-/* Aplica idade sobre as características. `escolhas` = alvos escolhidos na ordem dos efeitos de escolha.
+/* Aplica idade sobre as características. `escolhas` = alvos (ou quantidades de divisão) na ordem dos efeitos de escolha.
    `melhorias` = [{d100, d10}] na ordem dos testes. Retorna os valores finais e o registro do que aconteceu. */
 function aplicarIdade(base, idade, escolhas, melhorias){
   const valores = Object.assign({}, base);
@@ -61,6 +71,14 @@ function aplicarIdade(base, idade, escolhas, melhorias){
     if(e.tipo === "fixo"){
       valores[e.alvo] = Math.max(1, valores[e.alvo] + e.valor);
       registro.push({ faixa: e.faixa, alvo: e.alvo, valor: e.valor });
+    } else if(e.tipo === "divisao"){
+      const x = valorDivisao(escolhas, e.indiceEscolha, e.total);
+      if(x == null) continue;
+      const partes = [[e.alvos[0], x], [e.alvos[1], e.total - x]];
+      for(const [alvo, qtd] of partes){
+        valores[alvo] = Math.max(1, valores[alvo] - qtd);
+        registro.push({ faixa: e.faixa, alvo, valor: -qtd });
+      }
     } else {
       const alvo = (escolhas || [])[e.indiceEscolha];
       if(!e.opcoes.includes(alvo)) continue;
@@ -82,6 +100,13 @@ function aplicarIdade(base, idade, escolhas, melhorias){
 }
 
 /* ---- Derivados ---- */
+/* Movimento base (regra completa): compara FOR e DES com TAM. Ambas menores: 7. Ambas maiores: 9. Nos demais casos: 8. */
+function movBase(car){
+  const f = car.for, d = car.des, t = car.tam;
+  if(f < t && d < t) return 7;
+  if(f > t && d > t) return 9;
+  return 8;
+}
 function cocDano(somaForTam){
   return COC_DANO.find(d => somaForTam >= d.min && somaForTam <= d.max) || null;
 }
@@ -111,7 +136,7 @@ function calcDerivados(inv){
     sanMax: 99 - mitos,
     pm: Math.floor(car.pod / 5),
     sorte: sorteFinal(inv),
-    mov: COC_MOV_BASE.valor + movPorIdade(idade),
+    mov: Math.max(0, movBase(car) + movPorIdade(idade)),
     dano: dano ? dano.dano : null,
     corpo: dano ? dano.corpo : null,
     danoConhecido: !!dano,
@@ -168,6 +193,23 @@ function calcPericias(inv){
       inter: Number((inv.pontosInteresse || {})[p.id]) || 0, total, metade: Math.floor(total / 2), quinto: Math.floor(total / 5),
       espec: inv.especializacoes ? (inv.especializacoes[p.id] || "") : "" };
   });
+}
+
+/* Ficha de combate: armas básicas com o valor total da perícia do investigador. DB vem de calcDerivados. */
+function cocFichaCombate(inv){
+  const pericias = calcPericias(inv);
+  const der = calcDerivados(inv);
+  const dbTexto = der ? (der.danoConhecido ? der.dano : null) : null;
+  const armas = COC_ARMAS.map(a => {
+    const p = pericias.find(x => x.id === a.pericia) || { nome: a.pericia, total: 0 };
+    return { id: a.id, nome: a.nome, pericia: p.nome, valorPericia: p.total, dano: a.dano, usaDb: !!a.db,
+      alcance: a.alcance, tiros: a.tiros, fonte: a.fonte };
+  });
+  const combate = ["briga", "esquivar", "arma_pistola", "arma_rifle"].map(id => {
+    const p = pericias.find(x => x.id === id);
+    return { id, nome: p.nome, total: p.total };
+  });
+  return { db: dbTexto, dbConhecido: !!(der && der.danoConhecido), combate, armas };
 }
 
 /* Resumo de como as contas batem (usado na tela e no PDF). */

@@ -1,14 +1,15 @@
 /* Call of Cthulhu 7ª edição (Chaosium): dados de regra.
    Só mecânica e nomes em palavras próprias. Nenhum texto de livro, tabela copiada ou arte.
+   Processo: REGRA COMPLETA (Keeper Rulebook) como base. O Quick-Start oficial só é fonte onde coincide.
    Cada dado leva `fonte`. "NÃO VERIFICADO" = não confirmado em duas fontes independentes
    (ou com fontes em conflito): o app usa o valor, mostra o aviso, e o item está listado em
-   docs/VERIFICACAO_COC7.md (conferência de 2026-11-17) e em docs/AUDITORIA_COC7.md. */
+   docs/VERIFICACAO_COC7.md (conferência de 2026-11-17), docs/AUDITORIA_COC7.md e docs/TRABALHO_COC7_REGRAS.md. */
 
 const COC_NV = "NÃO VERIFICADO";
 const COC_FONTE_QS = "Chaosium, Quick-Start 7ª ed. (wiki oficial, Investigadores, passos 1 a 5)";
 const COC_FONTE_R20 = "Roll20 Compendium, regras de criação da 7ª ed.";
 const COC_FONTE_AUTOCALC = "Chaosium, ficha AutoCalc (instruções oficiais)";
-const COC_FONTE_DERIVADOS = "Chaosium, wiki Investigadores (passo 2), e Roll20 Compendium, Part Two (PV, Sanidade inicial, PM e Sorte, em 2 fontes cada); Sanidade máxima 99 − Mitos: " + "NÃO VERIFICADO (1 fonte, fórum)";
+const COC_FONTE_DERIVADOS = "Chaosium, wiki Investigadores (passo 2), e Roll20 Compendium, Part Two (PV, Sanidade inicial, PM e Sorte, em 2 fontes cada); Sanidade máxima 99 − Mitos: " + COC_NV + " (só posts de fórum: um cita a p. 155 do livro, edição não identificada; nenhum guia ou wiki confirmou)";
 
 /* ---- Características (3d6×5 ou (2d6+6)×5) ---- */
 const COC_CARACTERISTICAS = [
@@ -29,48 +30,58 @@ const COC_DADOS = {
 
 /* Método "distribuir valores": os oito valores abaixo são alocados livremente entre as características. */
 const COC_DISTRIBUICAO = [40, 50, 50, 50, 60, 60, 70, 80];
-const COC_DISTRIBUICAO_FONTE = `${COC_FONTE_QS}, passo 1 (valores para distribuir)`;
+const COC_DISTRIBUICAO_FONTE = `${COC_FONTE_QS}, passo 1; Roll20 Compendium, Part One (mesmos oito valores)`;
 
 /* ---- Idade ---- */
 const COC_IDADE = { min: 15, max: 90, fonte: `${COC_FONTE_AUTOCALC}; ${COC_FONTE_R20}` };
-/* Faixas de idade. Conferência de 2026-11-17 (docs/VERIFICACAO_COC7.md). Cada faixa diz no campo `fonte` o que está
-   confirmado em duas fontes e o que é NÃO VERIFICADO.
-   tipo "fixo": reduz o alvo pelo valor. tipo "escolha": o jogador escolhe um alvo da lista.
+/* Faixas de idade (regra completa). Conferência de 2026-11-17 e pesquisa complementar (docs/TRABALHO_COC7_REGRAS.md).
+   tipo "fixo": reduz o alvo pelo valor. tipo "escolha": o jogador escolhe um alvo da lista (valor = total da faixa).
+   tipo "divisao": o jogador divide o total entre dois alvos (escolhe quanto vai para o primeiro; o resto vai para o segundo).
    Faixas de 40 anos em diante acumulam (uma por faixa atingida). Faixas 15-19 valem só para quem tem essa idade. */
 const COC_FAIXAS_IDADE = [
   { min: 15, max: 19, rotulo: "15 a 19 anos", melhorias: 0, mov: 0, sorteDuasRolagens: true,
-    efeitos: [{ tipo: "fixo", alvo: "edu", valor: -5 }, { tipo: "escolha", opcoes: ["for", "tam"], valor: -5, rotulo: "FOR ou TAM" }],
-    fonte: "Confirmado em 2 fontes: Sorte rolada duas vezes, fica a maior (TRG; Renegade Outplayed). " +
-      "Confirmado em 2 fontes: a idade perde pontos de EDU e de FOR/SIZ. NÃO VERIFICADO: os valores (-5 cada?) e a escolha FOR ou TAM. " +
-      "Sem redução de MOV: 2 fontes dizem que o MOV cai só a partir de 40 (trpgline; TRG). Corrigido nesta conferência (antes -1)." },
+    efeitos: [{ tipo: "fixo", alvo: "edu", valor: -5 },
+      { tipo: "divisao", alvos: ["for", "tam"], total: 5, rotulo: "FOR e TAM (5 pontos divididos)" }],
+    fonte: "Confirmado em 2 fontes: EDU −5, e 5 pontos a dividir entre FOR e TAM (WorldAnvil, com a regra citada; The Role Players Guild, que lista FOR, TAM e EDU). " +
+      "Sorte rolada duas vezes, fica a maior (TRG; Renegade). CONFLITO: Renegade dá −5 em cada (FOR, TAM e EDU); não aplicado. " +
+      "Sem redução de MOV (trpgline e Renegade começam a redução de MOV aos 40)." },
   { min: 20, max: 39, rotulo: "20 a 39 anos", melhorias: 1, mov: 0, efeitos: [],
-    fonte: "Confirmado em 3 fontes: 1 teste de EDU na faixa de 20 a 39. NÃO VERIFICADO: +5 pontos entre FOR e SIZ aos 20 (1 fonte, não implementado)." },
+    fonte: "Confirmado em 4 fontes: 1 teste de melhoria de EDU nesta faixa (trpgline, WorldAnvil, Renegade, TRG). " +
+      "NÃO VERIFICADO: +5 pontos entre FOR e TAM aos 20 (só trpgline; WorldAnvil não lista ajuste nesta faixa). Não aplicado." },
   { min: 40, max: 49, rotulo: "40 a 49 anos", melhorias: 1, mov: -1,
     efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -5, rotulo: "FOR, CON ou DES" }],
-    fonte: "Confirmado em 2 fontes: APA -5, uma de FOR/CON/DES -5, MOV -1. NÃO VERIFICADO: testes de EDU (trpgline dá 1 aos 40; Renegade dá 2 nos 40)." },
+    fonte: "Confirmado em 3 fontes (trpgline, WorldAnvil, Renegade): APA −5 e FOR, CON ou DES −5 (total 5). MOV −1: trpgline e Renegade. " +
+      "Testes de EDU: 1 nesta faixa, 2 no total até 49 (trpgline, WorldAnvil). Simplificação do app: um alvo por faixa." },
   { min: 50, max: 59, rotulo: "50 a 59 anos", melhorias: 1, mov: -1,
     efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -5, rotulo: "FOR, CON ou DES" }],
-    fonte: "Confirmado em 2 fontes: MOV -1 por faixa, acumulado (MOV -2 aos 50). NÃO VERIFICADO: acumulação de APA e FOR/CON/DES (as fontes divergem: TRG diz que não acumula)." },
+    fonte: "Confirmado em 2 fontes (trpgline, WorldAnvil): FOR, CON ou DES com total 10 e APA com total 10. Testes de EDU: 1 nesta faixa (3 no total). " +
+      "MOV −2 no total: trpgline e Renegade. Simplificação do app: um alvo por faixa." },
   { min: 60, max: 69, rotulo: "60 a 69 anos", melhorias: 1, mov: -1,
-    efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -5, rotulo: "FOR, CON ou DES" }],
-    fonte: "MOV -1 por faixa (2 fontes). NÃO VERIFICADO: valores de APA e FOR/CON/DES e testes de EDU (as fontes divergem)." },
-  { min: 70, max: 79, rotulo: "70 a 79 anos", melhorias: 1, mov: -1,
-    efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -5, rotulo: "FOR, CON ou DES" }],
-    fonte: "MOV -1 por faixa (2 fontes). NÃO VERIFICADO: valores de APA e FOR/CON/DES e testes de EDU (as fontes divergem)." },
-  { min: 80, max: 90, rotulo: "80 a 90 anos", melhorias: 1, mov: -1,
-    efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -5, rotulo: "FOR, CON ou DES" }],
-    fonte: "MOV -1 por faixa (2 fontes). NÃO VERIFICADO: valores de APA e FOR/CON/DES e testes de EDU (as fontes divergem)." }
+    efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -10, rotulo: "FOR, CON ou DES" }],
+    fonte: "Confirmado em 2 fontes (trpgline, WorldAnvil): FOR, CON ou DES −10 nesta faixa (total 20); APA com total 15. Testes de EDU: 1 nesta faixa (4 no total). " +
+      "MOV −1 nesta faixa (trpgline; Renegade dá a regra por década). CONFLITO: Renegade dá total 15 de FOR, CON e DES; não aplicado. Simplificação do app: um alvo por faixa." },
+  { min: 70, max: 79, rotulo: "70 a 79 anos", melhorias: 0, mov: -1,
+    efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -20, rotulo: "FOR, CON ou DES" }],
+    fonte: "Confirmado em 2 fontes (trpgline, WorldAnvil): FOR, CON ou DES −20 nesta faixa (total 40); APA com total 20; nenhum teste de EDU. " +
+      "MOV −1 nesta faixa (trpgline; Renegade). CONFLITO: Renegade dá um teste de EDU por década; não aplicado. Simplificação do app: um alvo por faixa." },
+  { min: 80, max: 90, rotulo: "80 a 90 anos", melhorias: 0, mov: -1,
+    efeitos: [{ tipo: "fixo", alvo: "apa", valor: -5 }, { tipo: "escolha", opcoes: ["for", "con", "des"], valor: -40, rotulo: "FOR, CON ou DES" }],
+    fonte: "Confirmado em 2 fontes (trpgline, WorldAnvil): FOR, CON ou DES −40 nesta faixa (total 80); APA com total 25; nenhum teste de EDU. " +
+      "MOV −1 nesta faixa (trpgline; Renegade). Simplificação do app: um alvo por faixa." }
 ];
 
-/* Teste de melhoria de EDU: d100 acima da EDU atual soma 1d10 à EDU. O mecanismo é o da melhoria de perícia
-   (Chaosium, "rewards of success": d100 acima do valor soma 1d10), mas a aplicação à EDU vem de 1 fonte (Renegade). NÃO VERIFICADO. */
-const COC_MELHORIA_EDU = { dado: 100, ganho: "1d10", regra: "d100 acima da EDU atual soma 1d10", fonte: COC_NV };
+/* Teste de melhoria de EDU: a EDU é um "improvement check" (trpgline, aos 20 e em cada faixa de teste). Se o d100 for acima da EDU atual,
+   soma 1d10 à EDU (Renegade; o mecanismo é o de melhoria de perícia do Chaosium, rewards of success). Duas fontes: confirmado. */
+const COC_MELHORIA_EDU = { dado: 100, ganho: "1d10", regra: "d100 acima da EDU atual soma 1d10",
+  fonte: "trpgline (teste de melhoria de EDU, por faixa de idade); Renegade (d100 acima da EDU, +1D10); mecanismo: Chaosium, rewards of success" };
 
 /* ---- Derivados ---- */
-/* MOV 8 é o valor do processo simplificado do Quick-Start (wiki oficial e edição japonesa licenciada: 2 fontes).
-   A regra completa tem MOV 7, 8 ou 9 conforme FOR e DES em relação ao TAM (Roll20 e Renegade). Os dois valores
-   do meio divergem (8 no Roll20, 6 no Renegade): CONFLITO, não aplicado. */
-const COC_MOV_BASE = { valor: 8, fonte: `${COC_FONTE_QS}, processo simplificado (MOV 8 para humanos). Regra completa com MOV condicional: CONFLITO, não aplicada` };
+/* Movimento (regra completa): 7 se FOR e DES são ambas menores que TAM; 9 se ambas são maiores; 8 nos demais casos.
+   Roll20 (Table 2) dá as três faixas; Renegade dá 7 e 9 e um 6 no meio (conflito, descartado). O 8 do caso geral também é o
+   valor do Quick-Start (MOV 8 para humanos). Ordem não verificada: o app usa FOR, DES e TAM depois dos ajustes de idade. */
+const COC_MOV = { fonte: "Roll20 Compendium, Step Two, tabela de movimento (7, 8 ou 9 conforme FOR e DES em relação a TAM), e Renegade (7 e 9). " +
+  "Caso geral 8, também no Quick-Start. Redução por idade: −1 por faixa a partir de 40 (trpgline e Renegade). " +
+  "NÃO VERIFICADO: se a comparação usa os valores antes ou depois dos ajustes de idade (o app usa os valores depois)." };
 
 /* Dano e Corpo pela soma FOR+TAM. Faixas acima de 204 não confirmadas: o app não calcula. */
 const COC_DANO = [
@@ -81,12 +92,13 @@ const COC_DANO = [
   { min: 165, max: 204, dano: "+1D6", corpo: 2 }
 ];
 const COC_DANO_FONTE = `${COC_FONTE_QS}, passo 2 (Dano e Corpo); ${COC_FONTE_R20}, Part Two`;
-const COC_DANO_ACIMA_NV = "Faixas de FOR+TAM acima de 204: " + COC_NV;
+const COC_DANO_ACIMA_NV = "Faixas de FOR+TAM acima de 204: " + COC_NV + " (as fontes conferidas param em 204; nenhuma tabela estendida encontrada)";
 
 
-/* Teto de perícia na criação: NÃO VERIFICADO. Nenhuma fonte confirma 90%: o Roll20 diz que não há teto,
-   um fórum cita 75% como máximo opcional (edição não citada). Valor mantido (aviso e erro) até decisão. */
-const COC_TETO_PERICIA = { valor: 90, fonte: COC_NV + " (nenhuma fonte confirma 90%: Roll20 diz que não há teto; fórum cita 75% opcional)" };
+/* Teto de perícia na criação: não confirmado. Nenhuma fonte confirma 90%: o Roll20 diz que não há teto;
+   um fórum cita 75% como máximo opcional (edição não citada). Hoje é só AVISO (não bloqueia, em nenhum modo). */
+const COC_TETO_PERICIA = { valor: 90, aviso: "regra não confirmada",
+  fonte: COC_NV + " (nenhuma fonte confirma 90%: Roll20 diz que não há teto; fórum cita 75% opcional). Aviso, não bloqueia" };
 
 /* ---- Ocupações ----
    formula.base: soma de característica × multiplicador.
@@ -153,12 +165,12 @@ const COC_INTERESSE = { c: "int", m: 2, fonte: "Roll20 Compendium, Step Five; Th
 
 /* ---- Perícias ----
    base: número, "des2" (metade da DES), "edu" (igual à EDU) ou "crédito" (0, definido pela ocupação).
-   espec: aceita especialização em texto. nv: base em 1 fonte apenas (NÃO VERIFICADO); as demais têm 2 ou mais fontes. */
+   espec: aceita especialização em texto. Todas as bases têm 2 ou mais fontes (ver COC_PERICIAS_FONTE). */
 const COC_PERICIAS = [
   { id: "arma_pistola", nome: "Armas de Fogo (Pistola)", base: 20 },
   { id: "arma_rifle", nome: "Armas de Fogo (Rifle/Espingarda)", base: 25 },
-  { id: "arqueologia", nome: "Arqueologia", base: 1, nv: true },
-  { id: "arte", nome: "Arte e Ofício", base: 5, espec: true, nv: true },
+  { id: "arqueologia", nome: "Arqueologia", base: 1 },
+  { id: "arte", nome: "Arte e Ofício", base: 5, espec: true },
   { id: "avaliacao", nome: "Avaliação", base: 5 },
   { id: "biblioteca", nome: "Usar Biblioteca", base: 20 },
   { id: "briga", nome: "Briga", base: 25 },
@@ -174,7 +186,7 @@ const COC_PERICIAS = [
   { id: "esquivar", nome: "Esquivar", base: "des2" },
   { id: "furtividade", nome: "Furtividade", base: 20 },
   { id: "historia", nome: "História", base: 5 },
-  { id: "idioma_outro", nome: "Idioma (outro)", base: 1, espec: true, nv: true },
+  { id: "idioma_outro", nome: "Idioma (outro)", base: 1, espec: true },
   { id: "idioma_proprio", nome: "Idioma (próprio)", base: "edu" },
   { id: "intimidacao", nome: "Intimidação", base: 15, interpessoal: true },
   { id: "labia", nome: "Lábia", base: 5, interpessoal: true },
@@ -191,15 +203,28 @@ const COC_PERICIAS = [
   { id: "prestidigitacao", nome: "Prestidigitação", base: 10 },
   { id: "primeiros", nome: "Primeiros Socorros", base: 30 },
   { id: "procurar", nome: "Procurar", base: 25 },
-  { id: "psicanalise", nome: "Psicanálise", base: 1, nv: true },
+  { id: "psicanalise", nome: "Psicanálise", base: 1 },
   { id: "psicologia", nome: "Psicologia", base: 10 },
   { id: "rastrear", nome: "Rastrear", base: 10 },
   { id: "saltar", nome: "Saltar", base: 20 },
   { id: "sobrevivencia", nome: "Sobrevivência", base: 10, espec: true }
 ];
-/* Bases conferidas em 2 ou mais fontes (Quick-Start oficial, Roll20 Step Five, Roll20 Step Two, artigo do Investigator's Handbook),
-   exceto as com `nv: true`: 1 fonte apenas. */
-const COC_PERICIAS_FONTE = `${COC_FONTE_QS}, passo 3 (Dodge = DEX/2; Idioma próprio = EDU; Mitos sem pontos iniciais). Bases confirmadas em 2 fontes, exceto ${COC_NV} (1 fonte): Arte e Ofício, Arqueologia, Psicanálise e Idioma (outro)`;
+/* Bases conferidas em 2 ou mais fontes. Arte e Ofício (5) e Arqueologia (1): Roll20 Step Five e página Cascadia (WorldAnvil).
+   Psicanálise (1) e Idioma (outro) (1): Roll20 Step Five e Quick-Start japonês (K1, conferido em VERIFICACAO_COC7). Demais bases: 2 ou mais fontes. */
+const COC_PERICIAS_FONTE = `${COC_FONTE_QS}, passo 3 (Dodge = DEX/2; Idioma próprio = EDU; Mitos sem pontos iniciais). ` +
+  `Arte e Ofício 5 e Arqueologia 1: Roll20 Step Five e WorldAnvil (Cascadia). Psicanálise 1 e Idioma (outro) 1: Roll20 Step Five e Quick-Start japonês (K1)`;
+
+/* ---- Armas básicas (mecânica: perícia, dano, alcance, tiros). Só entram itens com a mesma linha em 2 fontes. ---- */
+const COC_ARMAS_FONTE = "Chaosium, wiki Equipment (Ammunition & Weapons), e Roll20 Compendium, Ammunition & Weapons: mesmas linhas de dano, alcance e tiros";
+const COC_ARMAS = [
+  { id: "soco_ingles", nome: "Soco-inglês", pericia: "briga", dano: "1D3+1", db: true, alcance: "Toque", tiros: null, fonte: COC_ARMAS_FONTE },
+  { id: "faca_pequena", nome: "Faca pequena (ex.: canivete)", pericia: "briga", dano: "1D4", db: true, alcance: "Toque", tiros: null, fonte: COC_ARMAS_FONTE },
+  { id: "faca_media", nome: "Faca média (ex.: faca de cozinha)", pericia: "briga", dano: "1D4+2", db: true, alcance: "Toque", tiros: null, fonte: COC_ARMAS_FONTE },
+  { id: "faca_grande", nome: "Faca grande (ex.: facão)", pericia: "briga", dano: "1D8", db: true, alcance: "Toque", tiros: null, fonte: COC_ARMAS_FONTE },
+  { id: "revolver_32", nome: "Revólver .32 ou 7,65 mm", pericia: "arma_pistola", dano: "1D8", db: false, alcance: "15 jardas", tiros: 6, fonte: COC_ARMAS_FONTE },
+  { id: "automatica_32", nome: "Automática .32 ou 7,65 mm", pericia: "arma_pistola", dano: "1D8", db: false, alcance: "15 jardas", tiros: 8, fonte: COC_ARMAS_FONTE },
+  { id: "espingarda_12", nome: "Espingarda calibre 12", pericia: "arma_rifle", dano: "4D6/2D6/1D6", db: false, alcance: "10 / 20 / 50 jardas", tiros: null, fonte: COC_ARMAS_FONTE }
+];
 
 /* Helpers de consulta. */
 function cocPericia(id){ return COC_PERICIAS.find(p => p.id === id) || null; }

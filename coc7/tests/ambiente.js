@@ -6,7 +6,7 @@ const path = require('path');
 const vm = require('vm');
 
 const DIR = path.resolve(__dirname, '..');
-const NUCLEO = ['rules.js', 'engine.js', 'state.js', 'validator.js', 'storage.js', 'export.js', 'export-pdf.js'];
+const NUCLEO = ['rules.js', 'rules-ocupacoes.js', 'engine.js', 'state.js', 'validator.js', 'storage.js', 'export.js', 'export-pdf.js'];
 
 function criarAmbiente(){
   const ctx = vm.createContext({ console, Math, JSON, Date });

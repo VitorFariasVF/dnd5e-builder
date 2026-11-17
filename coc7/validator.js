@@ -58,10 +58,13 @@ function validarIdade(estado){
     return fecharModo(estado.modo, erros, avisos);
   }
   const { escolhas, lista } = efeitosIdade(idade);
-  const efeitosEscolha = lista.filter(e => e.tipo === "escolha");
+  const efeitosEscolha = lista.filter(ehEscolha);
   for(let i = 0; i < escolhas; i++){
     const efeito = efeitosEscolha[i];
-    if(!inv.escolhasIdade[i] || !efeito.opcoes.includes(inv.escolhasIdade[i]))
+    if(efeito.tipo === "divisao"){
+      if(valorDivisao(inv.escolhasIdade, i, efeito.total) == null)
+        vErro(erros, `Divida os ${efeito.total} pontos de ${efeito.rotulo} (${efeito.faixa}): escolha quanto vai para ${cocCaracteristica(efeito.alvos[0]).sigla}.`, "idade-esc-" + i);
+    } else if(!inv.escolhasIdade[i] || !efeito.opcoes.includes(inv.escolhasIdade[i]))
       vErro(erros, `Escolha a redução de ${efeito.rotulo} (${efeito.faixa}).`, "idade-esc-" + i);
   }
   if(inv.caracteristicas && COC_CARACTERISTICAS.every(c => inv.caracteristicas[c.id] != null)){
@@ -84,7 +87,7 @@ function validarIdade(estado){
     const fin = aplicarIdade(base, idade, inv.escolhasIdade, inv.melhoriasEdu).valores;
     COC_CARACTERISTICAS.forEach(c => { if(fin[c.id] < 1) vErro(erros, `${c.sigla} ficou abaixo de 1 após os ajustes de idade.`, "car-" + c.id); });
   }
-  avisos.push({ msg: "Regras de idade NÃO VERIFICADAS em parte: reduções de APA e de FOR/CON/DES a partir de 50 anos, testes de EDU a partir de 40 e valores de 15 a 19 anos. Confira no livro antes de usar.", campo: null });
+  avisos.push({ msg: "Regras de idade NÃO VERIFICADAS em parte: +5 pontos entre FOR e TAM aos 20 anos (1 fonte, não aplicado). Os demais ajustes têm duas fontes. Confira no livro antes de usar.", campo: null });
   return fecharModo(estado.modo, erros, avisos);
 }
 
@@ -129,7 +132,7 @@ function validarPericiasOcupacao(estado){
     vErro(erros, `Crédito ${cred}% fora da faixa desta ocupação (${o.credito[0]} a ${o.credito[1]}).`, "occ-credito");
   COC_PERICIAS.forEach(p => {
     const total = cocTotalPericia(inv, p.id, car);
-    if(total > COC_TETO_PERICIA.valor) vErro(erros, `${p.nome} passou de ${COC_TETO_PERICIA.valor}% (${total}%).`, "occ-" + p.id);
+    if(total > COC_TETO_PERICIA.valor) avisos.push({ msg: `${p.nome} passou de ${COC_TETO_PERICIA.valor}% (${total}%): teto de ${COC_TETO_PERICIA.valor}%, ${COC_TETO_PERICIA.aviso}.`, campo: "occ-" + p.id });
   });
   if((Number((inv.pontosOcupacao || {}).mitos) || 0) > 0) vErro(erros, "Mitos de Cthulhu não recebe pontos na criação.", "occ-mitos");
   return fecharModo(estado.modo, erros, avisos);
@@ -153,7 +156,7 @@ function validarInteresse(estado){
   if(gasto !== pool) vErro(erros, `Distribuiu ${gasto} de ${pool} pontos de interesse pessoal. Faltam ${pool - gasto}.`, null);
   COC_PERICIAS.forEach(p => {
     const total = cocTotalPericia(inv, p.id, car);
-    if(total > COC_TETO_PERICIA.valor) vErro(erros, `${p.nome} passou de ${COC_TETO_PERICIA.valor}% (${total}%).`, "int-" + p.id);
+    if(total > COC_TETO_PERICIA.valor) avisos.push({ msg: `${p.nome} passou de ${COC_TETO_PERICIA.valor}% (${total}%): teto de ${COC_TETO_PERICIA.valor}%, ${COC_TETO_PERICIA.aviso}.`, campo: "int-" + p.id });
   });
   return fecharModo(estado.modo, erros, avisos);
 }

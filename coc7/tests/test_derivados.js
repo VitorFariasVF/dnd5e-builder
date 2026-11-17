@@ -2,11 +2,11 @@
 /* Derivados contra investigadores conferidos à mão.
    Conta feita à mão para cada caso antes de rodar o código:
    A: CON 60, TAM 70 -> PV (60+70)/10 = 13. POD 65 -> Sanidade 65, PM 65/5 = 13. FOR+TAM 60+70 = 130 -> +1D4, Corpo 1.
-      DES 50 -> Esquivar 50/2 = 25. EDU 70 -> Idioma próprio 70. Idade 30 (sem ajuste): MOV 8.
+      DES 50 -> Esquivar 50/2 = 25. EDU 70 -> Idioma próprio 70. Idade 30 (sem ajuste): FOR 60 e DES 50 abaixo de TAM 70: MOV 7.
    B: CON 45, TAM 65 -> PV 110/10 = 11. POD 50 -> Sanidade 50, PM 10. FOR+TAM 80+65 = 145 -> +1D4, Corpo 1.
-      DES 35 -> Esquivar 17 (35/2 = 17,5 arredondado para baixo). Idade 30: MOV 8.
+      DES 35 -> Esquivar 17 (35/2 = 17,5 arredondado para baixo). Idade 30: FOR 80 maior que TAM, DES menor: MOV 8.
    C: CON 85, TAM 50 -> PV 135/10 = 13 (13,5 arredondado para baixo). POD 40 -> PM 8. FOR+TAM 45+50 = 95 -> dano 0, Corpo 0.
-      DES 70 -> Esquivar 35. Idade 30: MOV 8.
+      DES 70 -> Esquivar 35. Idade 30: FOR 45 menor que TAM, DES 70 maior: MOV 8.
    Faixas de Dano/Corpo: 64 -> -2; 65 -> -1; 84 -> -1; 85 -> 0; 124 -> 0; 125 -> +1D4; 164 -> +1D4; 165 -> +1D6; 204 -> +1D6; 205 -> sem valor. */
 const { criarAmbiente, criarRunner } = require('./ambiente');
 const { ctx, val, chamar } = criarAmbiente();
@@ -17,9 +17,12 @@ const A = base({ for: 60, con: 60, tam: 70, des: 50, apa: 50, int: 60, pod: 65, 
 const B = base({ for: 80, con: 45, tam: 65, des: 35, apa: 50, int: 60, pod: 50, edu: 60 });
 const C = base({ for: 45, con: 85, tam: 50, des: 70, apa: 50, int: 60, pod: 40, edu: 60 });
 
-teste('A: PV 13, Sanidade 65, PM 13, Dano +1D4, Corpo 1, MOV 8', () => {
+teste('A: PV 13, Sanidade 65, PM 13, Dano +1D4, Corpo 1, MOV 7', () => {
   const d = chamar('calcDerivados', A);
-  if(d.pv !== 13 || d.sanInicial !== 65 || d.pm !== 13 || d.dano !== "+1D4" || d.corpo !== 1 || d.mov !== 8) throw new Error(JSON.stringify(d));
+  if(d.pv !== 13 || d.sanInicial !== 65 || d.pm !== 13 || d.dano !== "+1D4" || d.corpo !== 1 || d.mov !== 7) throw new Error(JSON.stringify(d));
+});
+teste('B e C: MOV 8 (um dos dois casos mistos da regra de movimento)', () => {
+  if(chamar('calcDerivados', B).mov !== 8 || chamar('calcDerivados', C).mov !== 8) throw new Error("mov");
 });
 teste('A: Esquivar 25 e Idioma próprio 70', () => {
   const p = chamar('calcPericias', A);

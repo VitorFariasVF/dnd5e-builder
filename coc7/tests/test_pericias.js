@@ -47,10 +47,13 @@ teste('Interesse pessoal: INT × 2 = 130', () => {
 teste('Interesse pessoal: a fórmula não aparece mais como NÃO VERIFICADO (2 fontes)', () => {
   if(String(val('COC_INTERESSE.fonte')).includes("NÃO VERIFICADO")) throw new Error(val('COC_INTERESSE.fonte'));
 });
-teste('Bases de perícia: as de 1 fonte só (Arte, Arqueologia, Psicanálise, Idioma outro) têm nv, as demais não', () => {
-  const nv = val('COC_PERICIAS.filter(p => p.nv).map(p => p.id)');
-  const esperado = ["arqueologia", "arte", "idioma_outro", "psicanalise"];
-  if(JSON.stringify([...nv].sort()) !== JSON.stringify(esperado)) throw new Error(JSON.stringify(nv));
+teste('Bases confirmadas em 2 fontes: Arte e Ofício 5, Arqueologia 1, Psicanálise 1, Idioma (outro) 1', () => {
+  const bases = { arte: 5, arqueologia: 1, psicanalise: 1, idioma_outro: 1 };
+  Object.entries(bases).forEach(([id, b]) => {
+    if(val(`cocPericia("${id}").base`) !== b) throw new Error(id);
+    if(val(`cocPericia("${id}").nv`) !== undefined) throw new Error("ainda marcada NV: " + id);
+  });
+  if(String(val('COC_PERICIAS_FONTE')).includes("NÃO VERIFICADO")) throw new Error("fonte das bases ainda diz NÃO VERIFICADO");
 });
 teste('Jornalista: fórmula EDU × 4 com crédito 9 a 30 (confirmado em 2 fontes)', () => {
   const o = val('cocOcupacao("jornalista")');
@@ -66,8 +69,8 @@ teste('Faixas de crédito das dez ocupações', () => {
     if(!o || o.credito[0] !== f[0] || o.credito[1] !== f[1]) throw new Error(id + " " + JSON.stringify(o && o.credito));
   });
 });
-teste('São dez ocupações', () => {
-  if(val('COC_OCUPACOES.length') !== 10) throw new Error(String(val('COC_OCUPACOES.length')));
+teste('São 19 ocupações (10 originais + 9 de rules-ocupacoes.js)', () => {
+  if(val('COC_OCUPACOES.length') !== 19) throw new Error(String(val('COC_OCUPACOES.length')));
 });
 
 /* Perícias de ocupação: a lista é fixa + escolhas de grupo + livres + crédito. */
