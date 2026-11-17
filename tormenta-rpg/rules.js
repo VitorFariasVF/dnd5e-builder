@@ -7,7 +7,7 @@ const TRPG_META = {
   versaoEsquema: 1,
   nomeSistema: "Tormenta RPG",
   edicao: "Edição d20 (Jambô), anterior ao Tormenta20",
-  fonteEdicao: "Verbete 'Tormenta' (Wikipédia em inglês, consultado em 2026-11-17): 'Tormenta d20 (2005)', publicado pela Jambô Editora e baseado no D&D 3.5. Confirmação no livro: NÃO VERIFICADO.",
+  fonteEdicao: "Verbete 'Tormenta' (en.wikipedia.org, lido em 2026-11-17): infobox 'Tormenta d20' com ano 2003; texto 'nova versão de Tormenta D20, publicada pela Jambô, baseada em D&D 3.5 em 2005'. Conflito de ano não resolvido; confirmação no livro: NÃO VERIFICADO. Ver docs/VERIFICACAO_TORMENTA_RPG.md.",
   licenca: "NÃO VERIFICADO",
   nivelMaximoEscopo: 5
 };
@@ -43,7 +43,7 @@ const TRPG_REGRAS = {
   pontosPericia: {
     nome: "Pontos de perícia por nível",
     formula: "base da classe + modificador de Inteligência, com mínimo de 1 por nível",
-    fonte: "d20 SRD 3.5, Perícias (cayzle.com/3Esrd/basics.html) para o modificador e o mínimo de 1; base da classe: NÃO VERIFICADO"
+    fonte: "d20 SRD 3.5 (cayzle.com/3Esrd/basics.html): mínimo de 1 ponto por nível confirmado; a soma com Inteligência não aparece na página lida; base da classe: NÃO VERIFICADO"
   }
 };
 

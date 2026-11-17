@@ -71,4 +71,15 @@ teste("a licença fica NÃO VERIFICADO até o livro ser conferido", () => {
   assert.strictEqual(avaliar(ctx, "TRPG_META.licenca"), "NÃO VERIFICADO");
 });
 
+/* Guarda para quando a tabela for preenchida: cada classe traz PV (dado de vida), BBA, resistências e fonte.
+   Hoje as tabelas estão vazias, então o teste confere só o formato que a entrada futura tem de ter. */
+teste("cada classe preenchida traz dado de vida, BBA, resistências e fonte", () => {
+  const classes = avaliar(ctx, "Object.values(TRPG_CLASSES)");
+  classes.forEach(c => {
+    ["nome", "dadoDeVida", "bba", "resistencias", "fonte"].forEach(campo => {
+      assert.ok(c[campo] !== undefined && c[campo] !== null, "classe sem " + campo + ": " + c.nome);
+    });
+  });
+});
+
 sair("regras");
