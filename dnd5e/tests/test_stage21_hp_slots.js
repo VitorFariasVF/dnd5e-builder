@@ -1,6 +1,6 @@
 const fs = require('fs');
 const vm = require('vm');
-const path = __dirname;
+const path = require('path').join(__dirname,'..');
 let code = '';
 for (const f of ['state.js','rules.js','rules-engine.js','validator.js']) {
   code += '\n// FILE '+f+'\n' + fs.readFileSync(path+'/'+f,'utf8') + '\n';

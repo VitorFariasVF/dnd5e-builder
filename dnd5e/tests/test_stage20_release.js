@@ -2,10 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const root = __dirname;
+const root = require('path').join(__dirname,'..');
 const requiredFiles = [
   'index.html',
-  'style.css',
+  '../core/style.css',
   'rules.js',
   'state.js',
   'validator.js',
@@ -14,14 +14,14 @@ const requiredFiles = [
   'export.js',
   'export-pdf.js',
   'export-roll20.js',
-  'vf/tokens.css',
-  'vf/components.css',
-  'vf/motion.css',
-  'vf/motion.js',
-  'vf/tool.js',
+  '../vf/tokens.css',
+  '../vf/components.css',
+  '../vf/motion.css',
+  '../vf/motion.js',
+  '../vf/tool.js',
   'ui.js',
   'main.js',
-  'README.md'
+  '../README.md'
 ];
 
 function sha256(file) {
@@ -29,7 +29,7 @@ function sha256(file) {
 }
 
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+const css = fs.readFileSync(path.join(root, '../core/style.css'), 'utf8');
 
 const scriptRefs = [...index.matchAll(/<script\s+src="([^"]+)"/g)].map(m => m[1]);
 const cssRefs = [...index.matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map(m => m[1]);

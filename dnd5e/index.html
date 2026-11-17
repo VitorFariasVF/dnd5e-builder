@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark" data-tool="dnd5e-builder">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D&amp;D 5e Builder — VF Tools</title>
+<meta name="description" content="Monte fichas de D&amp;D 5e (2014 ou 2024) e exporte para Foundry VTT, Roll20 e PDF.">
+<meta name="theme-color" content="#14110f">
+<link rel="icon" href="../vf/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="D&amp;D 5e Builder — VF Tools">
+<meta property="og:description" content="Monte fichas de D&amp;D 5e (2014 ou 2024) e exporte para Foundry VTT, Roll20 e PDF.">
+<!-- Aplica o tema salvo antes de pintar a página (evita o "flash") -->
+<script>try{var s=JSON.parse(localStorage.getItem("vf-tools:dnd5e-builder:v1")||"{}").theme||JSON.parse(localStorage.getItem("vf-tools:v1")||"{}").theme;if(s)document.documentElement.dataset.theme=s}catch(e){}</script>
+<link rel="stylesheet" href="../vf/tokens.css">
+<link rel="stylesheet" href="../vf/components.css">
+<link rel="stylesheet" href="../vf/motion.css">
+<link rel="stylesheet" href="../core/style.css">
+<link rel="stylesheet" href="../core/theme.css">
+</head>
+<body>
+<a class="skip" href="#main">Ir para o conteúdo</a>
+
+<header class="top wrap">
+  <a class="back" href="https://vitorfariasvf.github.io/VF-Tools/" aria-label="Voltar para VF Tools"><span>← VF<i style="color:var(--accent);font-style:normal">.</i>Tools</span></a>
+  <button id="theme" class="icon-btn" aria-label="Alternar tema claro/escuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+</header>
+
+<main id="main" class="wrap">
+  <h1 class="title">Criador de ficha <em>D&amp;D 5e</em></h1>
+  <p class="lead">Fluxo guiado, offline e sem cadastro. Escolha o tipo de ficha (2014 + Xanathar ou 2024) e exporte para Foundry VTT, Roll20 ou PDF.</p>
+  <section id="app" aria-live="polite"></section>
+</main>
+
+<footer class="foot wrap">
+  <span>© <span id="y"></span> Vitor Farias · <a href="https://github.com/VitorFariasVF">GitHub</a> · <a href="https://github.com/VitorFariasVF/dnd5e-builder/issues">Reportar problema</a></span>
+  <span>Seus dados ficam só neste navegador. <button class="link" id="reset" type="button">Limpar meus dados</button></span>
+</footer>
+
+<script src="../vf/tool.js"></script>
+<script src="../vf/motion.js"></script>
+<script src="rules.js"></script>
+<script src="state.js"></script>
+<script src="validator.js"></script>
+<script src="rules-engine.js"></script>
+<script src="storage.js"></script>
+<script src="export.js"></script>
+<script src="export-pdf.js"></script>
+<script src="export-roll20.js"></script>
+<script src="ui.js"></script>
+<script src="ui-theme.js"></script>
+<script src="main.js"></script>
+<script>
+  document.getElementById("y").textContent = new Date().getFullYear();
+  document.getElementById("reset").onclick = function(){ if(typeof limparBancoCompleto === "function") limparBancoCompleto(); };
+</script>
+</body>
+</html>

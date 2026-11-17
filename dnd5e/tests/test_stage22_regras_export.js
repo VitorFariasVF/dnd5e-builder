@@ -2,7 +2,7 @@
    Rodar: node test_stage22_regras_export.js */
 const fs = require('fs');
 const vm = require('vm');
-const root = __dirname;
+const root = require('path').join(__dirname,'..');
 const join = require('path').join;
 
 const el = () => ({ value:'', checked:false, innerHTML:'', style:{}, classList:{ add(){}, remove(){}, contains(){ return false; } }, addEventListener(){}, appendChild(){}, remove(){}, click(){}, insertAdjacentHTML(){}, querySelectorAll(){ return []; }, querySelector(){ return null; } });
