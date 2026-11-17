@@ -9,6 +9,12 @@ function createInitialState(){
       jogador:"",
       origem:null,
       raca:null,
+      subraca:null,
+      subracaNome:"",
+      escolhasRaciais:{atributos:[],pericia:"",talento:"",ancestral:""},
+      periciasRaciais:[],
+      talentosRaciais:[],
+      tamanho:null,
       classe:null,
       nivel:1,
       xp:0,
@@ -78,6 +84,10 @@ function ensureStateShape(){
   state.personagem.opcoesClasse = Object.assign({}, fresh.personagem.opcoesClasse, state.personagem.opcoesClasse || {});
   if(!Array.isArray(state.personagem.opcoesClasse.asi)) state.personagem.opcoesClasse.asi = [];
   state.personagem.bonusOrigem2024 = Object.assign({}, fresh.personagem.bonusOrigem2024, state.personagem.bonusOrigem2024 || {});
+  state.personagem.escolhasRaciais = Object.assign({}, fresh.personagem.escolhasRaciais, state.personagem.escolhasRaciais || {});
+  if(!Array.isArray(state.personagem.escolhasRaciais.atributos)) state.personagem.escolhasRaciais.atributos = [];
+  if(!Array.isArray(state.personagem.periciasRaciais)) state.personagem.periciasRaciais = [];
+  if(!Array.isArray(state.personagem.talentosRaciais)) state.personagem.talentosRaciais = [];
   delete state.personagem.caracteristicas;
   if(typeof aplicarCatalogoRegras === "function") aplicarCatalogoRegras(state.regras);
 }

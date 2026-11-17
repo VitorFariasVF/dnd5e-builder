@@ -476,9 +476,11 @@ function createEmptyRuleSpellcastingState() {
 
 function buildRuleContext(personagem) {
   const p = personagem || {};
+  const racaEfetiva = (typeof resolverRaca === "function" && p.raca) ? resolverRaca(p.raca, p) : null;
   return {
     personagem: p,
     raceKey: p.raca || null,
+    racePvPorNivel: racaEfetiva ? racaEfetiva.pvPorNivel : 0,
     backgroundKey: p.origem || null,
     classKey: p.classe || null,
     subclassKey: p.subclasse || null,
@@ -490,6 +492,7 @@ function buildRuleContext(personagem) {
     selectedOptions: p.opcoesClasse || {},
     currentMagic: p.magia || {},
     currentFeats: ruleUnique([
+      ...((racaEfetiva && racaEfetiva.talentos) || []),
       ...((p.opcoesClasse || {}).feats || []),
       ...((p.opcoesClasse || {}).talentos || []),
       ...([].concat(((p.opcoesClasse || {}).asi || [])).filter(c => c && c.type === RULE_ASI_CHOICE_TYPES.FEAT && c.feat).map(c => c.feat))
@@ -500,14 +503,35 @@ function buildRuleContext(personagem) {
 function resolveRaceGrants(context) {
   const race = typeof RACES !== "undefined" ? RACES[context.raceKey] : null;
   if (!race) return { attributes: {}, proficiencies: createEmptyRuleProficiencySet(), features: [], cantrips: [], spells: [], movement: 30 };
+  /* Sub-raça, variante e escolhas raciais entram pelo resolvedor de rules-racas.js (quando carregado). */
+  const efetiva = typeof resolverRaca === "function" ? resolverRaca(context.raceKey, context.personagem || {}) : null;
+  const bonus = efetiva ? efetiva.bonusAtributos : (race.bonusAtributos || {});
+  const idiomas = efetiva ? efetiva.idiomas : (race.idiomas || []);
+  const traits = efetiva ? efetiva.traits : (race.traits || []);
+  const movement = efetiva ? efetiva.deslocamento : (race.deslocamento || 30);
+  const pericias = efetiva ? efetiva.pericias : [];
   return {
-    attributes: normalizeAbilityMap(race.bonusAtributos || {}),
-    proficiencies: { ...createEmptyRuleProficiencySet(), languages: ruleUnique(race.idiomas || []) },
-    features: ruleUnique(race.traits || []),
+    attributes: normalizeAbilityMap(bonus),
+    proficiencies: { ...createEmptyRuleProficiencySet(), languages: ruleUnique(idiomas), skills: ruleUnique(pericias) },
+    features: ruleUnique(traits),
     cantrips: [],
     spells: [],
-    movement: race.deslocamento || 30
+    movement
   };
+}
+
+/* Restrições de armadura por classe (2014). São uma camada por cima da categoria de proficiência:
+   a classe continua proficiente em "Armaduras médias" e "Escudos"; a restrição só recusa o item de metal.
+   Fontes: SRD 5.1 (druida) e Roll20 Druid, conferidas em docs/VERIFICACAO_DND5E.md. */
+const RULE_ARMOR_CLASS_RESTRICTIONS_2014 = {
+  druida: { semArmaduraDeMetal: true, fonte: "SRD 5.1 (druida) e Roll20 Druid" }
+};
+/* Devolve a mensagem de bloqueio ou null. O escudo não tem material no app: não é checado. */
+function armaduraBloqueadaPelaClasse(classeKey, armor) {
+  const r = RULE_ARMOR_CLASS_RESTRICTIONS_2014[classeKey];
+  if (!r || !armor) return null;
+  if (r.semArmaduraDeMetal && (armor.tags || []).includes("metal")) return "Druidas não usam armadura de metal.";
+  return null;
 }
 
 function resolveBackgroundGrants(context) {
@@ -956,9 +980,11 @@ function resolveHitPoints(context, abilityScores) {
     return { hitDie: 0, level, constitutionModifier: conMod, firstLevel: 0, perLevel: 0, max: null };
   }
 
-  const firstLevel = Math.max(1, hitDie + conMod);
+  /* Traço racial de PV por nível (Anão da Colina, 2014): +1 no 1º nível e +1 em cada nível depois. */
+  const extraRacial = Math.max(0, Number(context.racePvPorNivel || 0));
+  const firstLevel = Math.max(1, hitDie + conMod) + extraRacial;
   const fixedAverage = Math.floor(hitDie / 2) + 1;
-  const perLevel = Math.max(1, fixedAverage + conMod);
+  const perLevel = Math.max(1, fixedAverage + conMod) + extraRacial;
   const max = firstLevel + Math.max(0, level - 1) * perLevel;
   return { hitDie, level, constitutionModifier: conMod, firstLevel, perLevel, max };
 }

@@ -18,7 +18,7 @@ const ctx = {
 ctx.window = ctx; ctx.globalThis = ctx;
 vm.createContext(ctx);
 let code = '';
-for (const f of ['rules.js', 'state.js', 'validator.js', 'rules-engine.js', 'storage.js', 'export.js', 'export-pdf.js', 'export-roll20.js', 'ui.js']) {
+for (const f of ['rules.js', 'rules-racas.js', 'state.js', 'validator.js', 'rules-engine.js', 'storage.js', 'export.js', 'export-pdf.js', 'export-roll20.js', 'ui.js']) {
   code += `\n//FILE ${f}\n` + fs.readFileSync(join(root, f), 'utf8') + '\n';
 }
 code += `

@@ -6,7 +6,7 @@ function validarOrigem(){
   }
   return null;
 }
-function validarRaca(){ return state.personagem.raca ? null : "Selecione uma raça."; }
+function validarRaca(){ if(!state.personagem.raca) return "Selecione uma raça."; return typeof validarEscolhasRaciais === "function" ? validarEscolhasRaciais(state.personagem) : null; }
 function validarClasse(){ if(!state.personagem.classe) return "Selecione uma classe."; if((state.personagem.nivel||1) < 1 || (state.personagem.nivel||1) > 20) return "O nível precisa ficar entre 1 e 20."; const nivel=state.personagem.nivel||1; const unlock=getSubclassUnlockLevel(state.personagem.classe); if(state.modo === "A" && nivel >= unlock && getSubclassOptions(state.personagem.classe).length && !state.personagem.subclasse) return "Selecione uma subclasse para esse nível."; return null; }
 
 function validarPericias(){
@@ -17,6 +17,7 @@ function validarPericias(){
   if(state.modo === "A"){
     if(escolhidas.length !== regra.quantidade) return `Escolha exatamente ${regra.quantidade} perícias da classe.`;
     if(escolhidas.some(p => state.personagem.periciasOrigem.includes(p))) return "Não repita perícias já recebidas pela origem.";
+    if(escolhidas.some(p => (state.personagem.periciasRaciais || []).includes(p))) return "Não repita perícias já recebidas pela raça.";
     if(escolhidas.some(p => !regra.opcoes.includes(p))) return "Há perícias inválidas para a classe.";
   }
   return null;
@@ -69,6 +70,9 @@ function validarCombate(){
   if(!WEAPONS[c.armaSecundaria]) return "Selecione uma arma secundária válida.";
   if(state.modo === "A"){
     if(!personagemEhProficienteComArmadura(ARMORS[c.armadura])) return "A classe não é proficiente com a armadura escolhida.";
+    /* Restrição de classe por cima da proficiência (2014). Não altera as categorias de proficiência. */
+    const bloqueio = (getRulesEdition() === "2014" && typeof armaduraBloqueadaPelaClasse === "function") ? armaduraBloqueadaPelaClasse(state.personagem.classe, ARMORS[c.armadura]) : null;
+    if(bloqueio) return bloqueio;
     if(!personagemEhProficienteComArma(WEAPONS[c.armaPrincipal])) return "A classe não é proficiente com a arma principal escolhida.";
     if(!personagemEhProficienteComArma(WEAPONS[c.armaSecundaria])) return "A classe não é proficiente com a arma secundária escolhida.";
     const profs = (state.personagem.proficienciasClasseEfetivas && state.personagem.proficienciasClasseEfetivas.length) ? state.personagem.proficienciasClasseEfetivas : ((typeof getEffectiveClassProficiencies === "function") ? getEffectiveClassProficiencies(state.personagem) : (state.personagem.proficienciasClasse || []));
