@@ -5,9 +5,9 @@
 **Fichas de RPG em HTML, CSS e JavaScript puro: offline, sem cadastro e sem backend.**
 D&D 5e (pronto), Tormenta20, Tormenta RPG e Call of Cthulhu 7ª edição (em andamento).
 
-[![Demo Online](https://img.shields.io/badge/🚀%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge)](https://vitorfariasvf.github.io/dnd5e-builder/)
-[![Código](https://img.shields.io/badge/📦%20Código-GitHub-111827?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
-[![Frontend Only](https://img.shields.io/badge/frontend-only-f59e0b?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
+[![Demo Online](https://img.shields.io/badge/🚀%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge)](https://vitorfariasvf.github.io/rpg-sheet-builder/)
+[![Código](https://img.shields.io/badge/📦%20Código-GitHub-111827?style=for-the-badge)](https://github.com/VitorFariasVF/rpg-sheet-builder)
+[![Frontend Only](https://img.shields.io/badge/frontend-only-f59e0b?style=for-the-badge)](https://github.com/VitorFariasVF/rpg-sheet-builder)
 
 </div>
 
@@ -32,7 +32,7 @@ O `index.html` da raiz é um **hub** que leva a cada sistema. Cada sistema é um
 
 ## 🚀 Como usar
 
-**Online:** abra a [demo no GitHub Pages](https://vitorfariasvf.github.io/dnd5e-builder/) e escolha o sistema.
+**Online:** abra a [demo no GitHub Pages](https://vitorfariasvf.github.io/rpg-sheet-builder/) e escolha o sistema.
 
 **Local:** não precisa de servidor nem de build. Baixe ou clone o repositório e abra o `index.html`.
 
@@ -145,7 +145,7 @@ Ainda sem arquivo `LICENSE`: a licença está pendente de definição. As regras
 
 <div align="center">
 
-### **🚀 [Abrir a demo no GitHub Pages](https://vitorfariasvf.github.io/dnd5e-builder/)**
-### **📦 [Ver o código no GitHub](https://github.com/VitorFariasVF/dnd5e-builder)**
+### **🚀 [Abrir a demo no GitHub Pages](https://vitorfariasvf.github.io/rpg-sheet-builder/)**
+### **📦 [Ver o código no GitHub](https://github.com/VitorFariasVF/rpg-sheet-builder)**
 
 </div>
