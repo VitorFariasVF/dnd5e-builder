@@ -56,3 +56,14 @@ Cada sistema tem o seu `index.html` com um `data-tool` próprio (`dnd5e-builder`
 - **Precisão das regras.** Quem escreve os dados pode errar de memória. Mitigação: pesquisa na web obrigatória, `fonte` em cada dado, teste de regras e revisão independente (fase 2).
 - **Direitos autorais.** Os livros são protegidos. Os sistemas guardam **mecânica** (números, fórmulas, nomes de regras) e descrições curtas **reescritas**, nunca texto do livro, tabelas inteiras copiadas nem arte. Onde houver licença aberta (SRD do d20/OGL, Tormenta RPG sob OGL, T20 conforme a política da Jambô, CoC conforme a política de conteúdo da Chaosium), a fonte e a licença ficam registradas na auditoria.
 - **Cobertura.** Primeira entrega por sistema = criação de ficha do nível inicial e níveis baixos, completa e correta, antes de ampliar (itens e magias grandes ficam como catálogo parcial declarado).
+
+## 6. Estado em 2026-11-17 (fases 0, 1 e 3 feitas; fase 2 aberta)
+
+| Sistema | Fluxo | Testes | Regras verificadas | Pendência principal |
+|---|---|---|---|---|
+| D&D 5e | Completo | 6 arquivos passam | 12 classes conferidas nível a nível (SRD) | Subclasses, perícias/proficiências e truques do Mago a conferir |
+| Tormenta20 | Níveis 1 a 5, 12 etapas | 5 arquivos + e2e | Parcial: PV/PM de 5 classes em duas fontes | Sem o livro: ver `AUDITORIA_TORMENTA20.md` |
+| Tormenta RPG (d20) | Estrutura pronta | 7 a 14 testes por arquivo | Quase nada: tabelas vazias | Sem fonte das regras |
+| Call of Cthulhu 7ª | 10 etapas | 115 + 50 no navegador | Parcial: idade e bases de perícia de memória | Conferir no Keeper Rulebook |
+
+**Fase 2 (verificação cruzada) fica aberta de propósito:** os agentes só acharam guias de fãs e resumos, e um revisor novo teria as mesmas fontes. Ela só avança com o livro (ou PDF) ou com fonte oficial acessível. A fase 4 (extrair stepper/menu/toasts para `core/`, CI, esquema versionado) segue pendente.
