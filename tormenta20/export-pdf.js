@@ -77,7 +77,7 @@ function t20GerarHtmlFicha(st){
 
   const pers = p.personalidade || {};
   const cabecalho = `<header class="topo"><div class="brasao" style="--cor:${cor}"><span>${t20Esc((cls.nome || "T").charAt(0))}</span></div><div class="titulo"><h1>${t20Esc(p.nome || "Personagem sem nome")}</h1><p class="linha-classe" style="--cor:${cor}">${subtitulo}</p><p class="meta">Jogador: ${t20Esc(p.jogador || "—")} · Modo: ${t20Esc(s.modo || "—")} · ${t20Esc(T20_EDICAO)}</p></div><div class="selo" style="--cor:${cor}">Tormenta20<strong>${s.modo === "estrito" ? "Ficha em modo estrito" : "Ficha em modo livre"}</strong></div></header>`;
-  const rodape = n => `<div class="rodape">Criador de fichas RPG · VF Tools · Tormenta20 · página ${n} de 2</div>`;
+  const rodape = n => `<div class="rodape">Regras de guias de fãs, não conferidas com o livro oficial · Criador de fichas RPG · VF Tools · Tormenta20 · página ${n} de 2</div>`;
 
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t20Esc(p.nome || "Ficha")} — Ficha Tormenta20</title><style>${T20_PDF_CSS}</style></head><body>
   <div class="barra"><span>Pré-visualização da ficha (A4, 2 páginas)</span><button type="button" onclick="window.print()">Imprimir / Salvar PDF</button></div>

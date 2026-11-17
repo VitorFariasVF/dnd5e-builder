@@ -144,13 +144,13 @@ function gerarHtmlDossie(estado){
       <div><section><h2>Vitais e derivados</h2>${cocBlocoVitais(estado, der)}
         <p class="aviso">Sanidade inicial = POD. Pontos de magia = POD ÷ 5. Movimento = 8 (Quick-Start), com −1 a cada faixa de 40 anos em diante. Movimento condicional da regra completa: conflito, não aplicado.</p></section></div></div>
     ${cocBlocoPericias(inv)}
-    <div class="rodape"><span>Ficha de uso pessoal. Mecânica de Call of Cthulhu 7ª edição (Chaosium).</span><span>Página 1 de 2</span></div>
+    <div class="rodape">Regras de guias de fãs, não conferidas com o livro oficial · <span>Ficha de uso pessoal. Mecânica de Call of Cthulhu 7ª edição (Chaosium).</span><span>Página 1 de 2</span></div>
   </article>
   <article class="pagina"><div class="moldura" aria-hidden="true"></div>
     <header class="cab"><div><div class="kicker">Dossiê · continuação</div><h1>${nome}</h1><div class="sub">${cocEscapar(sub)}</div></div>${cocEmblemaOlho()}</header>
     <div class="duas"><div>${cocBlocoOcupacao(estado)}${cocBlocoIdade(inv)}${cocBlocoEquipamento(inv)}</div><div>${cocBlocoAntecedentes(inv)}</div></div>
     <section class="anotacoes"><h2>Anotações de jogo</h2><div class="linhas" aria-hidden="true"></div></section>
-    <div class="rodape"><span>Gerado pelo criador de fichas VF Tools.</span><span>Página 2 de 2</span></div>
+    <div class="rodape"><span>Regras de guias de fãs, não conferidas com o livro oficial · Gerado pelo criador de fichas VF Tools.</span><span>Página 2 de 2</span></div>
   </article>
   <script>window.addEventListener('load',function(){(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(function(){setTimeout(function(){window.print()},350)})});</script>
   </body></html>`;

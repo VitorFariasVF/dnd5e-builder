@@ -63,7 +63,7 @@ function trpgFichaHtml(){
     ${trpgSecaoPdf("Identidade", `<dl class="pares"><dt>Aparência</dt><dd>${trpgEsc(p.aparencia || "—")}</dd><dt>História</dt><dd>${trpgEsc(p.historia || "—")}</dd></dl>`)}
     ${trpgSecaoPdf("Raça e classe", `<p>${trpgEsc(TRPG_PENDENTES.racas)}</p><p>${trpgEsc(TRPG_PENDENTES.classes)}</p>`)}
     ${trpgSecaoPdf("Testes de resistência", `<p class="suave">${naoDefinido}</p>`)}
-    <p class="rodape">Fórmulas: ${trpgEsc(TRPG_REGRAS.modificador.fonte)}. Página 1 de 2.</p>
+    <p class="rodape">Regras de guias de fãs, não conferidas com o livro oficial. Fórmulas: ${trpgEsc(TRPG_REGRAS.modificador.fonte)}. Página 1 de 2.</p>
   </div></div>`;
   const pagina2 = `<div class="pagina"><div class="moldura" aria-hidden="true"></div><div class="conteudo">
     <header class="topo" style="--cor:${cor}"><div></div><div><h1>${trpgEsc(p.nome || "Personagem sem nome")}</h1><p class="meta">Continuação da ficha</p></div><div class="selo">Tormenta RPG<strong>Página 2 de 2</strong></div></header>
@@ -73,7 +73,7 @@ function trpgFichaHtml(){
     ${trpgSecaoPdf("Equipamento", trpgLinhasPdf(p.equipamento, "Nenhum item registrado."))}
     ${trpgSecaoPdf("Dinheiro", `<p>${trpgEsc(p.dinheiro)} (unidade a confirmar: NÃO VERIFICADO)</p>`)}
     ${trpgSecaoPdf("Observações", `<p class="suave">${trpgEsc(TRPG_PENDENTES.vtt)}</p>`)}
-    <p class="rodape">Gerado no VF Tools. Dados de regra com fonte registrada em docs/AUDITORIA_TORMENTA_RPG.md.</p>
+    <p class="rodape">Regras de guias de fãs, não conferidas com o livro oficial. Gerado no VF Tools. Dados de regra com fonte registrada em docs/AUDITORIA_TORMENTA_RPG.md.</p>
   </div></div>`;
   return pagina1 + pagina2;
 }
