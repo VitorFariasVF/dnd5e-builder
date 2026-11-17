@@ -26,7 +26,7 @@ Fontes **descartadas**: cópias não autorizadas do livro encontradas na busca (
 | Características 3d6×5 (FOR, CON, DES, APA, POD) e (2d6+6)×5 (TAM, INT, EDU) | `rules.js`, `rolarCaracteristica` | Roll20 Step Two, Questportal | Confirmado em 2 fontes |
 | Distribuição 40, 50, 50, 50, 60, 60, 70, 80 | método "distribuir" | Chaosium (Quick-Start, passo 1) | Confirmado (1 fonte oficial). É o processo simplificado, não o de pontos do livro |
 | Idade entre 15 e 90 | validação da etapa 3 | Chaosium AutoCalc, Roll20 | Confirmado em 2 fontes |
-| PV = (CON + TAM) ÷ 10, arredondado para baixo | `calcDerivados` | Chaosium (passo 2) | Confirmado em 1 fonte oficial |
+| PV = (CON + TAM) ÷ 10, arredondado para baixo | `calcDerivados` | Chaosium (passo 2) | Confirmado em 2 fontes: Chaosium (passo 3) e Keeper Rulebook, pp. 154–169, via [trpgline.com](https://trpgline.com/rules/coc7/sanity) (espelho de terceiros, sem aviso de licença; usado só para conferir o número) |
 | Sanidade inicial = POD | `calcDerivados` | Chaosium (passo 2), AutoCalc | Confirmado em 2 fontes |
 | PM = POD ÷ 5 | `calcDerivados` | Chaosium (passo 2), AutoCalc | Confirmado em 2 fontes |
 | Esquiva = DES ÷ 2 (arredondado para baixo) | base da perícia `esquivar` | Chaosium (passo 3) | Confirmado em 1 fonte oficial |

@@ -145,3 +145,5 @@ Navegador: `node coc7/tests/e2e_navegador.js` (Chrome em `/usr/bin/google-chrome
 Nenhum comando de git de escrita foi executado.
 
 > **Atualização:** o app tem 19 ocupações, MOV condicional, teto de 90% como aviso e a regra completa como método (`TRABALHO_COC7_OCUPACOES.md`, `TRABALHO_COC7_REGRAS.md`). Este documento descreve a primeira verificação.
+
+**Atualização:** a Sanidade máxima = 99 − Mitos agora tem uma segunda fonte, o Keeper Rulebook (pp. 154–169) como reproduzido em trpgline.com/rules/coc7/sanity, junto com a fonte oficial da Chaosium. A fonte do site é de terceiros e a conferência com o livro impresso continua pendente.
