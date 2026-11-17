@@ -15,6 +15,9 @@
 
 </div>
 
+
+> **Estrutura multi-sistema.** O `index.html` da raiz é um hub que leva a cada sistema: [`dnd5e/`](dnd5e/) (pronto), [`tormenta20/`](tormenta20/), [`tormenta-rpg/`](tormenta-rpg/) e [`coc7/`](coc7/) (em desenvolvimento, com regras de guias de fãs, avisadas na própria página). O estilo compartilhado fica em `core/` e `vf/`. O plano, o contrato e a cobertura por sistema estão em [`docs/`](docs/) (`PLANO_DESENVOLVIMENTO.md`, `CONTRATO_SISTEMA.md`, `COBERTURA.md`). Para rodar os testes: `cd dnd5e && for f in tests/*.js; do node $f; done`, e `node <sistema>/tests/run_all.js` nos demais.
+
 ---
 
 ## ✨ Visão geral
