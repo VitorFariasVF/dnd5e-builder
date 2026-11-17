@@ -932,6 +932,13 @@ function resolveKnownSpellLimit(context, profile) {
   return profile.knownSpellProgression[context.level - 1] || 0;
 }
 
+// Restauração Feiticeira (Feiticeiro, nível 20, PHB): ao terminar um descanso curto,
+// recupera até 4 pontos de feitiçaria gastos. Antes do nível 20 não há recuperação em descanso curto.
+// Esta função só calcula a quantidade; a tela ainda recarrega apenas em descanso longo (ui.js).
+function getSorceryPointsShortRestRecovery(nivel) {
+  return Number(nivel) >= 20 ? 4 : 0;
+}
+
 // ===============================
 // ETAPA 21 - PV E SLOTS CONSOLIDADOS
 // ===============================

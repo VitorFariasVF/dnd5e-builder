@@ -152,7 +152,7 @@ check('Canalizar Divindade do clérigo recarrega em descanso curto', () => infoR
 check('Forma Selvagem: 2 usos a partir do nível 2, ilimitada no 20', () => maxRecurso('druida', 1, 'forma_selvagem') === 0 && maxRecurso('druida', 2, 'forma_selvagem') === 2 && maxRecurso('druida', 20, 'forma_selvagem') >= 999);
 check('Pontos de Feitiçaria: igual ao nível a partir do 2', () => maxRecurso('feiticeiro', 2, 'pontos_feiticaria') === 2 && maxRecurso('feiticeiro', 20, 'pontos_feiticaria') === 20);
 check('Pontos de Feitiçaria recarregam em descanso longo', () => infoRecurso('feiticeiro', 2, 'pontos_feiticaria').recarga === 'Descanso longo');
-check('Segundo Fôlego: 1 uso, descanso curto', () => maxRecurso('guerreiro', 1, 'segundo_folego') === 1 && infoRecurso('guerreiro', 1, 'segundo_folego').recarga === 'Descanso curto');
+check('Segundo Fôlego: 1 uso, recarga em descanso curto ou longo (PHB/SRD)', () => maxRecurso('guerreiro', 1, 'segundo_folego') === 1 && infoRecurso('guerreiro', 1, 'segundo_folego').recarga === 'Descanso curto ou longo');
 check('Surto de Ação: 1 uso no nível 2, 2 no nível 17', () => maxRecurso('guerreiro', 1, 'surto_acao') === 0 && maxRecurso('guerreiro', 2, 'surto_acao') === 1 && maxRecurso('guerreiro', 17, 'surto_acao') === 2);
 check('Indomável: 1 uso no nível 9, 2 no 13, 3 no 17', () =>
   maxRecurso('guerreiro', 8, 'indomavel') === 0 && maxRecurso('guerreiro', 9, 'indomavel') === 1 && maxRecurso('guerreiro', 13, 'indomavel') === 2 && maxRecurso('guerreiro', 17, 'indomavel') === 3);
