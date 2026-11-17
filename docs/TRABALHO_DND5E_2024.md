@@ -39,3 +39,5 @@ Frente só de dados. Nada ligado à interface ainda; a ficha 2024 continua usand
 `cd dnd5e && node tests/test_2024_classes.js`
 
 Falha que já existia e não vem desta frente: `tests/test_export_vtt.js` (2 de 22) chama `aplicarRacaNoPersonagem`, definida em `rules-racas.js`, que esse teste não carrega.
+
+> **Atualização:** os dados 2024 já estão ligados à ficha 2024. Veja `TRABALHO_DND5E_INTEGRACAO.md`.

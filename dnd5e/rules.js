@@ -1063,6 +1063,7 @@ function compileResourceRule(rule, n, mods){
   return {id:rule.id,nome:rule.nome,max:Math.max(0, Math.floor(max)),atual:Math.max(0, Math.floor(max)),recarga,detalhe: rule.detalhe || ''};
 }
 function getClassResources(classe, nivel, personagem){
+  if(getRulesEdition()==="2024" && typeof getClassResources2024==="function") return getClassResources2024(classe, nivel, personagem);
   const n = nivel || 1;
   const p = personagem || {};
   const mods = {
@@ -1395,6 +1396,9 @@ const RULESETS = {
   "2024":{label:"D&D 2024 (5.5) — Livro do Jogador 2024",livro:"PHB 2024",curto:"2024 (5.5)"}
 };
 function getRulesEdition(){ return (typeof state!=="undefined" && state && state.regras==="2024") ? "2024" : "2014"; }
+/* Avisos da edição 2024 (usados por ui.js e validator.js). O 2024 tem classes do SRD 5.2 desde rules-2024-classes.js. */
+const AVISO_CLASSES_2024 = "O 2024 usa só o SRD 5.2: uma subclasse por classe, sem listas de magia 2024 (as magias escolhíveis ainda são as do 2014) e sem talentos 2024 ainda. O equipamento inicial também segue o 2014.";
+const AVISO_CONFERENCIA_2024 = "Dados das classes conferidos no espelho do SRD 5.2; a conferência com o PDF oficial está pendente. Itens marcados como NÃO VERIFICADO não foram confirmados em segunda fonte.";
 
 const BACKGROUNDS_2014 = JSON.parse(JSON.stringify(BACKGROUNDS));
 const RACES_2014 = JSON.parse(JSON.stringify(RACES));
@@ -1444,6 +1448,7 @@ function aplicarCatalogoRegras(edicao){
   if(aplicarCatalogoRegras._atual === ed) return ed;
   _trocarCatalogo(BACKGROUNDS, ed==="2024" ? BACKGROUNDS_2024 : BACKGROUNDS_2014);
   _trocarCatalogo(RACES, ed==="2024" ? RACES_2024 : RACES_2014);
+  if(typeof aplicarDadosClasses2024 === "function") aplicarDadosClasses2024(ed); // classes, subclasses e conjuração (rules-2024-classes.js)
   aplicarCatalogoRegras._atual = ed;
   return ed;
 }

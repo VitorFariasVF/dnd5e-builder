@@ -240,7 +240,20 @@ const RULE_SUBCLASS_SPELL_RULES = {
 
   // Patronos de bruxo: expandem a lista, mas não entram automaticamente.
   "bruxo:celestial": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.EXPANDED_LIST, unlockByClassLevel: ruleCloneSubclassSpellBucket("bruxo:celestial") },
-  "bruxo:hexblade": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.EXPANDED_LIST, unlockByClassLevel: ruleCloneSubclassSpellBucket("bruxo:hexblade") }
+  "bruxo:hexblade": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.EXPANDED_LIST, unlockByClassLevel: ruleCloneSubclassSpellBucket("bruxo:hexblade") },
+
+  // Domínios de clérigo (PHB 2014, fonte única: NÃO VERIFICADO): sempre preparados, sem contar no limite.
+  "clerigo:knowledge": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.ALWAYS_PREPARED, unlockByClassLevel: ruleCloneSubclassSpellBucket("clerigo:knowledge") },
+  "clerigo:light": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.ALWAYS_PREPARED, unlockByClassLevel: ruleCloneSubclassSpellBucket("clerigo:light") },
+  "clerigo:nature": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.ALWAYS_PREPARED, unlockByClassLevel: ruleCloneSubclassSpellBucket("clerigo:nature") },
+  "clerigo:tempest": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.ALWAYS_PREPARED, unlockByClassLevel: ruleCloneSubclassSpellBucket("clerigo:tempest") },
+  "clerigo:trickery": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.ALWAYS_PREPARED, unlockByClassLevel: ruleCloneSubclassSpellBucket("clerigo:trickery") },
+
+  // Juramento dos Anciões (paladino): magias do juramento sempre preparadas.
+  "paladino:ancients": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.ALWAYS_PREPARED, unlockByClassLevel: ruleCloneSubclassSpellBucket("paladino:ancients") },
+
+  // Grande Antigo (bruxo): magias expandidas escolhíveis, como os patronos celestial e Lâmina Maldita.
+  "bruxo:great_old_one": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.EXPANDED_LIST, unlockByClassLevel: ruleCloneSubclassSpellBucket("bruxo:great_old_one") }
 };
 
 const RULE_SUBCLASS_PROFICIENCY_GRANTS = {
@@ -942,6 +955,8 @@ function resolveSpellSlots(context, profile) {
 function resolvePreparedSpellLimit(context, profile, abilityScores) {
   if (!profile || !["prepared", "spellbookPrepared"].includes(profile.model)) return 0;
   if (context.level < (profile.startsAtLevel || 1)) return 0;
+  // 2024: a classe traz o número de magias preparadas por nível (tabela), não uma fórmula.
+  if (Array.isArray(profile.preparedProgression)) return Math.max(1, Number(profile.preparedProgression[context.level - 1] || 0));
   const abilityValue = abilityScores.final[profile.ability] || 10;
   const abilityMod = ruleCalcMod(abilityValue);
   let total = 0;

@@ -1,7 +1,8 @@
 /* dnd5e/rules-2024-classes.js: dados das 12 classes do D&D 2024 (SRD 5.2, CC-BY-4.0).
    Carregado depois de rules.js. Globais novas, sem sobrescrever as de 2014:
    CLASSES_2024, CLASS_FEATURES_2024, SUBCLASSES_2024.
-   Ainda não é usado pela interface. Fonte e lacunas: docs/TRABALHO_DND5E_2024.md.
+   Ligado à interface quando state.regras === "2024" (aplicarDadosClasses2024, chamada por aplicarCatalogoRegras).
+   Fonte e lacunas: docs/TRABALHO_DND5E_2024.md.
    Nomes em português são traduções próprias; "resumo" são frases curtas reescritas, não texto copiado.
    Entradas com fonte "NÃO VERIFICADO" não foram confirmadas no SRD 5.2. */
 
@@ -455,3 +456,159 @@ const SUBCLASSES_2024 = {
     {level:10,nome:"Resiliência Ínfera",resumo:"Após cada descanso, escolhe um tipo de dano (exceto Força) para resistir até escolher outro."},
     {level:14,nome:"Arremessado ao Inferno",resumo:"Uma vez por turno, após acertar, uma salvaguarda de Carisma falha bane o alvo aos Planos Inferiores."}]}],
 };
+
+/* ===== Ligação na interface (state.regras === "2024") =====
+   aplicarDadosClasses2024 troca no lugar CLASSES, CLASS_FEATURES, SUBCLASS_OPTIONS, SPELLCASTERS,
+   RULE_CLASS_SPELLCASTING, RULE_ASI_LEVELS e o meio-conjurador de SPELL_SLOTS / RULE_SPELL_SLOTS.
+   O 2014 é guardado na primeira chamada (quando todos os scripts já carregaram) e volta sem perda.
+   Não mudam aqui: SPELL_LISTS (magias 2014), RULE_FEATS (talentos 2014), EQUIPMENT_LOADOUTS (equipamento 2014),
+   antecedentes e espécies (já trocados por aplicarCatalogoRegras). */
+
+const ATRIBUTO_CONJURACAO_2024 = { "Carisma": "carisma", "Sabedoria": "sabedoria", "Inteligência": "inteligencia" };
+
+/* Recursos rastreáveis 2024: só contadores com número na tabela da classe. Dados de dado (inspiração, ataque furtivo),
+   invocações e Imposição de Mãos não entram ainda (ver docs/TRABALHO_DND5E_2024.md). */
+const RECURSOS_2024 = {
+  barbaro: [{ id: "furia", nome: "Fúria", tabela: "furias", recarga: "Descanso longo" }],
+  bruxo: [],
+  clerigo: [{ id: "canalizar_divindade", nome: "Canalizar Divindade", tabela: "canalizarDivindade", recarga: "Descanso curto ou longo" }],
+  druida: [{ id: "forma_selvagem", nome: "Forma Selvagem", tabela: "formaSelvagem", recarga: "Descanso curto ou longo" }],
+  feiticeiro: [{ id: "pontos_feiticaria", nome: "Pontos de Feitiçaria", tabela: "pontosFeiticaria", recarga: "Descanso longo" }],
+  guerreiro: [
+    { id: "segundo_folego", nome: "Recuperação de Fôlego", tabela: "recuperacaoFolego", recarga: "Descanso curto ou longo" },
+    { id: "surto_acao", nome: "Surto de Ação", tabela: "acaoSurto", recarga: "Descanso curto ou longo" },
+    { id: "indomavel", nome: "Indomável", tabela: "indomavel", recarga: "Descanso longo" }
+  ],
+  monge: [{ id: "ki", nome: "Pontos de Foco", tabela: "pontosFoco", recarga: "Descanso curto ou longo (NÃO VERIFICADO)" }],
+  paladino: [{ id: "canalizar_divindade", nome: "Canalizar Divindade", tabela: "canalizarDivindade", recarga: "Descanso curto ou longo" }],
+  patrulheiro: [{ id: "inimigo_favorito", nome: "Inimigo Favorito", tabela: "inimigoFavorito", recarga: "Descanso longo (NÃO VERIFICADO)" }]
+};
+
+function _tabelaMeia2024(){
+  const out = {};
+  SLOTS_2024_MEIO.forEach((linha, i) => { const v = [0,0,0,0,0,0,0,0,0]; linha.forEach((n, j) => { v[j] = n; }); out[i + 1] = v; });
+  return out;
+}
+
+function _classesVisao2024(){
+  const out = {};
+  Object.entries(CLASSES_2024).forEach(([k, c]) => {
+    out[k] = {
+      nome: c.nome, fonte: c.fonte, source: "PHB 2024",
+      dadoVida: c.dadoVida, saves: [...c.saves], proficiencias: [...c.proficiencias],
+      equipamento: [], // equipamento inicial 2024 ainda não carregado (segue a aviso na tela)
+      escolhaPericias: JSON.parse(JSON.stringify(c.escolhaPericias)),
+      subclasseNivel: c.subclasseNivel, aumentoAtributoNiveis: [...c.aumentoAtributoNiveis], talentoEpicoNivel: c.talentoEpicoNivel
+    };
+  });
+  return out;
+}
+
+function _caracteristicasVisao2024(){
+  const out = {};
+  Object.entries(CLASS_FEATURES_2024).forEach(([k, lista]) => { out[k] = lista.map(f => ({ level: f.level, nome: f.nome, resumo: f.resumo })); });
+  return out;
+}
+
+function _subclassesVisao2024(){
+  const out = {};
+  Object.entries(SUBCLASSES_2024).forEach(([classe, lista]) => {
+    out[classe] = lista.map(s => {
+      const niveis = [...new Set(s.caracteristicas.map(f => f.level))];
+      return {
+        key: s.key, nome: s.nome, source: "PHB 2024", fonte: s.fonte,
+        resumo: "Subclasse do SRD 5.2 com características nos níveis " + niveis.join(", ") + ".",
+        features: s.caracteristicas.map(f => ({ level: f.level, nome: f.nome, resumo: f.resumo, fonte: f.fonte || s.fonte }))
+      };
+    });
+  });
+  return out;
+}
+
+function _conjuracaoVisao2024(){
+  const spellcasters = {}, perfis = {}, asi = { default: [4,8,12,16,19] };
+  Object.entries(CLASSES_2024).forEach(([k, c]) => {
+    asi[k] = [...c.aumentoAtributoNiveis, c.talentoEpicoNivel].sort((a, b) => a - b);
+    const cj = c.conjuracao;
+    if(!cj) return;
+    const habilidade = ATRIBUTO_CONJURACAO_2024[cj.atributo];
+    const cfg = { habilidade, tipo: "preparadas", preparadas: [...cj.preparadas] };
+    if(cj.truques) cfg.cantrips = [...cj.truques];
+    if(cj.tipo === "meia") cfg.meioConjurador = true;
+    spellcasters[k] = cfg;
+    const perfil = {
+      ability: habilidade,
+      casterType: cj.tipo === "completa" ? "full" : (cj.tipo === "meia" ? "half" : "pact"),
+      model: k === "mago" ? "spellbookPrepared" : "prepared",
+      startsAtLevel: 1,
+      preparedProgression: [...cj.preparadas]
+    };
+    if(cj.truques) perfil.cantripProgression = [...cj.truques];
+    if(k === "mago") perfil.spellbook = { initialLevel1Spells: 6, learnedPerLevel: 2 }; // igual ao 2014; não consta nos dados 2024
+    perfis[k] = perfil;
+  });
+  return { SPELLCASTERS: spellcasters, RULE_CLASS_SPELLCASTING: perfis, RULE_ASI_LEVELS: asi };
+}
+
+function _visaoDados2024(){
+  const conj = _conjuracaoVisao2024();
+  return {
+    CLASSES: _classesVisao2024(),
+    CLASS_FEATURES: _caracteristicasVisao2024(),
+    SUBCLASS_OPTIONS: _subclassesVisao2024(),
+    SPELLCASTERS: conj.SPELLCASTERS,
+    RULE_CLASS_SPELLCASTING: conj.RULE_CLASS_SPELLCASTING,
+    RULE_ASI_LEVELS: conj.RULE_ASI_LEVELS
+  };
+}
+
+/* Troca os dados de classe de acordo com a edição. Idempotente. Usa _trocarCatalogo (rules.js). */
+function aplicarDadosClasses2024(edicao){
+  const alvo = edicao === "2024" ? "2024" : "2014";
+  if(aplicarDadosClasses2024._atual === alvo) return alvo;
+  if(!aplicarDadosClasses2024._2014){
+    aplicarDadosClasses2024._2014 = {
+      CLASSES: JSON.parse(JSON.stringify(CLASSES)),
+      CLASS_FEATURES: JSON.parse(JSON.stringify(CLASS_FEATURES)),
+      SUBCLASS_OPTIONS: JSON.parse(JSON.stringify(SUBCLASS_OPTIONS)),
+      SPELLCASTERS: JSON.parse(JSON.stringify(SPELLCASTERS)),
+      RULE_CLASS_SPELLCASTING: JSON.parse(JSON.stringify(RULE_CLASS_SPELLCASTING)),
+      RULE_ASI_LEVELS: JSON.parse(JSON.stringify(RULE_ASI_LEVELS)),
+      MEIO_GLOBAL: JSON.parse(JSON.stringify(SPELL_SLOTS.half)),
+      MEIO_REGRAS: JSON.parse(JSON.stringify(RULE_SPELL_SLOTS.half))
+    };
+  }
+  const s = aplicarDadosClasses2024._2014;
+  const v = alvo === "2024" ? _visaoDados2024() : s;
+  _trocarCatalogo(CLASSES, v.CLASSES);
+  _trocarCatalogo(CLASS_FEATURES, v.CLASS_FEATURES);
+  _trocarCatalogo(SUBCLASS_OPTIONS, v.SUBCLASS_OPTIONS);
+  _trocarCatalogo(SPELLCASTERS, v.SPELLCASTERS);
+  _trocarCatalogo(RULE_CLASS_SPELLCASTING, v.RULE_CLASS_SPELLCASTING);
+  _trocarCatalogo(RULE_ASI_LEVELS, v.RULE_ASI_LEVELS);
+  SPELL_SLOTS.half = JSON.parse(JSON.stringify(alvo === "2024" ? _tabelaMeia2024() : s.MEIO_GLOBAL));
+  RULE_SPELL_SLOTS.half = JSON.parse(JSON.stringify(alvo === "2024" ? _tabelaMeia2024() : s.MEIO_REGRAS));
+  aplicarDadosClasses2024._atual = alvo;
+  return alvo;
+}
+
+/* Recursos de classe 2024 (contadores), no mesmo formato de getClassResources (rules.js). */
+function getClassResources2024(classe, nivel){
+  const cls = CLASSES_2024[classe];
+  const lista = RECURSOS_2024[classe] || [];
+  if(!cls) return [];
+  const n = Math.max(1, Math.min(20, Number(nivel) || 1));
+  return lista.map(r => {
+    const max = Math.max(0, Number(((cls.recursos || {})[r.tabela] || [])[n - 1]) || 0);
+    return { id: r.id, nome: r.nome, max, atual: max, recarga: r.recarga, detalhe: "" };
+  }).filter(r => r.max > 0);
+}
+
+/* Avisos de tela: faixa da edição 2024 e marca de dado não verificado em característica. */
+function htmlAvisoClasses2024(){
+  if(typeof getRulesEdition !== "function" || getRulesEdition() !== "2024") return "";
+  return `<div class="alert warning"><p>${AVISO_CLASSES_2024}</p><p class="muted">${AVISO_CONFERENCIA_2024}</p></div>`;
+}
+function htmlNaoVerificado2024(f){
+  return f && /NÃO VERIFICADO/.test(f.fonte || "") ? ` <span class="badge wip" title="${String(f.fonte).replace(/"/g, "'")}">NÃO VERIFICADO</span>` : "";
+}

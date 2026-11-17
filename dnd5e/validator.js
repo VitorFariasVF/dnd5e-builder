@@ -227,7 +227,7 @@ function validarPersonagemCompleto(){
   if(state.personagem.progressao.ataquesPorAcao !== getAttacksPerAction(state.personagem.classe, state.personagem.nivel||1)) avisos.push("Os ataques por ação não foram sincronizados com a progressão da classe.");
 
   if(getRulesEdition()==="2024"){
-    avisos.push("Ficha 2024 (5.5): espécie, antecedente, bônus de atributo, talento de origem e subclasse no nível 3 seguem o Livro do Jogador 2024. Características de classe, subclasses e magias ainda vêm do catálogo 2014 (sem Maestria em Arma nem os recursos novos de classe) — revise a ficha na mesa.");
+    avisos.push("Ficha 2024 (5.5): espécie, antecedente, bônus de atributo e talento de origem seguem o Livro do Jogador 2024. " + AVISO_CLASSES_2024 + " " + AVISO_CONFERENCIA_2024);
     if(!state.personagem.talentoOrigem && state.personagem.origem) avisos.push("O talento de origem do antecedente ainda não foi registrado.");
   } else if(state.personagem.subclasse && (getSubclassByKey(state.personagem.classe, state.personagem.subclasse)||{}).source === "XGtE"){
     avisos.push("Subclasse de Xanathar's Guide to Everything (fonte opcional): confirme com o mestre se a mesa permite.");
