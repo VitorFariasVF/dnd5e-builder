@@ -55,6 +55,8 @@ const semFonteClasse = Object.entries(ctx.T20_CLASSES).filter(([k, c]) => !c.fon
 t.igual("toda classe tem fonte de PV, perícias e magias", semFonteClasse, []);
 t.igual("14 classes do livro básico", ctx.T20_CLASSE_IDS.length, 14);
 t.igual("31 perícias", ctx.T20_PERICIAS.length, 31);
+t.igual("níveis: 14 classes com linha por nível 6 a 20", Object.keys(ctx.T20_NIVEIS.classes).length, 14);
+t.check("catálogo de poderes carregado (objeto por id)", Object.keys(ctx.T20_PODERES).length > 100);
 t.igual("35 origens", ctx.T20_ORIGENS.length, 35);
 t.igual("6 atributos", ctx.T20_ATRIBUTOS.length, 6);
 t.check("toda fonte de origem informa que benefícios específicos não foram verificados",

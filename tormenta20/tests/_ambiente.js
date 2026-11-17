@@ -6,7 +6,7 @@ const path = require("path");
 
 const RAIZ = path.join(__dirname, "..", "..");       // raiz do repositório
 const PASTA = path.join(__dirname, "..");            // tormenta20/
-const SCRIPTS = ["tormenta20/rules.js", "tormenta20/rules-magias.js", "tormenta20/rules-racas.js", "tormenta20/rules-equipamento.js",
+const SCRIPTS = ["tormenta20/rules.js", "tormenta20/rules-niveis.js", "tormenta20/rules-poderes.js", "tormenta20/rules-magias.js", "tormenta20/rules-racas.js", "tormenta20/rules-equipamento.js",
   "tormenta20/state.js", "tormenta20/validator.js", "tormenta20/engine.js",
   "tormenta20/storage.js", "tormenta20/export.js", "tormenta20/export-pdf.js"];
 
@@ -17,7 +17,8 @@ const NOMES_CONST = ["state", "T20_MAGIAS", "T20_MAGIAS_PENDENTES", "T20_MAGIAS_
   "T20_ATRIBUTO_NOME", "T20_PONTOS_COMPRA", "T20_MODIFICADOR_FONTE", "T20_PERICIAS", "T20_PERICIA_NOMES",
   "T20_PERICIA_FONTE", "T20_TREINO_FONTE", "T20_RACAS", "T20_ORIGENS", "T20_ORIGEM_FONTE", "T20_CLASSES",
   "T20_CLASSE_IDS", "T20_CIRCULOS", "T20_CIRCULOS_FONTE", "T20_NIVEL_MIN", "T20_NIVEL_MAX", "T20_DINHEIRO_FONTE",
-  "T20_DEFESA_FONTE", "T20_PV_FONTE", "T20_PM_FONTE", "T20_PDF_PALETA", "T20_PDF_COR_PADRAO", "T20_PDF_CSS"];
+  "T20_DEFESA_FONTE", "T20_PV_FONTE", "T20_PM_FONTE", "T20_PDF_PALETA", "T20_PDF_COR_PADRAO", "T20_PDF_CSS",
+  "T20_NIVEIS", "T20_PODERES"];
 
 function carregar(arquivos){
   const ctx = { console, Math, Date, JSON, Number, String, Object, Array, Set, Map, Symbol, Promise, setTimeout, clearTimeout };
