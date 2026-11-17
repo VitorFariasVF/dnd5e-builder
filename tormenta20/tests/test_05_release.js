@@ -49,7 +49,7 @@ t.igual("sem emoji nos arquivos do sistema", comEmoji, []);
 
 /* Todo dado de regra tem fonte (ou NÃO VERIFICADO explícito) */
 const ctx = carregar(SCRIPTS);
-const semFonteRaca = Object.entries(ctx.T20_RACAS).filter(([k, r]) => !r.fonte).map(([k]) => k);
+const semFonteRaca = Object.entries(ctx.T20_RACAS_COMPLETAS).filter(([k, r]) => !r.fonte).map(([k]) => k);
 t.igual("toda raça tem fonte", semFonteRaca, []);
 const semFonteClasse = Object.entries(ctx.T20_CLASSES).filter(([k, c]) => !c.fontePv || !c.fontePericias || !c.fonteMagias).map(([k]) => k);
 t.igual("toda classe tem fonte de PV, perícias e magias", semFonteClasse, []);
@@ -62,7 +62,7 @@ t.igual("6 atributos", ctx.T20_ATRIBUTOS.length, 6);
 t.check("toda fonte de origem informa que benefícios específicos não foram verificados",
   /NÃO VERIFICADO/.test(ctx.T20_ORIGEM_FONTE));
 t.igual("pontos de compra: total 10", ctx.T20_PONTOS_COMPRA.total, 10);
-t.igual("níveis suportados: 1 a 5", [ctx.T20_NIVEL_MIN, ctx.T20_NIVEL_MAX], [1, 5]);
+t.igual("níveis suportados: 1 a 20 (tabelas até o 5º; T20_NIVEIS do 6º)", [ctx.T20_NIVEL_MIN, ctx.T20_NIVEL_MAX, ctx.T20_NIVEL_BASE], [1, 20, 5]);
 const cores = Object.values(ctx.T20_CLASSES).map(c => c.cor);
 t.igual("cada classe tem cor própria", new Set(cores).size, cores.length);
 

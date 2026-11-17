@@ -1,12 +1,13 @@
-/* tormenta20/rules-racas.js: dados adicionais, carregado depois de rules.js. Preenchido pela frente de trabalho correspondente.
+/* tormenta20/rules-racas.js: cadastro único de raças (substitui o antigo T20_RACAS de rules.js).
 
-   FORMATO (só dados; a interface não usa este arquivo ainda). Não sobrescreve T20_RACAS de rules.js.
    T20_RACAS_COMPLETAS: objeto por id com as 17 raças do livro básico (lista do Núcleo em [X]). Cada raça:
      nome, tamanho (texto ou null), deslocamento (metros ou null), ajustes (objeto {atributo: valor} ou null),
      habilidades: [{ nome, efeito }] (efeito em palavras próprias),
+     periciasExtras (opcional): perícias treinadas extras por habilidade (Humano, Versátil: 2). Ausente = 0.
      verificado: { ajustes, tamanho, deslocamento (booleans), habilidades: [nomes conferidos em duas fontes] },
      fonte, observacoes (conflitos e lacunas).
-   Campo null = a fonte não informou. Nenhum valor foi preenchido de memória.
+   Campo null = a fonte não informou. O app aplica só o que está preenchido; o resto fica NÃO VERIFICADO
+   e o jogador lança à mão (ajuste manual no passo Atributos). Nenhum valor foi preenchido de memória.
 
    Fontes:
      [X] exegetadearton.com.br, páginas de raça (1 fonte; o site declara vir da Tormenta Collab Wiki). Não traz ajustes de atributo.
@@ -16,7 +17,7 @@
 
 const T20_RACAS_COMPLETAS = {
   humano: {
-    nome: "Humano", tamanho: null, deslocamento: null, ajustes: null,
+    nome: "Humano", tamanho: null, deslocamento: null, ajustes: null, periciasExtras: 2,
     habilidades: [
       { nome: "Versátil", efeito: "Treinado em duas perícias à sua escolha; pode trocar uma delas por um poder geral." }
     ],

@@ -1,6 +1,8 @@
 /* Dados de magias, raças completas e equipamento (rules-magias.js, rules-racas.js, rules-equipamento.js):
    estrutura, círculos, tipos, valores numéricos plausíveis, fonte presente e lacunas registradas. */
-const { carregar, criarTeste, SCRIPTS } = require("./_ambiente");
+const fs = require("fs");
+const path = require("path");
+const { carregar, criarTeste, SCRIPTS, RAIZ } = require("./_ambiente");
 const t = criarTeste("Magias, raças completas e equipamento Tormenta20");
 const ctx = carregar(SCRIPTS);
 
@@ -85,10 +87,10 @@ t.check("Minotauro: ajustes FOR +2, CON +1, SAB -1 com verificado false (1 fonte
   racas.minotauro.ajustes.forca === 2 && racas.minotauro.ajustes.constituicao === 1 && racas.minotauro.ajustes.sabedoria === -1 &&
   racas.minotauro.verificado.ajustes === false, racas.minotauro.ajustes);
 
-/* O dado original de rules.js continua no lugar (não foi sobrescrito) */
-t.igual("T20_RACAS de rules.js segue com as 5 raças originais",
-  Object.keys(ctx.T20_RACAS).sort(), ["anao", "elfo", "humano", "hynne", "minotauro"]);
-t.igual("T20_RACAS de rules.js não recebeu as raças completas", Object.keys(ctx.T20_RACAS).length < Object.keys(racas).length, true);
+/* Cadastro único: a tabela antiga de 5 raças saiu de rules.js; a ficha lê só T20_RACAS_COMPLETAS. */
+const regrasTexto = fs.readFileSync(path.join(RAIZ, "tormenta20/rules.js"), "utf8");
+t.check("rules.js não define mais T20_RACAS (um só cadastro de raças)", !/const T20_RACAS\b/.test(regrasTexto));
+t.igual("raças completas: 17 ids únicos", new Set(Object.keys(racas)).size, 17);
 
 /* ---- Equipamento ---- */
 const listas = { T20_ARMAS: ctx.T20_ARMAS, T20_ARMADURAS: ctx.T20_ARMADURAS, T20_ITENS: ctx.T20_ITENS };

@@ -1,6 +1,6 @@
-/* tormenta20/rules-magias.js: dados adicionais, carregado depois de rules.js. Preenchido pela frente de trabalho correspondente.
+/* tormenta20/rules-magias.js: catálogo de magias. A etapa de magias da ficha escolhe por círculo a partir daqui.
 
-   FORMATO (só dados; a interface não usa este arquivo ainda):
+   FORMATO:
    T20_MAGIAS: array de magias com dados completos. Cada item:
      id, nome, circulo (1 a 5), escola, tipo ("arcana" | "divina"),
      execucao, alcance, alvo (texto), duracao (texto, ou null quando a fonte não informa),

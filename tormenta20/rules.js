@@ -11,7 +11,8 @@
    o que dependia só deles ficou NÃO VERIFICADO. */
 
 const T20_SISTEMA = "tormenta20";
-const T20_VERSAO_ESQUEMA = 1;
+const T20_VERSAO_ESQUEMA = 2;
+const T20_VERSAO_ESQUEMA_ANTERIOR = 1;   // backups do esquema 1 ainda são importados (state.js completa os campos novos)
 const T20_EDICAO = "Edição Jogo do Ano (Jambô)";
 
 /* ---- Atributos ---- */
@@ -84,37 +85,8 @@ const T20_PERICIA_FONTE = "[E] lista das 31 perícias, atributo-chave, 6 só tre
 const T20_TREINO_FONTE = "CONFLITO: [E] e [R] sugerem que a não treinada também usa parte do nível; o app não soma nada. Valor exato de não treinada: NÃO VERIFICADO";
 
 /* ---- Raças ----
-   ajustes: null = NÃO VERIFICADO (o usuário lança manualmente no passo de atributos).
-   deslocamento em metros. tamanho: "Médio" | "Pequeno" | null (NÃO VERIFICADO).
-   Revisão 2026-11-17: o livro básico tem 17 raças jogáveis [R]; o app cobre 6. Minotauro, Hynne, Anão e Elfo
-   só têm uma fonte ([I]), que bate com os valores aqui. Humano: sem fonte para os ajustes. */
-const T20_RACAS = {
-  humano: {
-    nome: "Humano", tamanho: "Médio", deslocamento: 9, ajustes: null, extraPericiasTreinadas: 2,
-    habilidades: [{ nome: "Versátil", efeito: "Treinado em duas perícias à sua escolha (pode trocar uma delas por um poder geral)." }],
-    fonte: "[E] página Humano (habilidade Versátil); ajustes e tamanho: NÃO VERIFICADO", verificado: false
-  },
-  anao: {
-    nome: "Anão", tamanho: null, deslocamento: 9, ajustes: null, extraPericiasTreinadas: 0,
-    habilidades: [{ nome: "Conhecimento das Rochas", efeito: "Visão no escuro." }],
-    fonte: "[I] livro básico p. 20 (visão no escuro; a issue também cita +2 em Percepção e Sobrevivência no subterrâneo, não modelado); 1 fonte. Ajustes, tamanho e deslocamento: NÃO VERIFICADO", verificado: false
-  },
-  elfo: {
-    nome: "Elfo", tamanho: null, deslocamento: 9, ajustes: null, extraPericiasTreinadas: 0,
-    habilidades: [{ nome: "Sentidos Élficos", efeito: "Visão na penumbra." }],
-    fonte: "[I] livro básico p. 22 (visão na penumbra; a issue também cita +2 em Misticismo e Percepção, não modelado); 1 fonte. Ajustes, tamanho e deslocamento: NÃO VERIFICADO", verificado: false
-  },
-  minotauro: {
-    nome: "Minotauro", tamanho: null, deslocamento: 9, ajustes: { forca: 2, constituicao: 1, sabedoria: -1 }, extraPericiasTreinadas: 0,
-    habilidades: [],
-    fonte: "[I] livro básico p. 25 (Força +2, Constituição +1, Sabedoria -1); 1 fonte. Habilidades raciais: NÃO VERIFICADO", verificado: false
-  },
-  hynne: {
-    nome: "Hynne", tamanho: "Pequeno", deslocamento: 6, ajustes: null, extraPericiasTreinadas: 0,
-    habilidades: [{ nome: "Pequeno e Rechonchudo", efeito: "Você é Pequeno e tem deslocamento de 6 m." }],
-    fonte: "[I] livro básico p. 28 e p. 106 (Pequeno, 6 m; a issue também cita +2 em Enganação, não modelado); 1 fonte. Ajustes: NÃO VERIFICADO", verificado: false
-  }
-};
+   A lista de raças (17, do livro básico) está em rules-racas.js (T20_RACAS_COMPLETAS). Esta tabela
+   foi substituída por ela: não há mais um T20_RACAS aqui, para não haver dois cadastros divergentes. */
 
 /* ---- Origens (35) ----
    Cada origem dá benefícios (perícias ou poderes). Lista de nomes: [E] (confere com a lista da página de origens).
@@ -230,9 +202,12 @@ const T20_CIRCULOS = [
 ];
 const T20_CIRCULOS_FONTE = "NÃO VERIFICADO nesta revisão: a progressão veio dos artigos da Rotina (Bardo e Druida), que não foram reabertos; o guia 'Como criar sua ficha' e o timEU não trazem a tabela. Generalização a todos os conjuradores: NÃO VERIFICADO";
 
-/* Níveis do app: 1 a 5 (escopo desta entrega). */
+/* Níveis do app: 1 a 20. Até T20_NIVEL_BASE (5) valem as tabelas deste arquivo. Do 6º em diante, PV, PM,
+   bônus de treino, círculo e habilidades vêm de T20_NIVEIS (rules-niveis.js); onde a fonte não informou,
+   a ficha mostra NÃO VERIFICADO e aceita o valor digitado à mão. */
 const T20_NIVEL_MIN = 1;
-const T20_NIVEL_MAX = 5;
+const T20_NIVEL_MAX = 20;
+const T20_NIVEL_BASE = 5;
 
 /* Valores padrão e bônus de dinheiro: NÃO VERIFICADO (o livro define; não foi confirmado). */
 const T20_DINHEIRO_FONTE = "Dinheiro inicial (T$): NÃO VERIFICADO. O app não sugere valor (um guia da [R] sugere cerca de 15 T$ como prática de mesa, não como regra).";

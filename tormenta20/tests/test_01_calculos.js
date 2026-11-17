@@ -24,7 +24,8 @@ t.igual("A: bônus de treino = 0", d.bonusTreino, 0);
 t.igual("A: Luta treinada = 3", d.pericias.find(x => x.nome === "Luta").bonus, 3);
 t.igual("A: Fortitude treinada = 2", d.pericias.find(x => x.nome === "Fortitude").bonus, 2);
 t.igual("A: Percepção (origem) treinada = 0", d.pericias.find(x => x.nome === "Percepção").bonus, 0);
-t.igual("A: deslocamento Humano = 9 m", d.deslocamento, 9);
+/* Humano: a fonte não informa deslocamento (rules-racas.js, NÃO VERIFICADO): o app não chuta 9 m. */
+t.igual("A: deslocamento Humano não informado = null", d.deslocamento, null);
 
 /* Personagem B: Clérigo nível 3, Anão.
    Compra: SAB 3 (custo 4) + INT 2 (custo 2) + DES 2 (custo 2) + CON 1 (custo 1) = 9 pontos.
@@ -66,7 +67,7 @@ t.igual("C: PM no nível 5 = 21", d.pm, 21);
 t.igual("C: treino nível 5 = +2", d.bonusTreino, 2);
 t.igual("C: Sobrevivência treinada = 3", d.pericias.find(x => x.nome === "Sobrevivência").bonus, 3);
 t.igual("C: Defesa = 12", d.defesa, 12);
-t.igual("C: deslocamento Minotauro = 9 m", d.deslocamento, 9);
+t.igual("C: deslocamento Minotauro não informado = null", d.deslocamento, null);
 t.igual("C: círculo máximo nível 5 = 1º", d.circuloMaximo, 1);
 
 /* Casos de borda */

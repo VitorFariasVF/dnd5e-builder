@@ -6,7 +6,8 @@
 #app .t20-pericia{min-height:44px}
 #app .t20-pericia.off{opacity:.55}
 #app .t20-pericia input:disabled{cursor:not-allowed}
-.table-wrap{width:100%;max-width:100%}
+/* Tabela larga (ex.: níveis 6 a 20) rola dentro da própria caixa, sem rolagem lateral da página. */
+.table-wrap{width:100%;max-width:100%;overflow-x:auto}
 .table-like th{font-weight:600;color:var(--muted)}
 .score{font-size:1.5rem;font-family:var(--font-display);margin:var(--s1) 0}
 .badge.wip{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}

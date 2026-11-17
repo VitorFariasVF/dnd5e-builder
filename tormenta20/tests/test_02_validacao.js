@@ -30,7 +30,9 @@ t.igual("etapa 1 com modo estrito é aceita", contaErros(erros(1, "estrito")), 0
 t.igual("etapa 2: nome vazio recusado no estrito", contaErros(erros(2, "estrito", { nome: "  " })), 1);
 t.igual("etapa 2: nome vazio vira aviso no livre", [contaErros(erros(2, "livre", { nome: "" })), contaAvisos(erros(2, "livre", { nome: "" })) > 0], [0, true]);
 t.igual("etapa 2: nome preenchido aceito", contaErros(erros(2, "estrito")), 0);
-t.igual("etapa 2: nível 6 recusado (escopo é 1 a 5)", contaErros(erros(2, "estrito", { nivel: 6 })), 1);
+t.igual("etapa 2: nível 6 aceito (escopo é 1 a 20)", contaErros(erros(2, "estrito", { nivel: 6 })), 0);
+t.igual("etapa 2: nível 20 aceito", contaErros(erros(2, "estrito", { nivel: 20 })), 0);
+t.igual("etapa 2: nível 21 recusado", contaErros(erros(2, "estrito", { nivel: 21 })), 1);
 
 /* Etapa 3: raça */
 t.igual("etapa 3: sem raça recusado", contaErros(erros(3, "estrito", { raca: null })), 1);

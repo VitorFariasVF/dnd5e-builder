@@ -1,5 +1,7 @@
 /* Exportações: backup JSON (importável de volta) e JSON de ator para Foundry VTT.
-   O backup leva { sistema, versaoEsquema }. A importação recusa arquivo de outro sistema ou versão desconhecida.
+   O backup leva { sistema, versaoEsquema }. Esquema 2 (atual): inclui PV, PM e treino digitados à mão, poderes e
+   magias do catálogo. Esquema 1 (anterior) ainda é importado: ensureStateShape completa os campos novos.
+   A importação recusa arquivo de outro sistema ou versão desconhecida.
    O JSON de Foundry é um rascunho: nomes de campo não foram conferidos com o sistema Tormenta20 do Foundry
    e não foi testado em VTT real (ver docs/AUDITORIA_TORMENTA20.md). */
 
@@ -23,7 +25,8 @@ function t20LerBackup(texto){
   catch(err){ return { ok: false, erro: "O arquivo não é um JSON válido." }; }
   if(!obj || typeof obj !== "object") return { ok: false, erro: "O arquivo não tem os dados da ficha." };
   if(obj.sistema !== T20_SISTEMA) return { ok: false, erro: "Este arquivo não é de Tormenta20." };
-  if(obj.versaoEsquema !== T20_VERSAO_ESQUEMA) return { ok: false, erro: `Versão de backup ${obj.versaoEsquema} não suportada (esperada ${T20_VERSAO_ESQUEMA}).` };
+  const aceitas = [T20_VERSAO_ESQUEMA_ANTERIOR, T20_VERSAO_ESQUEMA];
+  if(!aceitas.includes(obj.versaoEsquema)) return { ok: false, erro: `Versão de backup ${obj.versaoEsquema} não suportada (aceitas: ${aceitas.join(" e ")}).` };
   if(!obj.personagem || typeof obj.personagem !== "object") return { ok: false, erro: "Backup sem os dados do personagem." };
   return { ok: true, dados: obj };
 }
@@ -55,7 +58,7 @@ function t20FoundryAtor(p, d){
     img: "icons/svg/mystery-man.svg",
     system: {
       nivel: p.nivel,
-      raca: (T20_RACAS[p.raca] || {}).nome || "",
+      raca: (T20_RACAS_COMPLETAS[p.raca] || {}).nome || "",
       classe: c.nome || "",
       origem: p.origem || "",
       atributos: Object.fromEntries(T20_ATRIBUTO_IDS.map(id => [id, { valor: d2.atributos[id], modificador: d2.modificadores[id] }])),

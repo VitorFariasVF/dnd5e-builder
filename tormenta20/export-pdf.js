@@ -1,6 +1,7 @@
 /* Ficha em PDF (A4, 2 páginas) para imprimir / salvar pelo navegador.
    Tema pergaminho com a cor da classe no cabeçalho e nas seções. Toda a arte é CSS e SVG próprio
-   (funciona offline). Gera uma string HTML: testável em Node. */
+   (funciona offline). Gera uma string HTML: testável em Node.
+   Valores sem fonte de 2 aparecem com "não verificado" (PV, PM, treino, círculo, habilidades, tipo de poder). */
 
 const T20_PDF_PALETA = { papel: "#f4ead2", superficie: "#fbf5e4", tinta: "#2a2118", suave: "#6b5a44", linha: "#d8c7a3" };
 const T20_PDF_COR_PADRAO = "#8a5200";
@@ -25,28 +26,54 @@ function t20PdfLista(itens, vazio){
 }
 function t20PdfMoedas(dinheiro){ return `${t20Esc(dinheiro)} T$ <span class="pequeno">(valor inicial NÃO VERIFICADO)</span>`; }
 
+/* Texto do PV, PM e treino: origem (calculado, à mão ou não verificado) e se os dados têm 2 fontes. */
+function t20PdfSubPV(d){
+  if(d.pv === null) return "não verificado";
+  if(d.pvOrigem === "manual") return "digitado à mão";
+  return d.pvVerificado ? "pontos de vida" : "pontos de vida (1 fonte)";
+}
+function t20PdfSubPM(d){
+  if(d.pm === null) return "não verificado";
+  if(d.pmOrigem === "manual") return "digitado à mão";
+  return d.pmVerificado ? "pontos de mana" : "pontos de mana (1 fonte)";
+}
+
+function t20PdfProgressao(d, nivel){
+  if(nivel <= T20_NIVEL_BASE) return `<p class="pequeno">Níveis 1 a ${T20_NIVEL_BASE}: habilidades de classe não cadastradas neste app (NÃO VERIFICADO).</p>`;
+  const linhas = d.niveis.map(r => {
+    const habs = r.habilidades.map(h => `${t20Esc(h.nome)}${h.frase ? `: ${t20Esc(h.frase)}` : ` <span class="nv">(efeito NÃO VERIFICADO)</span>`}`).join("; ");
+    return `<tr><td class="num">${r.nivel}</td><td class="num">${r.pv === null ? "<span class=\"nv\">—</span>" : t20Esc(t20FormatarBonus(r.pv))}</td><td class="num">${r.pm === null ? "<span class=\"nv\">—</span>" : t20Esc(t20FormatarBonus(r.pm))}</td><td class="num">${r.treino === null ? "<span class=\"nv\">—</span>" : t20Esc(t20FormatarBonus(r.treino))}</td><td class="num">${r.circulo === null ? "<span class=\"nv\">—</span>" : t20Esc(r.circulo)}</td><td>${habs || "<span class=\"suave\">—</span>"}</td></tr>`;
+  }).join("");
+  return `<table class="niveis"><thead><tr><th>Nível</th><th class="num">PV +</th><th class="num">PM +</th><th class="num">Treino</th><th class="num">Círculo</th><th>Habilidades de classe</th></tr></thead><tbody>${linhas}</tbody></table>
+    <p class="pequeno">Valores de guias de fãs. Onde não há 2 fontes, o dado é NÃO VERIFICADO.</p>`;
+}
+
 function t20GerarHtmlFicha(st){
   const s = st || state;
   const p = s.personagem;
   const d = t20Derivados(p);
   const cls = T20_CLASSES[p.classe] || {};
   const cor = t20PdfCor(p.classe);
-  const raca = (T20_RACAS[p.raca] || {}).nome || "";
-  const subtitulo = [cls.nome ? `${cls.nome} ${p.nivel}` : "Classe não escolhida", raca, p.origem].filter(Boolean).map(t20Esc).join(" · ");
+  const raca = t20RacaInfo(p.raca);
+  const subtitulo = [cls.nome ? `${cls.nome} ${p.nivel}` : "Classe não escolhida", raca ? raca.nome : "", p.origem].filter(Boolean).map(t20Esc).join(" · ");
   const nomes = t20PericiaNomesTreinadosOrdem(d);
   const notas = [];
-  if(!cls.verificadoPv && cls.pvInicial !== null && cls.nome) notas.push(`PV e PM de ${cls.nome}: uma fonte.`);
-  if(cls.pvInicial === null && cls.nome) notas.push(`PV de ${cls.nome}: fontes divergem, não calculado.`);
+  if(cls.nome && d.pv === null) notas.push(`PV de ${cls.nome}: não calculado (fontes divergem); preencher à mão.`);
+  else if(cls.nome && d.pvOrigem !== "manual" && !d.pvVerificado) notas.push(`PV de ${cls.nome}: 1 fonte (NÃO VERIFICADO).`);
+  if(cls.nome && d.pm === null) notas.push(`PM de ${cls.nome}: não calculado; preencher à mão.`);
+  if(p.nivel > T20_NIVEL_BASE) notas.push(`Níveis 6 a ${p.nivel}: guias de fãs; só o marcado com 2 fontes está confirmado.`);
+  if(raca) notas.push(`Raça ${raca.nome}: dados de 1 fonte, exceto os marcados como confirmados.`);
   notas.push("Bônus de perícia não treinada e resistências: NÃO VERIFICADO.");
-  notas.push("Dinheiro inicial e poderes por nível: NÃO VERIFICADO.");
+  notas.push("Dinheiro inicial, poderes por nível e armas e armaduras: NÃO VERIFICADO.");
 
   const atributos = T20_ATRIBUTOS.map(a => t20PdfEscudo(a.sigla, d.atributos[a.id], d.modificadores[a.id])).join("");
+  const deslSub = d.deslocamento === null ? "não verificado" : (raca && raca.verificado.deslocamento ? "pela raça" : "pela raça (1 fonte)");
   const vitais = [
-    t20PdfVital("PV", d.pv === null ? "—" : d.pv, d.pv === null ? "não calculado" : "pontos de vida", true),
-    t20PdfVital("PM", d.pm === null ? "—" : d.pm, "pontos de mana", false),
+    t20PdfVital("PV", d.pv === null ? "—" : d.pv, t20PdfSubPV(d), true),
+    t20PdfVital("PM", d.pm === null ? "—" : d.pm, t20PdfSubPM(d), false),
     t20PdfVital("Defesa", d.defesa, "10 + DES + armaduras", false),
-    t20PdfVital("Deslocamento", d.deslocamento === null ? "—" : `${d.deslocamento} m`, "", false),
-    t20PdfVital("Treino", t20FormatarBonus(d.bonusTreino), "metade do nível", false)
+    t20PdfVital("Deslocamento", d.deslocamento === null ? "—" : `${d.deslocamento} m`, deslSub, false),
+    t20PdfVital("Treino", t20FormatarBonus(d.bonusTreino), d.treinoOrigem === "manual" ? "digitado à mão" : "metade do nível (1 fonte)", false)
   ].join("");
 
   const linhasPericias = d.pericias.map(x => `<tr class="${x.treinada ? "" : "nao"}"><td>${x.treinada ? "●" : "○"}</td><td>${t20Esc(x.nome)} <span class="pequeno">(${t20Esc(T20_ATRIBUTOS.find(a => a.id === x.attr).sigla)})</span></td><td class="num">${x.treinada ? t20FormatarBonus(x.bonus) : t20FormatarBonus(d.atributos[x.attr])}</td></tr>`).join("");
@@ -55,25 +82,44 @@ function t20GerarHtmlFicha(st){
   const fixas = [...(cls.fixas || []).map(n => `<li>${t20Esc(n)} <span class="pequeno">(fixa)</span></li>`)];
   const magiaAtr = d.atributoMagia ? T20_ATRIBUTO_NOME[d.atributoMagia] : "";
   const resumoClasse = [
-    cls.conjurador ? `Conjurador: ${t20Esc(magiaAtr)}; círculo máximo ${d.circuloMaximo}` : "Sem conjuração neste app",
+    cls.conjurador ? `Conjurador: ${t20Esc(magiaAtr)}; círculo máximo ${d.circuloMaximo === null ? "NÃO VERIFICADO" : t20Esc(d.circuloMaximo)}` : "Sem conjuração neste app",
     cls.forte ? `Resistência forte: ${t20Esc(cls.forte)}` : "Resistência forte: NÃO VERIFICADO"
   ];
 
   const poderes = (p.poderes || []).length
-    ? `<table><thead><tr><th>Poder</th><th>Tipo</th><th>Nível</th></tr></thead><tbody>${p.poderes.map(pd => `<tr><td>${t20Esc(pd.nome)}${pd.nota ? `<br><span class="pequeno">${t20Esc(pd.nota)}</span>` : ""}</td><td>${t20Esc(pd.tipo)}</td><td class="num">${t20Esc(pd.nivel)}</td></tr>`).join("")}</tbody></table>`
+    ? `<table><thead><tr><th>Poder</th><th>Tipo</th><th>Nível</th></tr></thead><tbody>${p.poderes.map(pd => {
+        const cat = pd.id ? T20_PODERES[pd.id] || null : null;
+        const tipo = cat ? (cat.tipo ? t20TipoRotulo(cat.tipo) : "não verificado") : (t20TipoRotulo(pd.tipo) || (pd.tipo ? pd.tipo : "—"));
+        const marca = cat && !cat.verificado ? `<br><span class="pequeno">1 fonte (NÃO VERIFICADO)</span>` : "";
+        const nota = pd.nota ? `<br><span class="pequeno">${t20Esc(pd.nota)}</span>` : "";
+        return `<tr><td>${t20Esc(pd.nome)}${marca}${nota}</td><td>${t20Esc(tipo)}</td><td class="num">${t20Esc(pd.nivel)}</td></tr>`;
+      }).join("")}</tbody></table>`
     : `<p class="suave">Nenhum poder registrado.</p>`;
 
   let magias = `<p class="suave">Classe sem conjuração neste app.</p>`;
   if(cls.conjurador){
     const porCirculo = {};
-    (p.magias || []).forEach(m => { (porCirculo[m.circulo] = porCirculo[m.circulo] || []).push(m.nome); });
+    let algumPendente = false;
+    (p.magias || []).forEach(m => {
+      const cat = t20MagiaCatalogo(m.nome);
+      if(cat && cat.pendente) algumPendente = true;
+      (porCirculo[m.circulo] = porCirculo[m.circulo] || []).push(`${m.nome}${cat && cat.pendente ? "*" : ""}`);
+    });
     const linhas = Object.keys(porCirculo).sort().map(c => `<li><strong>${t20Esc(c)}º círculo:</strong> ${porCirculo[c].map(t20Esc).join(", ")}</li>`);
-    magias = `<p class="pequeno">Círculo máximo no nível ${p.nivel}: ${d.circuloMaximo}. Magias conhecidas no 1º nível: ${cls.magiasNivel1}.</p>${t20PdfLista(linhas, "Nenhuma magia registrada.")}`;
+    const nota = algumPendente ? `<p class="pequeno">* Execução, alcance e duração NÃO VERIFICADOS (só o índice de uma fonte).</p>` : "";
+    magias = `<p class="pequeno">Círculo máximo no nível ${p.nivel}: ${d.circuloMaximo === null ? "NÃO VERIFICADO" : t20Esc(d.circuloMaximo)}. Magias conhecidas no 1º nível: ${cls.magiasNivel1}.</p>${t20PdfLista(linhas, "Nenhuma magia registrada.")}${nota}`;
   }
 
   const equip = (p.equipamento || []).length
     ? `<table><thead><tr><th>Item</th><th>Qtd</th></tr></thead><tbody>${p.equipamento.map(e => `<tr><td>${t20Esc(e.nome)}</td><td class="num">${t20Esc(e.quantidade)}</td></tr>`).join("")}</tbody></table>`
     : `<p class="suave">Nenhum item registrado.</p>`;
+
+  const racaTxt = raca ? [
+    `<li><strong>Tamanho</strong>: ${raca.tamanho ? t20Esc(raca.tamanho) + (raca.verificado.tamanho ? "" : " <span class=\"nv\">(1 fonte)</span>") : "<span class=\"nv\">NÃO VERIFICADO</span>"}</li>`,
+    `<li><strong>Deslocamento</strong>: ${raca.deslocamento !== null ? t20Esc(raca.deslocamento) + " m" : "<span class=\"nv\">NÃO VERIFICADO</span>"}</li>`,
+    `<li><strong>Ajustes</strong>: ${raca.ajustes ? Object.entries(raca.ajustes).map(([k, v]) => `${t20Esc(T20_ATRIBUTO_NOME[k])} ${t20Esc(t20FormatarBonus(v))}`).join(", ") + (raca.verificado.ajustes ? "" : " <span class=\"nv\">(1 fonte)</span>") : "<span class=\"nv\">NÃO VERIFICADO</span>"}</li>`
+  ] : [];
+  const tracos = raca ? raca.habilidades.map(h => `<li><strong>${t20Esc(h.nome)}</strong>: ${t20Esc(h.efeito)}</li>`) : [];
 
   const pers = p.personalidade || {};
   const cabecalho = `<header class="topo"><div class="brasao" style="--cor:${cor}"><span>${t20Esc((cls.nome || "T").charAt(0))}</span></div><div class="titulo"><h1>${t20Esc(p.nome || "Personagem sem nome")}</h1><p class="linha-classe" style="--cor:${cor}">${subtitulo}</p><p class="meta">Jogador: ${t20Esc(p.jogador || "—")} · Modo: ${t20Esc(s.modo || "—")} · ${t20Esc(T20_EDICAO)}</p></div><div class="selo" style="--cor:${cor}">Tormenta20<strong>${s.modo === "estrito" ? "Ficha em modo estrito" : "Ficha em modo livre"}</strong></div></header>`;
@@ -100,11 +146,12 @@ function t20GerarHtmlFicha(st){
     <div class="fluxo">
       ${t20PdfSecao("Poderes", poderes, "longa")}
       ${t20PdfSecao("Magias", magias, "longa")}
+      ${p.nivel > T20_NIVEL_BASE ? t20PdfSecao("Progressão de classe (6º ao " + t20Esc(p.nivel) + "º)", t20PdfProgressao(d, p.nivel), "longa") : ""}
       ${t20PdfSecao("Equipamento", `${equip}<p class="pequeno">${t20PdfMoedas(p.dinheiro || 0)}</p>`)}
+      ${t20PdfSecao("Raça", t20PdfLista([...racaTxt, ...tracos], "Sem raça escolhida."))}
       ${t20PdfSecao("Aparência", `<p class="texto">${t20Esc(pers.aparencia || "—")}</p>`)}
       ${t20PdfSecao("Personalidade", `<p class="texto">${t20Esc(pers.tracos || "—")}</p>`)}
       ${t20PdfSecao("História", `<p class="texto">${t20Esc(pers.historia || "—")}</p>`, "longa")}
-      ${t20PdfSecao("Traços raciais", t20PdfLista((T20_RACAS[p.raca] || { habilidades: [] }).habilidades.map(h => `<li><strong>${t20Esc(h.nome)}</strong>: ${t20Esc(h.efeito)}</li>`), "Sem traços raciais verificados."))}
     </div>
     ${rodape(2)}
   </div></article>
@@ -154,9 +201,12 @@ const T20_PDF_CSS = `
   th{font-size:6.5pt;letter-spacing:.06em;text-transform:uppercase;color:var(--suave);text-align:left;padding:0 1mm 1mm}
   td{padding:.4mm 1mm;border-bottom:.4pt dotted var(--linha);vertical-align:top}
   td.num{text-align:right;font-weight:700;white-space:nowrap}
+  table.niveis{font-size:6.8pt}
+  table.niveis td{padding:.3mm .8mm}
   .pericias td:first-child{width:4mm;color:var(--cor)}
   .pericias tr.nao td{color:var(--suave)}
   .suave{color:var(--suave)}.pequeno{font-size:7pt;color:var(--suave)}
+  .nv{font-weight:700;color:var(--cor)}
   .texto{white-space:pre-wrap}
   .rodape{position:absolute;left:0;right:0;bottom:6mm;text-align:center;font-size:6.5pt;color:var(--suave);letter-spacing:.04em}
   @media screen and (max-width:820px){.pagina{zoom:.44;margin:6px auto}.barra{position:relative}}

@@ -71,9 +71,9 @@ t.igual("círculo máximo: nível 5 = 1º, 6 = 2º, 10 = 3º, 14 = 4º", [5, 6, 
 t.check("círculos seguem marcados NÃO VERIFICADO", /NÃO VERIFICADO/.test(ctx.T20_CIRCULOS_FONTE));
 
 /* Raças: Minotauro, Hynne (issue #57, 1 fonte). Anão, Elfo e Humano sem ajustes verificados. */
-t.igual("Minotauro: FOR +2, CON +1, SAB -1 (1 fonte)", ctx.T20_RACAS.minotauro.ajustes, { forca: 2, constituicao: 1, sabedoria: -1 });
-t.igual("Hynne: Pequeno, 6 m (1 fonte)", [ctx.T20_RACAS.hynne.tamanho, ctx.T20_RACAS.hynne.deslocamento], ["Pequeno", 6]);
-t.igual("Anão, Elfo e Humano: ajustes NÃO VERIFICADOS", [ctx.T20_RACAS.anao.ajustes, ctx.T20_RACAS.elfo.ajustes, ctx.T20_RACAS.humano.ajustes], [null, null, null]);
+t.igual("Minotauro: FOR +2, CON +1, SAB -1 (1 fonte)", ctx.T20_RACAS_COMPLETAS.minotauro.ajustes, { forca: 2, constituicao: 1, sabedoria: -1 });
+t.igual("Hynne: Pequeno, 6 m (2 fontes)", [ctx.T20_RACAS_COMPLETAS.hynne.tamanho, ctx.T20_RACAS_COMPLETAS.hynne.deslocamento], ["Pequeno", 6]);
+t.igual("Anão, Elfo e Humano: ajustes NÃO VERIFICADOS", [ctx.T20_RACAS_COMPLETAS.anao.ajustes, ctx.T20_RACAS_COMPLETAS.elfo.ajustes, ctx.T20_RACAS_COMPLETAS.humano.ajustes], [null, null, null]);
 
 /* Regra de não treinada: conflito registrado, valor do app mantido e marcado. */
 t.check("regra de treino: conflito registrado", /CONFLITO/.test(ctx.T20_TREINO_FONTE));

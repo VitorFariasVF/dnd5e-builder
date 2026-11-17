@@ -22,7 +22,7 @@ ctx.state.etapa = 9;
 const antes = JSON.stringify({ modo: ctx.state.modo, personagem: ctx.state.personagem });
 const backup = ctx.t20BackupObjeto();
 t.igual("backup leva sistema tormenta20", backup.sistema, "tormenta20");
-t.igual("backup leva versaoEsquema 1", backup.versaoEsquema, 1);
+t.igual("backup leva versaoEsquema 2", backup.versaoEsquema, 2);
 const texto = JSON.stringify(backup, null, 2);
 
 /* Round trip: zera o estado e importa o texto */
@@ -36,7 +36,8 @@ t.igual("round trip: etapa restaurada", ctx.state.etapa, 9);
 /* Recusas */
 t.igual("recusa JSON inválido", ctx.t20LerBackup("{nao é json").ok, false);
 t.igual("recusa outro sistema (dnd5e)", ctx.t20LerBackup(JSON.stringify({ sistema: "dnd5e", versaoEsquema: 1, personagem: {} })).ok, false);
-t.igual("recusa versão de esquema desconhecida (2)", ctx.t20LerBackup(JSON.stringify({ sistema: "tormenta20", versaoEsquema: 2, personagem: {} })).ok, false);
+t.igual("recusa versão de esquema desconhecida (3)", ctx.t20LerBackup(JSON.stringify({ sistema: "tormenta20", versaoEsquema: 3, personagem: {} })).ok, false);
+t.igual("aceita esquema 2 (atual)", ctx.t20LerBackup(JSON.stringify({ sistema: "tormenta20", versaoEsquema: 2, personagem: {} })).ok, true);
 t.igual("recusa backup sem personagem", ctx.t20LerBackup(JSON.stringify({ sistema: "tormenta20", versaoEsquema: 1 })).ok, false);
 t.igual("aceita backup mínimo válido", ctx.t20LerBackup(JSON.stringify({ sistema: "tormenta20", versaoEsquema: 1, personagem: {} })).ok, true);
 t.igual("mensagem de erro para sistema errado", ctx.t20LerBackup(JSON.stringify({ sistema: "coc7", versaoEsquema: 1, personagem: {} })).erro, "Este arquivo não é de Tormenta20.");

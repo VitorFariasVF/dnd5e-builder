@@ -1,6 +1,7 @@
 /* Teste ponta a ponta no Chrome headless (Playwright + /usr/bin/google-chrome).
    Percorre a criação de um Clérigo nível 1 em 1100 px e 360 px, procura erro de console, rolagem lateral
-   e recusa no modo estrito; depois confere o PDF (2 páginas A4, sem estouro de conteúdo).
+   e recusa no modo estrito; depois confere o PDF (2 páginas A4, sem estouro de conteúdo). Em seguida importa
+   uma ficha de Ladino nível 20 (backup esquema 2) e confere a tabela de níveis, o PDF e a rolagem lateral.
    Não entra em run_all.js (precisa de navegador). Uso: node tormenta20/tests/e2e_chrome.js
    Capturas em /tmp/t20-capturas (fora do repositório). */
 const path = require("path");
@@ -90,16 +91,19 @@ async function rodar(largura){
   await page.check('input[data-nome="Diplomacia"]');
   await avancar(page);
 
-  /* 8. Poderes (opcional) */
+  /* 8. Poderes (opcional): um poder do catálogo (geral, sem pré-requisito) */
+  await page.click('[data-acao="poder-add"]');
+  await page.selectOption("#poder-0", "esquiva");
+  ok("poderes: catálogo mostra o nível e o tipo do poder escolhido", (await page.textContent("#app")).includes("Poder geral"));
   await avancar(page);
 
   /* 9. Magias: 3 de 1º círculo */
   await avancar(page);
   ok("magias: recusa sem as 3 magias", (await page.locator('#app [role="alert"]').count()) > 0);
   for(let i = 0; i < 3; i++) await page.click('[data-acao="magia-add"]');
-  await page.fill("#magia-0", "Curar Ferimentos");
-  await page.fill("#magia-1", "Bênção");
-  await page.fill("#magia-2", "Escudo da Fé");
+  await page.selectOption("#magia-0", "Curar Ferimentos");
+  await page.selectOption("#magia-1", "Bênção");
+  await page.selectOption("#magia-2", "Escudo da Fé");
   await avancar(page);
 
   /* 10. Equipamento e defesa */
@@ -109,10 +113,10 @@ async function rodar(largura){
   await avancar(page);
   await semRolagemLateral(page, "etapa equipamento");
 
-  /* 11. Derivados: Clérigo nível 1, SAB 3, CON 2, DES 2, Anão (deslocamento 9 m), armadura 2.
+  /* 11. Derivados: Clérigo nível 1, SAB 3, CON 2, DES 2, Anão (deslocamento 6 m da fonte; conflito com 9 m fica marcado), armadura 2.
      PV = 16 + 2 = 18; PM = 5 + SAB 3 = 8; Defesa = 10 + DES 2 + armadura 2 = 14; treino +0. */
   const valores = await page.$$eval("#app .score", els => els.map(e => e.textContent.trim()));
-  ok("derivados: PV 18, PM 8, Defesa 14, Deslocamento 9 m, treino +0", JSON.stringify(valores) === JSON.stringify(["18", "8", "14", "9 m", "+0"]), valores);
+  ok("derivados: PV 18, PM 8, Defesa 14, Deslocamento 6 m, treino +0", JSON.stringify(valores) === JSON.stringify(["18", "8", "14", "6 m", "+0"]), valores);
   await avancar(page);
 
   /* 12. Resumo: ficha válida e PDF */
@@ -131,7 +135,7 @@ async function rodar(largura){
   await pop.setViewportSize({ width: 1100, height: 900 });
   const info = await pop.evaluate(() => {
     const paginas = [...document.querySelectorAll("article.pagina")];
-    return paginas.map(p => ({ altura: p.getBoundingClientRect().height, estoura: p.scrollHeight > p.clientHeight + 2 }));
+    return paginas.map(p => ({ altura: p.getBoundingClientRect().height, estoura: p.scrollHeight > p.clientHeight + 2 || p.scrollWidth > p.clientWidth + 2 }));
   });
   ok("PDF: 2 páginas", info.length === 2, info);
   ok("PDF: nenhuma página estoura o conteúdo", info.every(p => !p.estoura), info);
@@ -149,7 +153,7 @@ async function rodar(largura){
   const caminhoBackup = path.join(SAIDA, `backup-${largura}.json`);
   await download.saveAs(caminhoBackup);
   const backup = JSON.parse(fs.readFileSync(caminhoBackup, "utf8"));
-  ok("backup do navegador: sistema e versão", backup.sistema === "tormenta20" && backup.versaoEsquema === 1, backup.sistema);
+  ok("backup do navegador: sistema e versão 2", backup.sistema === "tormenta20" && backup.versaoEsquema === 2, backup.sistema);
 
   await page.evaluate(() => { try { localStorage.clear(); } catch(e){} });
   await page.reload();
@@ -163,6 +167,49 @@ async function rodar(largura){
     await page.evaluate(() => { try { localStorage.clear(); } catch(e){} });
   }
   await page.screenshot({ path: path.join(SAIDA, `inicio-${largura}.png`), fullPage: true });
+
+  /* Nível 20: ficha de Ladino importada de um backup esquema 2 (PV 89 e PM 80 conferidos à mão, duas fontes). */
+  await page.evaluate(() => { try { localStorage.clear(); } catch(e){} });
+  await page.reload();
+  const fichaNivel20 = {
+    sistema: "tormenta20", versaoEsquema: 2, edicao: "Edição Jogo do Ano (Jambô)", exportadoEm: new Date().toISOString(),
+    modo: "livre", etapa: 11,
+    personagem: {
+      nome: "Ladino Nível 20", jogador: "", nivel: 20, raca: "humano", origem: "Criminoso", classe: "ladino",
+      origemBeneficios: [{ tipo: "pericia", valor: "Furtividade" }, { tipo: "pericia", valor: "Enganação" }],
+      atributosBase: { forca: 0, destreza: 2, constituicao: 1, inteligencia: 1, sabedoria: 0, carisma: 0 },
+      ajusteManual: { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 },
+      periciasEscolhidas: ["Atletismo", "Intuição", "Investigação", "Jogatina", "Luta", "Misticismo", "Ofício", "Percepção"],
+      grupoFixoEscolha: "", pvManual: null, pmManual: null, treinoManual: null,
+      poderes: [
+        { id: "oportunismo", nivel: 6, nota: "" }, { id: "roubo-de-mana", nivel: 7, nota: "" }, { id: "veneno-persistente", nivel: 8, nota: "" },
+        { id: "mestre-impostor", nivel: 11, nota: "" }, { id: "mestre-assassino", nivel: 11, nota: "" }, { id: "ladrao-arcano", nivel: 13, nota: "" },
+        { id: "rei-do-crime", nivel: 17, nota: "" }, { id: "ameaca-brutal", nivel: 20, nota: "" }, { id: "assassino-em-serie", nivel: 11, nota: "" },
+        { id: "truque-magico-aprimorado", nivel: 11, nota: "" }
+      ],
+      magias: [], equipamento: [{ nome: "Adaga", quantidade: 2, peso: 1 }], dinheiro: 500,
+      defesa: { armadura: 3, escudo: 0, outros: 0, nomeArmadura: "Couro", nomeEscudo: "" },
+      personalidade: { aparencia: "Capa cinza", historia: "Cresceu nas ruas. ".repeat(30), tracos: "Calmo e observador" }
+    }
+  };
+  const caminhoNivel20 = path.join(SAIDA, `ladino-20-${largura}.json`);
+  fs.writeFileSync(caminhoNivel20, JSON.stringify(fichaNivel20, null, 2));
+  await page.setInputFiles("#t20-importar", caminhoNivel20);
+  await page.waitForTimeout(400);
+  await semRolagemLateral(page, "nível 20: derivados");
+  const valores20 = await page.$$eval("#app .score", els => els.map(e => e.textContent.trim()));
+  ok("nível 20: PV 89 e PM 80 (Ladino, duas fontes), treino +10", valores20[0] === "89" && valores20[1] === "80" && valores20[4] === "+10", valores20);
+  ok("nível 20: tabela de níveis do 6º ao 20º", (await page.textContent("#app")).includes("Níveis 6 a 20"));
+  await avancar(page);
+  await semRolagemLateral(page, "nível 20: resumo");
+  const pop20Promessa = contexto.waitForEvent("page");
+  await page.click('[data-acao="exp-pdf"]');
+  const pop20 = await pop20Promessa;
+  await pop20.waitForLoadState("load");
+  await pop20.setViewportSize({ width: 1100, height: 900 });
+  const info20 = await pop20.evaluate(() => [...document.querySelectorAll("article.pagina")].map(p => ({ estoura: p.scrollHeight > p.clientHeight + 2 || p.scrollWidth > p.clientWidth + 2, altura: p.scrollHeight, limite: p.clientHeight })));
+  ok("nível 20: PDF com 2 páginas sem estouro de conteúdo", info20.length === 2 && info20.every(p => !p.estoura), info20);
+  await pop20.close();
 
   ok(`sem erro de console em ${largura}px (${erros.length})`, erros.length === 0, erros.slice(0, 5));
   await navegador.close();

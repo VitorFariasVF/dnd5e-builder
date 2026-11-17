@@ -29,11 +29,11 @@ const T20_NIVEIS_FONTE_E = "[E] exegetadearton.com.br, página da classe (NÃO V
 const T20_NIVEIS_ESPEC = {
   arcanista: {
     nome: "Arcanista", fonte: T20_NIVEIS_FONTE_E, pv: 2, pm: 6, poderDeClasseDe: 2, magia: "todos",
-    circulos: [[5, 2], [9, 3]], verif: { pv: false, pm: false, circ: false, magia: false },
+    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
     habs: { 20: [{ nome: "Alta Arcana", frase: "Custo em PM das magias arcanas cai pela metade." }] },
     poderes: { 6: ["heranca-aprimorada"], 8: ["mestre-em-escola"], 9: ["contramagica-superior", "trama-celere"],
       10: ["fluxo-de-mana"], 11: ["heranca-superior"], 17: ["apoteose", "sifao-de-mana"] },
-    notas: "Círculos de [E] (2º no 5º, 3º no 9º; 'e assim por diante' sem níveis fixos) conflitam com o Bardo e o Druida em [E] (6, 10, 14). Níveis 13 e 17 não entram. Magia nova: uma por nível, conforme [E]."
+    notas: "Círculo não informado: [E] dá 2º no 5º e 3º no 9º, e o Bardo e o Druida em [E] dão 2º no 6º, 3º no 10º e 4º no 14º. As fontes conflitam, então a linha fica sem círculo (NÃO VERIFICADO). Níveis 13 e 17 não entram. Magia nova: uma por nível, conforme [E]."
   },
   barbaro: {
     nome: "Bárbaro", fonte: T20_NIVEIS_FONTE_E, pv: 6, pm: 3, poderDeClasseDe: 2, magia: null,
@@ -93,12 +93,12 @@ const T20_NIVEIS_ESPEC = {
   },
   clerigo: {
     nome: "Clérigo", fonte: T20_NIVEIS_FONTE_E, pv: 4, pm: 5, poderDeClasseDe: 2, magia: "todos",
-    circulos: [[5, 2], [9, 3]], verif: { pv: false, pm: false, circ: false, magia: false },
+    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
     habs: { 20: [{ nome: "Mão da Divindade", frase: "Lança três magias divinas sem custo de PM, mas fica atordoado depois." }] },
     poderes: { 6: ["forca-da-devocao"], 7: ["arma-divina"], 9: ["canalizar-poderoso", "presente-dos-deuses"],
       11: ["canalizar-abencoado", "canalizar-concentrado", "canalizar-profanado"], 12: ["mestre-celebrante"],
       17: ["missa-compartilhar-milagre", "representante-divino"] },
-    notas: "Círculos conflitam com Bardo e Druida (ver Arcanista). A página diz magia de qualquer círculo a cada nível. PM +5 confere com [R] só no 1º nível (exemplo), então fica sem verificação."
+    notas: "Círculo não informado: conflita com Bardo e Druida (ver Arcanista), então a linha fica sem círculo (NÃO VERIFICADO). A página diz magia de qualquer círculo a cada nível. PM +5 confere com [R] só no 1º nível (exemplo), então fica sem verificação."
   },
   druida: {
     nome: "Druida", fonte: T20_NIVEIS_FONTE_E, pv: 4, pm: 4, poderDeClasseDe: 2, magia: "pares",

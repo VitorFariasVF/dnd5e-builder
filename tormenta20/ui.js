@@ -1,6 +1,7 @@
 /* Interface da ficha Tormenta20: tela inicial (fichas salvas) e 12 etapas com stepper.
    Padrão do D&D: erro em faixa no topo da etapa (role="alert"), foco no campo citado, sem caixas bloqueantes.
-   Campos com data-campo gravam direto no `state` por caminho ("personagem.nome", "personagem.origemBeneficios.0.valor"). */
+   Campos com data-campo gravam direto no `state` por caminho ("personagem.nome", "personagem.origemBeneficios.0.valor").
+   Campos numéricos: data-tipo="int" (vazio = 0) e data-tipo="intnulo" (vazio = null: PV, PM e treino à mão). */
 
 let t20Tela = "inicio";              // "inicio" | "ficha"
 let t20UltimoFoco = null;           // id do campo com foco antes de re-renderizar
@@ -8,6 +9,7 @@ let t20SairTimer = null;
 
 const T20_ETAPAS = ["Modo", "Identidade", "Raça", "Origem", "Classe", "Atributos", "Perícias", "Poderes", "Magias", "Equipamento", "Derivados", "Resumo"];
 const T20_TOTAL = T20_ETAPAS.length;
+const T20_CIRCULO_TELA = 5;         // teto de círculos na tela quando a fonte não informa o máximo
 
 /* ---- utilidades ---- */
 function t20Reduz(){ return window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches; }
@@ -21,6 +23,12 @@ function t20SetPath(obj, caminho, valor){
   }
   alvo[partes[partes.length - 1]] = valor;
 }
+function t20LerValor(el){
+  const v = el.value;
+  if(el.dataset.tipo === "int"){ const n = v === "" ? 0 : Math.trunc(Number(v)); return Number.isFinite(n) ? n : 0; }
+  if(el.dataset.tipo === "intnulo"){ if(v === "") return null; const n = Math.trunc(Number(v)); return Number.isFinite(n) ? n : null; }
+  return v;
+}
 function t20Opcoes(lista, atual, vazio){
   return (vazio !== undefined ? `<option value="">${t20Esc(vazio)}</option>` : "") +
     lista.map(o => `<option value="${t20Esc(o.valor)}"${String(o.valor) === String(atual) ? " selected" : ""}>${t20Esc(o.rotulo)}</option>`).join("");
@@ -28,6 +36,12 @@ function t20Opcoes(lista, atual, vazio){
 function t20Aviso(lista, tipo){
   if(!lista || !lista.length) return "";
   return `<div class="alert ${tipo === "erro" ? "error" : "warning"} aviso-etapa" role="${tipo === "erro" ? "alert" : "note"}"><ul class="clean">${lista.map(x => `<li>${t20Esc(x.msg)}</li>`).join("")}</ul></div>`;
+}
+/* Selo de dado: "2 fontes" quando confirmado; "não verificado" quando não. */
+function t20Selo(verificado, rotuloSim, rotuloNao){
+  return verificado
+    ? `<span class="badge ok">${t20Esc(rotuloSim || "2 fontes")}</span>`
+    : `<span class="badge wip">${t20Esc(rotuloNao || "não verificado")}</span>`;
 }
 function t20Salvar(){ salvarEstado(); }
 
@@ -135,24 +149,34 @@ function t20PassoIdentidade(){
   <select id="nivel" data-campo="personagem.nivel" data-tipo="int" data-recarregar="1">
     ${t20Opcoes(Array.from({ length: T20_NIVEL_MAX }, (_, i) => ({ valor: i + 1, rotulo: `Nível ${i + 1}` })), p.nivel)}
   </select></div>
-  <p class="hint">Esta versão cria fichas do nível 1 ao 5. Níveis mais altos ficam para uma próxima entrega.</p>`;
+  <p class="hint">Fichas do nível 1 ao ${T20_NIVEL_MAX}. Do 6º nível em diante, PV, PM, treino, círculo e habilidades vêm da tabela da classe. O que não tem fonte fica NÃO VERIFICADO e pode ser digitado à mão.</p>`;
 }
 
-/* ---- etapa 3: raça ---- */
+/* ---- etapa 3: raça (17 raças do livro básico) ---- */
 function t20PassoRaca(){
   const p = state.personagem;
-  const r = T20_RACAS[p.raca];
-  const opcoes = Object.keys(T20_RACAS).map(id => ({ valor: id, rotulo: T20_RACAS[id].nome }));
+  const r = t20RacaInfo(p.raca);
+  const opcoes = Object.keys(T20_RACAS_COMPLETAS).map(id => ({ valor: id, rotulo: T20_RACAS_COMPLETAS[id].nome }));
   let info = `<p class="muted">Escolha uma raça para ver os detalhes.</p>`;
   if(r){
-    const aj = r.ajustes ? Object.entries(r.ajustes).map(([k, v]) => `${T20_ATRIBUTO_NOME[k]} ${t20FormatarBonus(v)}`).join(", ") : "NÃO VERIFICADO";
-    info = `<div class="info-box"><p><b>Tamanho:</b> ${t20Esc(r.tamanho || "NÃO VERIFICADO (o app usa Médio, 9 m)")} · <b>Deslocamento:</b> ${t20Esc(r.deslocamento)} m</p>
-      <p><b>Ajustes de atributo:</b> ${t20Esc(aj)}</p>
+    const v = r.verificado;
+    const aj = r.ajustes
+      ? Object.entries(r.ajustes).map(([k, val]) => `${T20_ATRIBUTO_NOME[k]} ${t20FormatarBonus(val)}`).join(", ") + " " + t20Selo(v.ajustes, "2 fontes", "1 fonte · não verificado")
+      : `<span class="muted">NÃO VERIFICADO</span>`;
+    const tam = r.tamanho ? `${t20Esc(r.tamanho)} ${t20Selo(v.tamanho, "2 fontes", "1 fonte · não verificado")}` : `<span class="muted">NÃO VERIFICADO</span>`;
+    const desl = r.deslocamento !== null ? `${t20Esc(r.deslocamento)} m ${t20Selo(v.deslocamento, "2 fontes", "1 fonte · não verificado")}` : `<span class="muted">NÃO VERIFICADO</span>`;
+    info = `<div class="info-box">
+      <p><b>Tamanho:</b> ${tam}</p>
+      <p><b>Deslocamento:</b> ${desl}</p>
+      <p><b>Ajustes de atributo:</b> ${aj}</p>
+      ${r.periciasExtras ? `<p><b>Perícias treinadas extras:</b> ${t20Esc(r.periciasExtras)} (escolha na etapa Perícias)</p>` : ""}
       <p><b>Habilidades:</b></p><ul class="clean">${r.habilidades.length ? r.habilidades.map(h => `<li><b>${t20Esc(h.nome)}</b>: ${t20Esc(h.efeito)}</li>`).join("") : "<li>NÃO VERIFICADO</li>"}</ul>
+      ${r.observacoes ? `<p class="hint">${t20Esc(r.observacoes)}</p>` : ""}
       <p class="hint">Fonte: ${t20Esc(r.fonte)}.</p></div>`;
   }
   return `<div class="field"><label for="raca">Raça</label>
     <select id="raca" data-campo="personagem.raca" data-recarregar="1">${t20Opcoes(opcoes, p.raca, "Escolha uma raça")}</select></div>
+    <p class="hint">Estão as 17 raças do livro básico. O app aplica só o que a fonte informou; o resto fica NÃO VERIFICADO e você lança à mão no passo Atributos.</p>
     ${info}`;
 }
 
@@ -162,7 +186,6 @@ function t20PassoOrigem(){
   const opcOrigem = T20_ORIGENS.map(o => ({ valor: o, rotulo: o }));
   const linhas = p.origemBeneficios.map((b, i) => {
     const idTipo = `beneficio-tipo-${i}`;
-    const campoValor = t20Id(`personagem.origemBeneficios.${i}.valor`);
     const campoValorEl = b.tipo === "pericia"
       ? `<select id="beneficio-${i}" data-campo="personagem.origemBeneficios.${i}.valor" data-recarregar="1">${t20Opcoes(T20_PERICIA_NOMES.map(n => ({ valor: n, rotulo: n })), b.valor, "Escolha a perícia")}</select>`
       : `<input id="beneficio-${i}" data-campo="personagem.origemBeneficios.${i}.valor" value="${t20Esc(b.valor)}" placeholder="Nome do poder" maxlength="80">`;
@@ -268,35 +291,88 @@ function t20PassoPericias(){
     <fieldset class="rules-pick"><legend>Perícias livres</legend><div class="grid-3">${listaPericias}</div></fieldset>`;
 }
 
-/* ---- etapa 8: poderes ---- */
+/* ---- etapa 8: poderes (catálogo de T20_PODERES) ---- */
+function t20RotuloPoder(x){
+  return `${x.nome}${x.nivel !== null ? ` · nível ${x.nivel}` : " · nível NÃO VERIFICADO"}`;
+}
+function t20HtmlDetalhePoder(cat){
+  const tipo = cat.tipo ? t20TipoRotulo(cat.tipo) : "tipo NÃO VERIFICADO";
+  const classes = cat.classes.length ? cat.classes.map(id => T20_CLASSES[id].nome).join(" / ") : "";
+  const pre = t20TextoPre(cat.pre);
+  return `<p class="hint"><b>${t20Esc(tipo)}</b>${classes ? ` · ${t20Esc(classes)}` : ""}${cat.nivel !== null ? ` · nível ${t20Esc(cat.nivel)}` : " · nível NÃO VERIFICADO"}${pre ? ` · pré-requisito: ${t20Esc(pre)}` : ""}</p>
+    <p>${cat.frase ? t20Esc(cat.frase) : `<span class="muted">Efeito NÃO VERIFICADO: a fonte não descreve.</span>`}${cat.nota ? ` <span class="hint">${t20Esc(cat.nota)}</span>` : ""}</p>
+    <p class="hint">${t20Esc(cat.fonte)}. ${t20Selo(cat.verificado)}</p>`;
+}
 function t20PassoPoderes(){
   const p = state.personagem;
-  const linhas = p.poderes.map((pd, i) => `<div class="info-box"><div class="inline-row">
-    <div class="field" style="flex:2 1 12rem"><label for="poder-${i}">Nome do poder</label><input id="poder-${i}" data-campo="personagem.poderes.${i}.nome" value="${t20Esc(pd.nome)}" maxlength="80"></div>
-    <div class="field" style="flex:1 1 8rem"><label for="poder-tipo-${i}">Tipo</label><select id="poder-tipo-${i}" data-campo="personagem.poderes.${i}.tipo">${t20Opcoes([{ valor: "classe", rotulo: "Classe" }, { valor: "geral", rotulo: "Geral" }, { valor: "origem", rotulo: "Origem" }], pd.tipo)}</select></div>
-    <div class="field" style="flex:1 1 7rem"><label for="poder-nivel-${i}">Nível</label><select id="poder-nivel-${i}" data-campo="personagem.poderes.${i}.nivel" data-tipo="int">${t20Opcoes(Array.from({ length: p.nivel }, (_, k) => ({ valor: k + 1, rotulo: String(k + 1) })), pd.nivel)}</select></div>
-  </div>
-  <div class="field"><label for="poder-nota-${i}">Anotação (opcional)</label><input id="poder-nota-${i}" data-campo="personagem.poderes.${i}.nota" value="${t20Esc(pd.nota || "")}" maxlength="160"></div>
-  <button type="button" class="small danger" data-acao="poder-del" data-i="${i}">Remover poder</button></div>`).join("");
-  return `<p class="hint">Escreva os poderes que o personagem tem. Nesta versão o app não conta a quantidade de poderes por nível: ${t20Esc("NÃO VERIFICADO")}.</p>
+  const finais = t20AtributosFinais(p);
+  const treinadas = t20TreinadasLista(p);
+  const disponiveis = t20PoderesDisponiveis(p.classe, p.nivel);
+  const linhas = p.poderes.map((pd, i) => {
+    const cat = pd.id && T20_PODERES[pd.id] ? T20_PODERES[pd.id] : null;
+    const lista = disponiveis.slice();
+    if(cat && !lista.some(x => x.id === cat.id)) lista.push(cat);
+    const valorSel = pd.livre ? "__livre__" : (cat ? cat.id : "");
+    const opcoes = `<option value=""${valorSel === "" ? " selected" : ""}>Escolha um poder</option>` +
+      lista.map(x => `<option value="${t20Esc(x.id)}"${valorSel === x.id ? " selected" : ""}>${t20Esc(t20RotuloPoder(x))}</option>`).join("") +
+      `<option value="__livre__"${valorSel === "__livre__" ? " selected" : ""}>Outro poder (digitar)</option>`;
+    const checagens = cat ? t20ChecarPoder(p, pd, finais, treinadas) : [];
+    return `<div class="info-box">
+      <div class="field"><label for="poder-${i}">Poder ${i + 1}</label>
+        <select id="poder-${i}" data-acao="poder-escolha" data-i="${i}">${opcoes}</select></div>
+      ${cat ? t20HtmlDetalhePoder(cat) : ""}
+      ${pd.livre ? `<div class="inline-row">
+        <div class="field" style="flex:2 1 12rem"><label for="poder-nome-${i}">Nome do poder</label><input id="poder-nome-${i}" data-campo="personagem.poderes.${i}.nome" value="${t20Esc(pd.nome)}" maxlength="80"></div>
+        <div class="field" style="flex:1 1 8rem"><label for="poder-tipo-${i}">Tipo</label><select id="poder-tipo-${i}" data-campo="personagem.poderes.${i}.tipo">${t20Opcoes([{ valor: "classe", rotulo: "Poder de classe" }, { valor: "geral", rotulo: "Poder geral" }, { valor: "concedido", rotulo: "Poder concedido" }, { valor: "origem", rotulo: "Poder de origem" }], pd.tipo)}</select></div>
+      </div>` : ""}
+      <div class="inline-row">
+        <div class="field" style="flex:1 1 9rem"><label for="poder-nivel-${i}">Escolhido no nível</label><select id="poder-nivel-${i}" data-campo="personagem.poderes.${i}.nivel" data-tipo="int" data-recarregar="1">${t20Opcoes(Array.from({ length: Math.max(p.nivel, pd.nivel || 1) }, (_, k) => ({ valor: k + 1, rotulo: String(k + 1) })), pd.nivel)}</select></div>
+      </div>
+      <div class="field"><label for="poder-nota-${i}">Anotação (opcional)</label><input id="poder-nota-${i}" data-campo="personagem.poderes.${i}.nota" value="${t20Esc(pd.nota || "")}" maxlength="160"></div>
+      ${checagens.length ? `<ul class="clean">${checagens.map(x => `<li${x.mecanico ? ' class="chip-no"' : ""}>${t20Esc(x.msg)}</li>`).join("")}</ul>` : ""}
+      <button type="button" class="small danger" data-acao="poder-del" data-i="${i}">Remover poder</button></div>`;
+  }).join("");
+  return `<p class="hint">Escolha os poderes do catálogo (de classe, gerais e concedidos) ou digite um que não esteja na lista. Pré-requisitos de atributo, perícia e de outro poder são conferidos: erro no modo estrito, aviso no livre.</p>
     ${linhas || `<p class="muted">Nenhum poder registrado.</p>`}
-    <button type="button" class="secondary" data-acao="poder-add">Adicionar poder</button>`;
+    <button type="button" class="secondary" data-acao="poder-add">Adicionar poder</button>
+    <p class="hint">O catálogo ainda não traz todos os poderes de cada classe. Quantidade de poderes por nível: NÃO VERIFICADO.</p>`;
 }
 
-/* ---- etapa 9: magias ---- */
+/* ---- etapa 9: magias (catálogo por círculo) ---- */
+function t20HtmlDetalheMagia(cat){
+  if(cat.pendente){
+    return `<p class="hint">${t20Esc(cat.escola)} · ${t20Esc(cat.circulo)}º círculo · <span class="muted">execução, alcance e duração NÃO VERIFICADOS</span> ${t20Selo(false)}</p>
+      <p class="hint">${t20Esc(cat.fonte)}.</p>`;
+  }
+  return `<p class="hint">${t20Esc(cat.escola)} · ${t20Esc(cat.circulo)}º · ${t20Esc(cat.tipo)} · execução ${t20Esc(cat.execucao)} · alcance ${t20Esc(cat.alcance)} · alvo ${t20Esc(cat.alvo)} · duração ${t20Esc(cat.duracao === null ? "NÃO VERIFICADO" : cat.duracao)}${cat.resistencia ? ` · resistência ${t20Esc(cat.resistencia)}` : ""}</p>
+    <p>${t20Esc(cat.efeito)}</p><p class="hint">${t20Esc(cat.fonte)}. ${t20Selo(cat.verificado)}</p>`;
+}
 function t20PassoMagias(){
   const p = state.personagem;
   const c = T20_CLASSES[p.classe];
   if(!c) return `<p class="muted">Escolha a classe na etapa 5.</p>`;
   if(!c.conjurador) return `<p class="muted">${t20Esc(c.nome)} não conjura neste app. Pule esta etapa.</p>`;
-  const max = t20CirculoMaximo(p.nivel);
+  const max = t20CirculoMaximoClasse(p.classe, p.nivel);
+  const teto = max === null ? T20_CIRCULO_TELA : max;
   const limite = t20MagiasConhecidasLimite(p.classe, p.nivel);
-  const linhas = p.magias.map((m, i) => `<div class="inline-row">
-    <div class="field" style="flex:2 1 12rem"><label for="magia-${i}">Magia ${i + 1}</label><input id="magia-${i}" data-campo="personagem.magias.${i}.nome" value="${t20Esc(m.nome)}" maxlength="80"></div>
-    <div class="field" style="flex:1 1 8rem"><label for="magia-circ-${i}">Círculo</label><select id="magia-circ-${i}" data-campo="personagem.magias.${i}.circulo" data-tipo="int">${t20Opcoes(Array.from({ length: Math.max(1, max) }, (_, k) => ({ valor: k + 1, rotulo: `${k + 1}º` })), m.circulo)}</select></div>
-    <button type="button" class="small danger" data-acao="magia-del" data-i="${i}">Remover</button></div>`).join("");
-  return `<p><b>Círculo máximo no nível ${t20Esc(p.nivel)}:</b> ${t20Esc(max)}. ${limite === null ? "Magias conhecidas acima do 1º nível: NÃO VERIFICADO." : `Magias conhecidas no 1º nível: <b>${t20Esc(limite)}</b>.`}</p>
-    <p class="hint">Escreva os nomes das magias. Lista de magias do livro não foi incluída nesta versão.</p>
+  const linhas = p.magias.map((m, i) => {
+    const circulos = Array.from({ length: Math.max(1, teto, m.circulo || 1) }, (_, k) => ({ valor: k + 1, rotulo: `${k + 1}º` }));
+    const cat = !m.livre && m.nome ? t20MagiaCatalogo(m.nome) : null;
+    const valorSel = m.livre ? "__livre__" : (cat ? cat.nome : "");
+    const opcoes = `<option value=""${valorSel === "" ? " selected" : ""}>Escolha uma magia</option>` +
+      t20MagiasDoCirculo(m.circulo).map(x => `<option value="${t20Esc(x.nome)}"${valorSel === x.nome ? " selected" : ""}>${t20Esc(x.nome)}${x.pendente ? " (só o nome conferido)" : ""}</option>`).join("") +
+      `<option value="__livre__"${valorSel === "__livre__" ? " selected" : ""}>Outra magia (digitar)</option>`;
+    return `<div class="info-box">
+      <div class="inline-row">
+        <div class="field" style="flex:1 1 7rem"><label for="magia-circ-${i}">Círculo</label><select id="magia-circ-${i}" data-acao="magia-circ" data-i="${i}">${t20Opcoes(circulos, m.circulo)}</select></div>
+        <div class="field" style="flex:2 1 12rem"><label for="magia-${i}">Magia ${i + 1}</label><select id="magia-${i}" data-acao="magia-escolha" data-i="${i}">${opcoes}</select></div>
+      </div>
+      ${m.livre ? `<div class="field"><label for="magia-nome-${i}">Nome da magia</label><input id="magia-nome-${i}" data-campo="personagem.magias.${i}.nome" value="${t20Esc(m.nome)}" maxlength="80"></div>` : ""}
+      ${cat ? t20HtmlDetalheMagia(cat) : ""}
+      <button type="button" class="small danger" data-acao="magia-del" data-i="${i}">Remover</button></div>`;
+  }).join("");
+  return `<p><b>Círculo máximo no nível ${t20Esc(p.nivel)}:</b> ${max === null ? "NÃO VERIFICADO" : t20Esc(max)}. ${limite === null ? "Magias conhecidas acima do 1º nível: NÃO VERIFICADO." : `Magias conhecidas no 1º nível: <b>${t20Esc(limite)}</b>.`}</p>
+    <p class="hint">Escolha o círculo e depois a magia. As de 1º círculo têm o detalhe completo; as de 2º a 5º aparecem só com o nome, até a página de cada uma ser conferida.</p>
     ${linhas || `<p class="muted">Nenhuma magia registrada.</p>`}
     <button type="button" class="secondary" data-acao="magia-add">Adicionar magia</button>`;
 }
@@ -317,6 +393,7 @@ function t20PassoEquipamento(){
       <div class="field"><label for="def-escudo">Bônus de escudo</label><input id="def-escudo" type="number" step="1" data-campo="personagem.defesa.escudo" data-tipo="int" value="${t20Esc(d.escudo)}"></div>
       <div class="field"><label for="def-outros">Outros bônus de Defesa</label><input id="def-outros" type="number" step="1" data-campo="personagem.defesa.outros" data-tipo="int" value="${t20Esc(d.outros)}"></div>
     </div>
+    <p class="hint">Armas e armaduras: ${t20Selo(false)} ${t20Esc(T20_EQUIPAMENTO_STATUS.armas)}.</p>
     <h3>Equipamento</h3>
     ${linhas || `<p class="muted">Nenhum item registrado.</p>`}
     <button type="button" class="secondary" data-acao="equip-add">Adicionar item</button>
@@ -325,22 +402,37 @@ function t20PassoEquipamento(){
     <p class="hint">${t20Esc(T20_DINHEIRO_FONTE)}</p>`;
 }
 
-/* ---- etapa 11: derivados ---- */
+/* ---- etapa 11: derivados (PV, PM e treino por nível; digitação à mão quando não há dado) ---- */
 function t20PassoDerivados(){
   const p = state.personagem;
-  const d = t20Derivados(p);
   if(!T20_CLASSES[p.classe]) return `<p class="muted">Escolha a classe para ver os derivados.</p>`;
-  const naoCalc = v => v === null ? `<span class="muted">não calculado</span>` : t20Esc(v);
-  const linhas = d.pericias.map(x => `<tr><td>${t20Esc(x.nome)}${x.soTreinado ? ` <span class="muted">(só treinado)</span>` : ""}</td><td>${x.treinada ? "treinada" : "—"}</td><td class="num">${x.treinada ? t20FormatarBonus(x.bonus) : t20FormatarBonus(d.atributos[x.attr]) + ` <span class="muted">(sem treino: NÃO VERIFICADO)</span>`}</td></tr>`).join("");
-  return `<div class="grid-3">
-    <div class="info-box"><b>PV</b><div class="score">${naoCalc(d.pv)}</div><span class="hint">PV inicial + CON; +PV por nível + CON por nível</span></div>
-    <div class="info-box"><b>PM</b><div class="score">${naoCalc(d.pm)}</div><span class="hint">PM por nível × nível${T20_CLASSES[p.classe].conjurador ? " + atributo de magia" : ""}</span></div>
-    <div class="info-box"><b>Defesa</b><div class="score">${t20Esc(d.defesa)}</div><span class="hint">10 + DES + armadura + escudo + outros</span></div>
-    <div class="info-box"><b>Deslocamento</b><div class="score">${naoCalc(d.deslocamento === null ? null : d.deslocamento + " m")}</div><span class="hint">pela raça</span></div>
-    <div class="info-box"><b>Bônus de treino</b><div class="score">${t20Esc(t20FormatarBonus(d.bonusTreino))}</div><span class="hint">metade do nível</span></div>
-  </div>
+  const c = T20_CLASSES[p.classe];
+  const d = t20Derivados(p);
+  const raca = t20RacaInfo(p.raca);
+  const valorOuNao = v => v === null ? `<span class="muted">não verificado</span>` : t20Esc(v);
+  const seloDe = (origem, verificado) => origem === "manual" ? `<span class="badge">digitado à mão</span>` : t20Selo(verificado);
+  const manual = (id, rotulo, campo, valor) => `<div class="field"><label for="${id}">${t20Esc(rotulo)}</label><input id="${id}" type="number" step="1" data-campo="${campo}" data-tipo="intnulo" data-recarregar="1" value="${valor === null || valor === undefined ? "" : t20Esc(valor)}" placeholder="calculado"></div>`;
+  const caixa = (titulo, valorHtml, seloHtml, dica, extra) => `<div class="info-box"><b>${t20Esc(titulo)}</b><div class="score">${valorHtml}</div><span class="hint">${t20Esc(dica)}</span> ${seloHtml || ""}${extra || ""}</div>`;
+  const grade = `<div class="grid-3">
+    ${caixa("PV", valorOuNao(d.pv), seloDe(d.pvOrigem, d.pvVerificado), "PV inicial + CON; PV por nível + CON por nível.", manual("pv-manual", "PV manual (vazio = calculado)", "personagem.pvManual", p.pvManual))}
+    ${caixa("PM", valorOuNao(d.pm), seloDe(d.pmOrigem, d.pmVerificado), "PM por nível × nível" + (c.conjurador ? " + atributo de magia." : "."), manual("pm-manual", "PM manual (vazio = calculado)", "personagem.pmManual", p.pmManual))}
+    ${caixa("Defesa", t20Esc(d.defesa), "", "10 + DES + armadura + escudo + outros.")}
+    ${caixa("Deslocamento", d.deslocamento === null ? `<span class="muted">não verificado</span>` : t20Esc(d.deslocamento + " m"), raca ? t20Selo(raca.verificado.deslocamento, "2 fontes", "1 fonte · não verificado") : "", "pela raça.")}
+    ${caixa("Bônus de treino", t20Esc(t20FormatarBonus(d.bonusTreino)), seloDe(d.treinoOrigem, d.treinoVerificado), "metade do nível; do 6º nível, tabela da classe.", manual("treino-manual", "Treino manual (vazio = calculado)", "personagem.treinoManual", p.treinoManual))}
+  </div>`;
+  const circulo = c.conjurador
+    ? `<p>Círculo máximo no nível ${t20Esc(p.nivel)}: <b>${d.circuloMaximo === null ? "NÃO VERIFICADO" : t20Esc(d.circuloMaximo)}</b> ${t20Selo(d.circuloVerificado)}</p>`
+    : "";
+  const niveis = p.nivel > T20_NIVEL_BASE
+    ? `<h3>Níveis 6 a ${t20Esc(p.nivel)}</h3>
+      <div class="table-wrap"><table class="table-like"><thead><tr><th scope="col">Nível</th><th scope="col" class="num">PV +</th><th scope="col" class="num">PM +</th><th scope="col" class="num">Treino</th><th scope="col" class="num">Círculo</th><th scope="col">Poder de classe</th><th scope="col">Habilidades</th></tr></thead><tbody>${d.niveis.map(r => `<tr><td>${r.nivel}</td><td class="num">${valorOuNao(r.pv)}</td><td class="num">${valorOuNao(r.pm)}</td><td class="num">${t20Esc(t20FormatarBonus(r.treino))}</td><td class="num">${valorOuNao(r.circulo)}</td><td>${r.poderDeClasse ? "sim" : "não"}</td><td>${r.habilidades.length ? r.habilidades.map(h => `<div><b>${t20Esc(h.nome)}</b>: ${h.frase ? t20Esc(h.frase) : `<span class="muted">efeito NÃO VERIFICADO</span>`}</div>`).join("") : `<span class="muted">—</span>`}</td></tr>`).join("")}</tbody></table></div>
+      <p class="hint">Os valores vêm de guias de fãs. O selo de 2 fontes aparece só onde há confirmação; o resto é NÃO VERIFICADO.</p>`
+    : `<p class="hint">Níveis 1 a ${T20_NIVEL_BASE}: habilidades de classe não cadastradas neste app (NÃO VERIFICADO).</p>`;
+  return `${grade}
+  ${circulo}
+  ${niveis}
   <h3>Perícias</h3>
-  <div class="table-wrap"><table class="table-like"><thead><tr><th scope="col">Perícia</th><th scope="col">Situação</th><th scope="col" class="num">Bônus</th></tr></thead><tbody>${linhas}</tbody></table></div>
+  <div class="table-wrap"><table class="table-like"><thead><tr><th scope="col">Perícia</th><th scope="col">Situação</th><th scope="col" class="num">Bônus</th></tr></thead><tbody>${d.pericias.map(x => `<tr><td>${t20Esc(x.nome)}${x.soTreinado ? ` <span class="muted">(só treinado)</span>` : ""}</td><td>${x.treinada ? "treinada" : "—"}</td><td class="num">${x.treinada ? t20FormatarBonus(x.bonus) : t20FormatarBonus(d.atributos[x.attr]) + ` <span class="muted">(sem treino: NÃO VERIFICADO)</span>`}</td></tr>`).join("")}</tbody></table></div>
   <p class="hint">Teste: 1d20 + bônus. ${t20Esc(T20_TREINO_FONTE)}.</p>`;
 }
 
@@ -357,8 +449,8 @@ function t20PassoResumo(){
   const d = p.classe ? t20Derivados(p) : null;
   const status = r.valido ? `<span class="badge ok">Ficha válida</span>` : `<span class="badge">Revisão pendente: ${t20Esc(r.erros)} erro(s)</span>`;
   return `<p>${status} <span class="muted">${t20Esc(r.avisos)} aviso(s) · modo ${t20Esc(state.modo || "—")}</span></p>
-    <div class="info-box"><p><b>${t20Esc(p.nome || "Personagem sem nome")}</b> · ${t20Esc((T20_CLASSES[p.classe] || {}).nome || "sem classe")} ${t20Esc(p.nivel)} · ${t20Esc((T20_RACAS[p.raca] || {}).nome || "sem raça")} · ${t20Esc(p.origem || "sem origem")}</p>
-      ${d ? `<p>PV ${t20Esc(d.pv === null ? "não calculado" : d.pv)} · PM ${t20Esc(d.pm === null ? "não calculado" : d.pm)} · Defesa ${t20Esc(d.defesa)} · Deslocamento ${t20Esc(d.deslocamento === null ? "—" : d.deslocamento + " m")}</p>` : ""}</div>
+    <div class="info-box"><p><b>${t20Esc(p.nome || "Personagem sem nome")}</b> · ${t20Esc((T20_CLASSES[p.classe] || {}).nome || "sem classe")} ${t20Esc(p.nivel)} · ${t20Esc((t20RacaInfo(p.raca) || {}).nome || "sem raça")} · ${t20Esc(p.origem || "sem origem")}</p>
+      ${d ? `<p>PV ${d.pv === null ? "não verificado" : t20Esc(d.pv)} · PM ${d.pm === null ? "não verificado" : t20Esc(d.pm)} · Defesa ${t20Esc(d.defesa)} · Deslocamento ${d.deslocamento === null ? "não verificado" : t20Esc(d.deslocamento + " m")}</p>` : ""}</div>
     ${lista ? `<h3>Pendências e avisos</h3><ul class="clean">${lista}</ul>` : `<p class="muted">Nada pendente.</p>`}
     <h3>Exportar</h3>
     <div class="actions">
@@ -441,9 +533,9 @@ function t20Acao(el){
     }
     case "pericia": break;   // tratado em change
     case "modo": break;      // tratado em change
-    case "poder-add": state.personagem.poderes.push({ nome: "", tipo: "classe", nivel: 1, nota: "" }); t20Salvar(); render(); break;
+    case "poder-add": state.personagem.poderes.push({ id: null, nome: "", tipo: "classe", nivel: 1, nota: "", livre: false }); t20Salvar(); render(); break;
     case "poder-del": state.personagem.poderes.splice(Number(el.dataset.i), 1); t20Salvar(); render(); break;
-    case "magia-add": state.personagem.magias.push({ nome: "", circulo: 1 }); t20Salvar(); render(); break;
+    case "magia-add": state.personagem.magias.push({ nome: "", circulo: 1, livre: false }); t20Salvar(); render(); break;
     case "magia-del": state.personagem.magias.splice(Number(el.dataset.i), 1); t20Salvar(); render(); break;
     case "equip-add": state.personagem.equipamento.push({ nome: "", quantidade: 1, peso: 0 }); t20Salvar(); render(); break;
     case "equip-del": state.personagem.equipamento.splice(Number(el.dataset.i), 1); t20Salvar(); render(); break;
@@ -467,6 +559,36 @@ function t20Acao(el){
   }
 }
 
+/* Escolha de poder do catálogo: "" = nenhum, "__livre__" = digitar, senão o id de T20_PODERES. */
+function t20EscolherPoder(i, valor){
+  const lista = state.personagem.poderes;
+  const atual = lista[i];
+  if(!atual) return;
+  if(valor === "__livre__"){ lista[i] = { id: null, nome: "", tipo: "classe", nivel: atual.nivel, nota: atual.nota || "", livre: true }; return; }
+  if(!valor){ lista[i] = { id: null, nome: "", tipo: "classe", nivel: atual.nivel, nota: atual.nota || "", livre: false }; return; }
+  const cat = T20_PODERES[valor];
+  if(!cat) return;
+  lista[i] = { id: cat.id, nome: cat.nome, tipo: cat.tipo, nivel: cat.nivel !== null ? cat.nivel : atual.nivel, nota: atual.nota || "", livre: false };
+}
+/* Escolha de magia do catálogo: mesmo critério de t20EscolherPoder. */
+function t20EscolherMagia(i, valor){
+  const m = state.personagem.magias[i];
+  if(!m) return;
+  if(valor === "__livre__"){ m.nome = ""; m.livre = true; return; }
+  m.nome = valor || "";
+  m.livre = false;
+}
+/* Trocar o círculo limpa a magia do catálogo que não pertence ao novo círculo. */
+function t20MudarCirculoMagia(i, valor){
+  const m = state.personagem.magias[i];
+  if(!m) return;
+  m.circulo = Number(valor) || 1;
+  if(!m.livre && m.nome){
+    const cat = t20MagiaCatalogo(m.nome);
+    if(!cat || cat.circulo !== m.circulo) m.nome = "";
+  }
+}
+
 function t20AoMudarCampo(el){
   if(el.dataset.acao === "modo"){
     state.modo = el.value; t20Salvar(); render(); return;
@@ -479,11 +601,12 @@ function t20AoMudarCampo(el){
     if(!el.checked && i >= 0) lista.splice(i, 1);
     t20Salvar(); render(); return;
   }
+  if(el.dataset.acao === "poder-escolha"){ t20EscolherPoder(Number(el.dataset.i), el.value); t20Salvar(); render(); return; }
+  if(el.dataset.acao === "magia-escolha"){ t20EscolherMagia(Number(el.dataset.i), el.value); t20Salvar(); render(); return; }
+  if(el.dataset.acao === "magia-circ"){ t20MudarCirculoMagia(Number(el.dataset.i), el.value); t20Salvar(); render(); return; }
   if(el.dataset.campo){
-    let v = el.value;
-    if(el.dataset.tipo === "int"){ v = v === "" ? 0 : Math.trunc(Number(v)); if(!Number.isFinite(v)) v = 0; }
     if(el.type === "radio" && !el.checked) return;
-    t20SetPath(state, el.dataset.campo, v);
+    t20SetPath(state, el.dataset.campo, t20LerValor(el));
     t20Salvar();
     if(el.dataset.recarregar) render();
   }
@@ -508,9 +631,7 @@ function t20Inicializar(){
   app.addEventListener("input", ev => {
     const el = ev.target;
     if(el.dataset && el.dataset.campo && el.type !== "radio" && el.type !== "checkbox" && el.tagName !== "SELECT"){
-      let v = el.value;
-      if(el.dataset.tipo === "int"){ v = v === "" ? 0 : Math.trunc(Number(v)); if(!Number.isFinite(v)) v = 0; }
-      t20SetPath(state, el.dataset.campo, v);
+      t20SetPath(state, el.dataset.campo, t20LerValor(el));
       t20Salvar();
     }
   });
