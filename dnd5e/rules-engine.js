@@ -19,6 +19,14 @@ const RULE_ASI_LEVELS = {
   ladino: [4, 8, 10, 12, 16, 19]
 };
 
+/* Aumento de Valor de Habilidade na lista de características sai do mesmo quadro que o motor aplica (RULE_ASI_LEVELS),
+   para tela e regra não divergirem. Entradas já existentes com o mesmo nível e nome prevalecem sobre o texto genérico. */
+Object.keys(CLASSES).forEach(classe => {
+  const niveis = RULE_ASI_LEVELS[classe] || RULE_ASI_LEVELS.default;
+  const asi = niveis.map(level => ({ level, nome: "Aumento de Valor de Habilidade", resumo: "Aumenta atributos ou escolhe talento." }));
+  CLASS_FEATURES[classe] = dedupeFeatureList([...asi, ...(CLASS_FEATURES[classe] || [])]);
+});
+
 const RULE_ASI_CHOICE_TYPES = {
   PLUS_TWO: "plus_two",
   PLUS_ONE_PLUS_ONE: "plus_one_plus_one",
@@ -511,7 +519,9 @@ function resolveBackgroundGrants(context) {
 function resolveClassGrants(context) {
   const cls = typeof CLASSES !== "undefined" ? CLASSES[context.classKey] : null;
   if (!cls) return { proficiencies: [], savingThrows: [], skillChoices: null };
-  return { proficiencies: ruleUnique(cls.proficiencias || []), savingThrows: ruleUnique(cls.saves || []), skillChoices: cls.escolhaPericias || null };
+  /* Mente Escorregadia (ladino, nível 15): ganha proficiência em salvaguarda de Sabedoria (SRD 5.1, tabela do ladino). */
+  const ganhaSabedoria = context.classKey === "ladino" && Number(context.level || 1) >= 15;
+  return { proficiencies: ruleUnique(cls.proficiencias || []), savingThrows: ruleUnique([...(cls.saves || []), ...(ganhaSabedoria ? ["Sabedoria"] : [])]), skillChoices: cls.escolhaPericias || null };
 }
 
 function resolveSubclassGrants(context) {

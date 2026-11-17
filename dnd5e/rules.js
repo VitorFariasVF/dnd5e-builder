@@ -38,12 +38,12 @@ const SPELLCASTERS = {
   feiticeiro:{habilidade:"carisma",tipo:"conhecidas",cantrips:[4,4,4,5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6],magias:[2,3,4,5,6,7,8,9,10,11,12,12,13,13,14,14,15,15,15,15]},
   mago:{habilidade:"inteligencia",tipo:"preparadas"},
   paladino:{habilidade:"carisma",tipo:"preparadas",meioConjurador:true},
-  patrulheiro:{habilidade:"sabedoria",tipo:"conhecidas",meioConjurador:true,magias:[0,0,0,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11]}
+  patrulheiro:{habilidade:"sabedoria",tipo:"conhecidas",meioConjurador:true,magias:[0,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11]}
 };
 
 const SPELL_SLOTS = {
   full:{1:[2,0,0,0,0,0,0,0,0],2:[3,0,0,0,0,0,0,0,0],3:[4,2,0,0,0,0,0,0,0],4:[4,3,0,0,0,0,0,0,0],5:[4,3,2,0,0,0,0,0,0],6:[4,3,3,0,0,0,0,0,0],7:[4,3,3,1,0,0,0,0,0],8:[4,3,3,2,0,0,0,0,0],9:[4,3,3,3,1,0,0,0,0],10:[4,3,3,3,2,0,0,0,0],11:[4,3,3,3,2,1,0,0,0],12:[4,3,3,3,2,1,0,0,0],13:[4,3,3,3,2,1,1,0,0],14:[4,3,3,3,2,1,1,0,0],15:[4,3,3,3,2,1,1,1,0],16:[4,3,3,3,2,1,1,1,0],17:[4,3,3,3,2,1,1,1,1],18:[4,3,3,3,3,1,1,1,1],19:[4,3,3,3,3,2,1,1,1],20:[4,3,3,3,3,2,2,1,1]},
-  half:{1:[0,0,0,0,0,0,0,0,0],2:[0,0,0,0,0,0,0,0,0],3:[0,0,0,0,0,0,0,0,0],4:[3,0,0,0,0,0,0,0,0],5:[4,2,0,0,0,0,0,0,0],6:[4,2,0,0,0,0,0,0,0],7:[4,3,0,0,0,0,0,0,0],8:[4,3,0,0,0,0,0,0,0],9:[4,3,2,0,0,0,0,0,0],10:[4,3,2,0,0,0,0,0,0],11:[4,3,3,0,0,0,0,0,0],12:[4,3,3,0,0,0,0,0,0],13:[4,3,3,1,0,0,0,0,0],14:[4,3,3,1,0,0,0,0,0],15:[4,3,3,2,0,0,0,0,0],16:[4,3,3,2,0,0,0,0,0],17:[4,3,3,3,1,0,0,0,0],18:[4,3,3,3,1,0,0,0,0],19:[4,3,3,3,2,0,0,0,0],20:[4,3,3,3,2,0,0,0,0]},
+  half:{1:[0,0,0,0,0,0,0,0,0],2:[2,0,0,0,0,0,0,0,0],3:[3,0,0,0,0,0,0,0,0],4:[3,0,0,0,0,0,0,0,0],5:[4,2,0,0,0,0,0,0,0],6:[4,2,0,0,0,0,0,0,0],7:[4,3,0,0,0,0,0,0,0],8:[4,3,0,0,0,0,0,0,0],9:[4,3,2,0,0,0,0,0,0],10:[4,3,2,0,0,0,0,0,0],11:[4,3,3,0,0,0,0,0,0],12:[4,3,3,0,0,0,0,0,0],13:[4,3,3,1,0,0,0,0,0],14:[4,3,3,1,0,0,0,0,0],15:[4,3,3,2,0,0,0,0,0],16:[4,3,3,2,0,0,0,0,0],17:[4,3,3,3,1,0,0,0,0],18:[4,3,3,3,1,0,0,0,0],19:[4,3,3,3,2,0,0,0,0],20:[4,3,3,3,2,0,0,0,0]},
   warlock:{1:[1],2:[2],3:[2],4:[2],5:[2],6:[2],7:[2],8:[2],9:[2],10:[2],11:[3],12:[3],13:[3],14:[3],15:[3],16:[3],17:[4],18:[4],19:[4],20:[4]},
   warlockCircle:{1:1,2:1,3:2,4:2,5:3,6:3,7:4,8:4,9:5,10:5,11:5,12:5,13:5,14:5,15:5,16:5,17:5,18:5,19:5,20:5}
 };
@@ -871,12 +871,12 @@ Object.entries(COMPLETE_CLASS_FEATURE_PATCH).forEach(([classe, extras])=>{
 const CLASS_FEATURE_FIXES = {
   remover:{
     barbaro:["Fúrias por descanso","Crítico Brutal (1 dado)"],
-    bardo:["Especialização adicional"],
+    bardo:["Especialização adicional","Segredos Mágicos Superiores"],
     bruxo:["Outro Patrono","Benção do Pacto"],
     clerigo:["Conjuração Divina","Destruir Mortos-Vivos (ND 1/2)"],
-    druida:["Conjuração Druídica","Idioma Druídico","Forma Selvagem aprimorada"],
-    feiticeiro:["Conjuração Inata","Fonte da Magia"],
-    mago:["Conjuração Arcana"],
+    druida:["Conjuração Druídica","Idioma Druídico","Forma Selvagem aprimorada","Aprimoramento de Conjuração"],
+    feiticeiro:["Conjuração Inata","Fonte da Magia","Mais Pontos de Feitiçaria","Pontos de Feitiçaria ampliados"],
+    mago:["Conjuração Arcana","Magias mais poderosas"],
     paladino:["Conjuração Sagrada","Mãos Curativas"],
     patrulheiro:["Conjuração do Patrulheiro"]
   },
@@ -898,6 +898,41 @@ Object.keys(CLASS_FEATURES).forEach(classe=>{
   const base = (CLASS_FEATURES[classe]||[]).filter(f=>!rem.has(f.nome)).map(f=>ren[f.nome]?Object.assign({},f,{nome:ren[f.nome]}):f);
   const lista = dedupeFeatureList([...base, ...(CLASS_FEATURE_FIXES.incluir[classe]||[])]);
   CLASS_FEATURES[classe] = lista.map((f,i)=>({f,i})).sort((a,b)=>(a.f.level-b.f.level)||(a.i-b.i)).map(x=>x.f);
+});
+/* Auditoria nível a nível (docs/AUDITORIA_DND5E_CLASSES.md): características e marcos de nível que a lista ainda não tinha.
+   Fonte: SRD 5.1 (tabelas de classe). Os Aumentos de Valor de Habilidade não entram aqui: vêm de RULE_ASI_LEVELS (rules-engine.js). */
+const CLASS_FEATURE_AUDIT_ADDS = {
+  bardo:[
+    {level:9,nome:"Canção de Descanso (d8)",resumo:"O dado de Canção de Descanso aumenta para d8."},
+    {level:10,nome:"Dado de Inspiração d10",resumo:"Seu dado de Inspiração de Bardo aumenta para d10."},
+    {level:13,nome:"Canção de Descanso (d10)",resumo:"O dado de Canção de Descanso aumenta para d10."},
+    {level:14,nome:"Segredos Mágicos",resumo:"Aprende mais magias de outras listas."},
+    {level:18,nome:"Segredos Mágicos",resumo:"Aprende mais magias de outras listas."},
+    {level:15,nome:"Dado de Inspiração d12",resumo:"Seu dado de Inspiração de Bardo aumenta para d12."},
+    {level:17,nome:"Canção de Descanso (d12)",resumo:"O dado de Canção de Descanso aumenta para d12."}
+  ],
+  clerigo:[{level:18,nome:"Canalizar Divindade adicional (3º uso)",resumo:"Ganha um terceiro uso de Canalizar Divindade entre descansos."}],
+  druida:[
+    {level:6,nome:"Traço do círculo",resumo:"O círculo druídico concede um benefício."},
+    {level:14,nome:"Traço do círculo",resumo:"O círculo druídico concede um benefício."}
+  ],
+  feiticeiro:[{level:17,nome:"Metamagia adicional",resumo:"Aprende mais uma forma de alterar magias."}],
+  guerreiro:[
+    {level:13,nome:"Indomável (2 usos)",resumo:"Pode usar Indomável duas vezes por descanso longo."},
+    {level:17,nome:"Indomável (3 usos)",resumo:"Pode usar Indomável três vezes por descanso longo."},
+    {level:17,nome:"Surto de Ação (2 usos)",resumo:"Pode usar Surto de Ação duas vezes por descanso curto."}
+  ],
+  mago:[{level:14,nome:"Traço da tradição (nível 14)",resumo:"A tradição arcana concede um novo benefício."}],
+  monge:[{level:9,nome:"Movimento sem Armadura aprimorado",resumo:"Pode se mover em superfícies verticais e sobre líquidos sem cair."}],
+  paladino:[{level:18,nome:"Auras aprimoradas",resumo:"O alcance das suas auras aumenta."}],
+  patrulheiro:[
+    {level:6,nome:"Inimigo Favorito e Explorador Nato aprimorados",resumo:"Aumenta as escolhas de inimigo favorito e de terreno natural."},
+    {level:10,nome:"Explorador Nato aprimorado",resumo:"Escolhe mais um terreno favorito."},
+    {level:14,nome:"Inimigo Favorito aprimorado",resumo:"Escolhe mais um tipo de inimigo favorito."}
+  ]
+};
+Object.keys(CLASS_FEATURE_AUDIT_ADDS).forEach(classe=>{
+  CLASS_FEATURES[classe] = dedupeFeatureList([...(CLASS_FEATURES[classe]||[]), ...CLASS_FEATURE_AUDIT_ADDS[classe]]);
 });
 
 Object.entries(COMPLETE_SUBCLASS_FEATURE_PATCH).forEach(([classe, patch])=>{
