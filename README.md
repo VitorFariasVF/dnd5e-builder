@@ -1,430 +1,145 @@
 <div align="center">
 
-# ⚔️ D&D 5e Builder
+# ⚔️ Criador de fichas RPG
 
-**Criador de fichas de D&D 5e em HTML, CSS e JavaScript puro, com salvamento local, histórico de personagens, PDF A4 estilizado e exportação para Foundry VTT e Roll20.**
+**Fichas de RPG em HTML, CSS e JavaScript puro: offline, sem cadastro e sem backend.**
+D&D 5e (pronto), Tormenta20, Tormenta RPG e Call of Cthulhu 7ª edição (em andamento).
 
 [![Demo Online](https://img.shields.io/badge/🚀%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge)](https://vitorfariasvf.github.io/dnd5e-builder/)
-[![Repositório](https://img.shields.io/badge/📦%20Código-GitHub-111827?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
-[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-2563eb?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
+[![Código](https://img.shields.io/badge/📦%20Código-GitHub-111827?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
 [![Frontend Only](https://img.shields.io/badge/frontend-only-f59e0b?style=for-the-badge)](https://github.com/VitorFariasVF/dnd5e-builder)
 
-## **👉 [ABRIR AGORA NO GITHUB PAGES](https://vitorfariasvf.github.io/dnd5e-builder/)**
-
-**Repositório:** [github.com/VitorFariasVF/dnd5e-builder](https://github.com/VitorFariasVF/dnd5e-builder)
-
 </div>
-
-
-> **Estrutura multi-sistema.** O `index.html` da raiz é um hub que leva a cada sistema: [`dnd5e/`](dnd5e/) (pronto), [`tormenta20/`](tormenta20/), [`tormenta-rpg/`](tormenta-rpg/) e [`coc7/`](coc7/) (em desenvolvimento, com regras de guias de fãs, avisadas na própria página). O estilo compartilhado fica em `core/` e `vf/`. O plano, o contrato e a cobertura por sistema estão em [`docs/`](docs/) (`PLANO_DESENVOLVIMENTO.md`, `CONTRATO_SISTEMA.md`, `COBERTURA.md`). Para rodar os testes: `cd dnd5e && for f in tests/*.js; do node $f; done`, e `node <sistema>/tests/run_all.js` nos demais.
 
 ---
 
 ## ✨ Visão geral
 
-Este projeto é um **construtor offline de personagens de D&D 5e** pensado para funcionar **direto no navegador**, sem backend e sem etapa de build obrigatória.
+O `index.html` da raiz é um **hub** que leva a cada sistema. Cada sistema é uma página independente, com o seu próprio fluxo guiado, as suas regras, as suas exportações e os seus testes. Visual no padrão [VF Tools](https://github.com/VitorFariasVF/VF-Tools), com tema escuro e claro.
 
-Ele foi criado para servir como um **mini builder de ficha** com foco em:
+| Sistema | Pasta | Estado | Escopo pronto* | Regras conferidas* |
+|---|---|---|---|---|
+| **D&D 5e** (2014 + Xanathar, ou 2024) | [`dnd5e/`](dnd5e/) | Pronto | ≈ 92% (2014) · ≈ 55% (2024) | ≈ 65% |
+| **Call of Cthulhu 7ª edição** | [`coc7/`](coc7/) | Trabalho em andamento | ≈ 80% | ≈ 55% |
+| **Tormenta20** | [`tormenta20/`](tormenta20/) | Trabalho em andamento | ≈ 55% | ≈ 15% |
+| **Tormenta RPG** (d20 original) | [`tormenta-rpg/`](tormenta-rpg/) | Trabalho em andamento | ≈ 35% | ≈ 30% |
 
-- criação guiada por etapas
-- validação paralela com **Rule Engine** segura
-- persistência local com **LocalStorage**
-- histórico de personagens
-- edição posterior da ficha
-- tipo de ficha: **D&D 5e 2014 (PHB + Xanathar)** ou **D&D 2024 (5.5)**
-- exportação para **Foundry VTT** e **Roll20**
-- exportação em **PDF A4** com arte estilizada
-- base extensível para livros e módulos futuros
+\* Valores aproximados. O método e o que falta em cada sistema estão em [`docs/COBERTURA.md`](docs/COBERTURA.md).
 
----
-
-## Tipo de ficha: 2014 × 2024
-
-Na tela inicial escolha a edição das regras:
-
-- **D&D 5e (2014) — PHB + Xanathar:** raças com bônus de atributo, antecedentes do PHB, subclasses de Xanathar (a ficha avisa que são opcionais).
-- **D&D 2024 (5.5):** espécies sem bônus, 16 antecedentes com +2/+1 ou +1/+1/+1 e talento de origem, subclasse no nível 3. **Classes, subclasses e magias ainda usam o catálogo 2014**, e a ficha mostra um aviso.
-
-A exportação marca a mesma edição em todos os itens (Foundry `source.rules`).
+> **Sobre as regras.** Tormenta20, Tormenta RPG e Call of Cthulhu foram montados a partir de **guias de fãs, wikis e material gratuito**, não do livro oficial. Cada dado leva a sua fonte e o que não foi confirmado em duas fontes aparece como **NÃO VERIFICADO** na tela. Cada página desses três sistemas e o rodapé do PDF avisam isso. Confira no seu exemplar do livro antes de usar em mesa. Os sistemas guardam só mecânica (números, fórmulas, nomes) e descrições curtas em palavras próprias, nunca texto de livro nem arte.
 
 ---
 
 ## 🚀 Como usar
 
-### Opção 1 — usar online
+**Online:** abra a [demo no GitHub Pages](https://vitorfariasvf.github.io/dnd5e-builder/) e escolha o sistema.
 
-Abra a versão publicada:
-
-## **👉 [Clique aqui para abrir a demo no GitHub Pages](https://vitorfariasvf.github.io/dnd5e-builder/)**
-
-### Opção 2 — usar localmente
-
-Este projeto **não precisa iniciar servidor** para o uso normal.
-
-Basta:
-
-1. baixar ou clonar o repositório
-2. abrir o arquivo **`index.html`**
-3. usar a aplicação normalmente
+**Local:** não precisa de servidor nem de build. Baixe ou clone o repositório e abra o `index.html`.
 
 ```text
-/index.html
+/index.html            hub
+/dnd5e/index.html      D&D 5e
+/tormenta20/index.html Tormenta20
+/tormenta-rpg/index.html Tormenta RPG
+/coc7/index.html       Call of Cthulhu 7ª edição
 ```
 
-> O projeto foi organizado para rodar **diretamente do `index.html`**.
-
-### Fluxo rápido
-
-1. escolha o modo de criação
-2. selecione origem, raça, classe e nível
-3. distribua atributos
-4. escolha perícias, equipamentos e magias
-5. preencha traços, ideais, vínculos e defeitos
-6. revise a ficha
-7. exporte para **Foundry JSON**, **backup JSON** ou **PDF**
+Fluxo em todos os sistemas: escolher o modo (estrito, com validação das regras, ou livre) → montar a ficha por etapas → revisar o resumo → exportar. Os dados ficam só no navegador, com histórico, duplicação e importação do backup.
 
 ---
 
-## 🧩 Principais recursos
+## 🎲 D&D 5e
 
-- criação de personagem por etapas
-- modo **A** com validação guiada por regras
-- modo **B** com maior liberdade de customização
-- atributos com **Standard Array**, **Point Buy**, ASI e talentos
-- cálculo de modificadores, saves e perícias
-- proficiências separadas por raça, origem, classe, subclasse e talento
-- combate com armas, armaduras, escudo e peso de inventário
-- magias com slots, truques, preparação, grimório do mago e descanso
-- validação de listas de magias por classe, círculo e fonte
-- personalidade com:
-  - traços
-  - ideais
-  - vínculos
-  - defeitos
-  - descrição geral
-  - aparência
-  - história
-- progressão por nível de **1 a 20**
-- subclasses e recursos rastreáveis
-- suporte em expansão para **Xanathar's Guide to Everything**
-- exportação para:
-  - **Foundry VTT JSON**
-  - **backup interno do projeto**
-  - **PDF A4**
-- histórico de personagens para editar depois
-- importação de JSON do projeto para continuar edição
+- **Tipo de ficha:** 2014 (PHB + Xanathar) ou 2024 (SRD 5.2). A edição vale para raças, antecedentes, classes e exportação.
+- **Criação:** raças e sub-raças do PHB (Meio-Elfo com dois +1, Humano Variante, ancestral do Draconato), antecedentes, 12 classes do nível 1 ao 20, subclasses do PHB e de Xanathar, atributos (Standard Array, Point Buy, ASI e talentos), perícias, equipamento, magias (espaços, truques, preparação, grimório), recursos rastreáveis e personalidade.
+- **Regras:** revisão das 12 classes nível a nível contra a SRD. A ficha 2024 usa as classes do SRD 5.2 (uma subclasse por classe, sem listas de magia e talentos 2024 ainda).
+- **Exportação:** PDF A4 de 2 páginas com moldura, escudos de atributo e brasão de classe; **Foundry VTT** (ator JSON, sistema dnd5e 5.3); **Roll20** (script de API para a ficha OGL e lista de campos); backup JSON.
+- **Limite:** Foundry e Roll20 **não foram testados em VTT real**. Veja [`docs/AUDITORIA_FICHAS_VTT.md`](docs/AUDITORIA_FICHAS_VTT.md) e [`docs/TRABALHO_DND5E_EXPORT.md`](docs/TRABALHO_DND5E_EXPORT.md).
+
+## 🐙 Call of Cthulhu 7ª edição
+
+Investigador completo: características (rolar ou distribuir), ajustes de idade, 19 ocupações, perícias de ocupação e de interesse pessoal, antecedentes, equipamento, derivados (PV, Sanidade, Sorte, PM, Movimento, Dano e Corpo) e ficha de combate. Segue a **regra completa** (Keeper Rulebook) como método. Exporta backup JSON e um dossiê em PDF de 2 páginas.
+
+## 🛡️ Tormenta20
+
+Fluxo em 12 etapas do nível 1 ao 20, com 14 classes, 17 raças, 194 poderes e magias por círculo. Onde o dado é incerto, a ficha mostra "não verificado" e aceita o valor digitado à mão. Equipamento e magias de 2º a 5º círculo ainda estão incompletos. Exporta backup JSON (esquema 2), PDF e um rascunho de ator para Foundry (não testado).
+
+## 📜 Tormenta RPG (d20)
+
+Fluxo de 10 etapas com 13 classes (PV, bônus base de ataque, círculos), 19 perícias e 13 talentos. Resistências por classe, magias por dia, equipamento e traços das raças ainda estão vazios. Não há VTT verificado, então não exporta para VTT. Exporta backup JSON e PDF.
+
+---
+
+## 📁 Estrutura
+
+```text
+.
+├── index.html            hub: escolhe o sistema
+├── core/                 estilo compartilhado (style.css, theme.css, hub.css)
+├── vf/                   identidade VF Tools (tokens, componentes, motion, tool.js)
+├── dnd5e/                rules*.js, rules-engine.js, state.js, validator.js, ui.js,
+│                         ui-theme.js, export*.js, storage.js, main.js, tests/
+├── tormenta20/           rules*.js, engine.js, state.js, validator.js, ui.js,
+│                         export*.js, storage.js, main.js, tests/
+├── tormenta-rpg/         (mesmo formato)
+├── coc7/                 (mesmo formato)
+└── docs/                 plano, contrato, cobertura, auditorias e verificações
+```
+
+Cada sistema é autocontido e as páginas não carregam umas às outras, então os nomes globais não colidem. Os dados salvos usam uma chave por sistema (`vf-tools:<sistema>-builder:v1`); a do D&D continua `vf-tools:dnd5e-builder:v1`, então as fichas antigas não se perdem.
+
+### Documentos
+
+- [`docs/PLANO_DESENVOLVIMENTO.md`](docs/PLANO_DESENVOLVIMENTO.md): auditoria de crescimento, fases e riscos
+- [`docs/CONTRATO_SISTEMA.md`](docs/CONTRATO_SISTEMA.md): o que cada sistema precisa ter
+- [`docs/COBERTURA.md`](docs/COBERTURA.md): percentuais e o que falta
+- `docs/AUDITORIA_*.md` e `docs/VERIFICACAO_*.md`: o que foi conferido, contra qual fonte e o que ficou de fora
+- `docs/TRABALHO_*.md`: registro de cada frente de trabalho
+- [`docs/AUDITORIA_UX.md`](docs/AUDITORIA_UX.md): auditoria visual, animações e tema
+
+---
+
+## 🧪 Testes
+
+Testes em Node, sem dependências, que saem com código diferente de 0 se algo falhar.
+
+```bash
+cd dnd5e && for f in tests/*.js; do node "$f" || echo "FALHOU $f"; done
+node tormenta20/tests/run_all.js
+node tormenta-rpg/tests/run-all.js
+node coc7/tests/run_all.js
+```
+
+Cada sistema também tem um teste de navegador (`e2e_*.js`) que usa Playwright e o Chrome headless; fica fora do `run_all` porque precisa dessas ferramentas.
+
+---
+
+## 🧠 Rule Engine do D&D
+
+`dnd5e/rules-engine.js` é uma camada segura acima das regras: recebe `state.personagem`, calcula a ficha resolvida (atributos, proficiências, conjuração, espaços, recursos) e gera um `legacyPatch` compatível com a estrutura antiga, que a exportação continua lendo. O modo estrito valida pelas regras; o modo livre só avisa.
 
 ---
 
 ## 🛠️ Tecnologias
 
-- **HTML5**
-- **CSS3**
-- **JavaScript Vanilla**
-- **LocalStorage**
-
-Sem framework. Sem backend. Sem build obrigatório. Visual no padrão [VF Tools](https://github.com/VitorFariasVF/VF-Tools) (tema escuro/claro; arquivos em `vf/`).
-
----
-
-## 📁 Estrutura do projeto
-
-```text
-.
-├── index.html
-├── style.css
-├── vf/                  (padrão visual VF Tools, cópias)
-├── main.js
-├── ui.js
-├── state.js
-├── rules.js
-├── rules-engine.js
-├── validator.js
-├── export.js            (Foundry VTT e backup)
-├── export-pdf.js        (PDF A4 estilizado)
-├── export-roll20.js     (Roll20: script de API e lista de campos)
-├── storage.js
-└── README.md
-```
-
-### Função dos arquivos
-
-- `rules.js` → catálogos, tabelas e regras do jogo
-- `rules-engine.js` → camada paralela de resolução/auditoria de regras
-- `state.js` → estrutura base do estado do personagem
-- `validator.js` → validações e selo final da ficha
-- `ui.js` → renderização, etapas e interação da interface
-- `export.js` → exportação para Foundry JSON e backup
-- `export-pdf.js` → ficha em PDF A4 com moldura, escudos de atributo e brasão de classe
-- `export-roll20.js` → script de API do Roll20 e lista de campos da ficha OGL
-- `storage.js` → persistência com LocalStorage
-- `main.js` → inicialização da aplicação
-
----
-
-## 📚 Como a ficha funciona
-
-### Criação
-
-A aplicação organiza a montagem da ficha em etapas para facilitar o fluxo de criação.
-
-### Salvamento local
-
-Os dados ficam no navegador e podem ser reabertos depois sem backend.
-
-### Histórico
-
-Você pode:
-
-- salvar personagem no histórico
-- abrir personagem salvo para editar
-- duplicar ficha
-- excluir ficha
-- voltar para a tela inicial
-- limpar todo o banco local do navegador
-
-### Importação para edição
-
-A aplicação consegue reabrir JSONs do próprio projeto para continuar a edição.
-
----
-
-## 🧠 Arquitetura da Rule Engine
-
-A Rule Engine fica em `rules-engine.js` e funciona como uma camada segura acima das regras antigas. Ela recebe `state.personagem`, calcula uma versão resolvida da ficha e gera um `legacyPatch` compatível com os campos antigos.
-
-Fluxo simplificado:
-
-```text
-state.personagem
-    ↓
-resolveCharacterRules(personagem)
-    ↓
-resolved + warnings + errors
-    ↓
-legacyPatch compatível com a estrutura antiga
-```
-
-A exportação continua lendo os campos tradicionais da ficha. Por isso, a engine pode corrigir regras sem exigir mudança imediata no `export.js`.
-
-Principais funções:
-
-- `resolveCharacterRules(personagem)`
-- `resolveAbilityScores(context)`
-- `resolveProficiencies(context)`
-- `resolveSpellcasting(context)`
-- `resolveCantrips(context, profile)`
-- `resolveSpellSlots(context, profile)`
-- `resolvePreparedSpellLimit(context, profile, abilityScores)`
-- `resolveWizardSpellbook(context)`
-- `auditCharacterRules(context, resolved)`
-- `buildLegacyPatch(resolved)`
-
-### O que a engine não faz nesta fase
-
-- não altera a exportação
-- não substitui o `export.js`
-- não depende de backend
-- não exige build
-- não usa compêndio externo em tempo de execução
-
-## 📤 Exportação
-
-### 1. Foundry VTT JSON
-
-A exportação principal gera um **Actor JSON** voltado ao fluxo de importação do Foundry VTT.
-
-Fluxo recomendado no Foundry:
-
-1. criar um ator vazio do tipo personagem
-2. clicar com o botão direito no ator
-3. escolher **Import Data**
-4. selecionar o JSON exportado pelo projeto
-
-### 2. Roll20
-
-O Roll20 não importa um arquivo de ficha sozinho. O app gera:
-
-- **Script de API** (`*_roll20_api.js`): requer campanha com assinatura **Pro** e a ficha **D&D 5E by Roll20**. Cole em *Scripts de API* e digite no chat o comando `!vf-importar-<nome>` que aparece no topo do arquivo.
-- **Lista de campos** (`*_roll20_campos.json`): valores prontos para copiar à mão ou usar em um importador de terceiros.
-
-> Testado só em uma API simulada, não em uma campanha real. Confira os campos depois de importar (veja `AUDITORIA_FICHAS_VTT.md`).
-
-### 3. Backup JSON
-
-Exporta o estado interno do projeto para reabrir a ficha depois.
-
-### 4. PDF
-
-Gera uma ficha em **2 páginas A4** (moldura, escudos de atributo, brasão da classe), usando a impressão do navegador. Funciona offline.
-
----
-
-## 🎲 Conteúdo já implementado
-
-### Base da ficha
-
-- criação por etapas
-- atributos
-- perícias e saves
-- combate
-- armaduras e armas
-- inventário
-- magias
-- personalidade
-- validação
-- progressão
-- subclasses
-- exportações
-
-### Regras e validação atual
-
-A versão atual inclui uma camada paralela chamada **Rule Engine**, criada para validar e resolver regras sem alterar o formato da exportação. Ela trata:
-
-- Point Buy e Standard Array
-- ASI / aumento de atributo por nível
-- talentos e pré-requisitos
-- proficiências por categoria
-- truques por classe e por fonte
-- slots de magia por tipo de conjurador
-- magias conhecidas e preparadas
-- grimório do mago
-- magias bônus de subclasse
-- validação de magia por classe/círculo
-
-### Xanathar
-
-Já existe suporte em expansão para conteúdo de **Xanathar**, com foco em:
-
-- subclasses
-- magias
-- proficiências adicionais de subclasses
-- habilidades de subclasse que impactam a ficha
-- talentos raciais e pré-requisitos
-- magias bônus de subclasses como Domínio da Forja, Lâmina Maldita e Patrulheiros de Xanathar
-
----
-
-## ✅ Relatórios internos de auditoria
-
-O pacote inclui relatórios gerados durante a revisão da engine:
-
-- `SPELL_AUDIT_REPORT.md`
-- `SPELL_SELECTION_VALIDATION_REPORT.md`
-- `FEAT_ASI_VALIDATION_REPORT.md`
-- `FEAT_DETAIL_CHOICES_REPORT.md`
-- `FULL_FLOW_AUDIT_REPORT.md`
-- `VISUAL_FLOW_AUDIT_REPORT.md`
-
-Eles servem como histórico técnico do que foi validado e dos pontos que ainda merecem teste manual.
-
-## 🔗 Referências
-
-### Projeto
-
-- **Demo online:** [https://vitorfariasvf.github.io/dnd5e-builder/](https://vitorfariasvf.github.io/dnd5e-builder/)
-- **Código-fonte:** [https://github.com/VitorFariasVF/dnd5e-builder](https://github.com/VitorFariasVF/dnd5e-builder)
-
-### Base técnica usada no projeto
-
-- estrutura de **Actor JSON** para importação no Foundry VTT
-- organização de ficha voltada ao sistema **D&D 5e**
-- comparação com um **actor funcional de referência** para alinhar ordem, shape e blocos principais
-
-### Referências internas de arquitetura
-
-- `rules.js` como base das regras
-- `state.js` como fonte do estado da ficha
-- `export.js` como ponte entre ficha interna e formatos externos
-
----
-
-## ⚠️ Compatibilidade atual
-
-O foco do projeto está em:
-
-- rodar direto no navegador
-- permitir edição sem backend
-- manter histórico local
-- exportar a ficha em formato útil para Foundry VTT
-
-Ainda assim, por ser um projeto offline e independente do compêndio do mundo do usuário, alguns itens podem entrar como documentos próprios gerados pelo app.
-
----
-
-## 🧱 Limites atuais
-
-- nem todos os recursos de D&D 5e estão automatizados no nível de um VTT completo
-- descrições completas de magias e recursos ainda podem exigir revisão editorial
-- conteúdos de livros adicionais além do PHB/Xanathar ainda não são foco principal
-- a integração com Foundry continua preservada e sem mudanças nesta fase
-- a exportação não foi reestruturada durante a implantação da Rule Engine
-
----
+HTML5, CSS3, JavaScript Vanilla e LocalStorage. Sem framework, sem backend e sem build.
 
 ## 🗺️ Roadmap
 
-- testar importação/exportação com personagens reais no Foundry VTT
-- melhorar descrições de magias e recursos
-- revisar mais subclasses e recursos
-- enriquecer o PDF A4
-- melhorar a UI do histórico de personagens
-- ampliar a importação para edição
-- documentar casos especiais de multiclasse em etapa futura
-
----
+- conferir as regras dos três sistemas novos com os livros ou com as wikis (tsrd, tormenta-collab)
+- completar equipamento e magias do Tormenta20, e resistências e equipamento do Tormenta RPG
+- mais ocupações no Call of Cthulhu
+- 2024 no D&D: equipamento, listas de magia e talentos; conferir o SRD 5.2 contra o PDF oficial
+- testar as exportações em Foundry VTT e Roll20 reais
+- extrair o stepper, o menu e os toasts para `core/`, e rodar os testes em CI
 
 ## 🤝 Como contribuir
 
-Sugestões de contribuição:
-
-- revisar conteúdo de classes, subclasses e magias
-- testar exportação/importação no Foundry VTT
-- reportar bugs de fluxo da ficha
-- melhorar o visual e a experiência de uso
-- refinar textos e documentação
-
-Fluxo sugerido:
-
-1. faça um fork do projeto
-2. crie uma branch para sua alteração
-3. faça as mudanças
-4. teste localmente abrindo o `index.html`
-5. envie um pull request
-
----
-
-## 🧾 Histórico técnico recente
-
-### Etapa 18
-
-- README revisado para refletir a Rule Engine
-- documentação de uso e arquitetura atualizada
-- exportação preservada
-
-### Etapas 03 a 17
-
-- criada camada paralela `rules-engine.js`
-- auditoria conectada à validação
-- atributos, ASI e talentos conectados
-- proficiências conectadas por categoria
-- truques, slots e limites de magia corrigidos
-- grimório do mago separado da preparação
-- magias bônus de subclasse separadas por tipo
-- listas PHB/Xanathar auditadas
-- validação de seleção de magia por classe/círculo adicionada
-- fluxo visual revisado
-- `export.js` preservado durante as etapas
+Revisar regras contra o livro, testar exportações em um VTT real, reportar bugs e melhorar a interface. Fluxo: faça um fork, crie uma branch, mude só a pasta do sistema (veja o contrato), rode os testes do sistema, abra o `index.html` do sistema para conferir e envie um pull request.
 
 ## 📄 Licença
 
-Defina aqui a licença que deseja usar no repositório.
-
-Sugestão comum para projetos open source:
-
-- MIT
-
-Enquanto não houver um arquivo `LICENSE`, considere isso como pendente de definição.
+Ainda sem arquivo `LICENSE`: a licença está pendente de definição. As regras dos sistemas pertencem aos seus respectivos autores e editoras; este projeto guarda só mecânica e descrições curtas próprias.
 
 ---
 
@@ -434,7 +149,3 @@ Enquanto não houver um arquivo `LICENSE`, considere isso como pendente de defin
 ### **📦 [Ver o código no GitHub](https://github.com/VitorFariasVF/dnd5e-builder)**
 
 </div>
-
-## Interface e tema
-
-`theme.css` e `ui-theme.js` (carregados depois de `style.css`/`ui.js`) adicionam o stepper com progresso, o menu de ações, os escudos de atributo, o brasão de classe, os toasts e as animações funcionais (desligadas com `prefers-reduced-motion`). Detalhes e pendências em `AUDITORIA_UX.md`.
