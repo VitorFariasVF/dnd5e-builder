@@ -3,6 +3,11 @@ function obterNomeArquivo(base, ext){
   return `${nome || base}.${ext}`;
 }
 
+/* Alvo do JSON Foundry: sistema dnd5e 5.3.x (5.3.3 é a mais nova nas notas consultadas em 2026-11-17)
+   com Foundry v13. Estrutura de itens: `system.activities` por id (desde 4.0), `system.advancement` como objeto
+   (desde 5.3.0). Não testado em Foundry real. Ver docs/TRABALHO_DND5E_EXPORT.md. */
+const FOUNDRY_SYSTEM_VERSION = '5.3.3';
+
 const FOUNDRY_ABILITY_MAP = {
   forca: 'str',
   destreza: 'dex',
@@ -79,7 +84,15 @@ const FOUNDRY_BACKGROUND_EN_MAP = {
   guild_artisan: 'Guild Artisan',
   forasteiro: 'Outlander',
   sabio: 'Sage',
-  heroi_povo: 'Folk Hero'
+  heroi_povo: 'Folk Hero',
+  /* Antecedentes de 2024 (chaves do rules.js). Nomes conferidos no reveal do Livro do Jogador 2024 (EN World). */
+  artesao: 'Artisan',
+  fazendeiro: 'Farmer',
+  guarda: 'Guard',
+  guia: 'Guide',
+  mercador: 'Merchant',
+  escriba: 'Scribe',
+  viajante: 'Wayfarer'
 };
 
 const FOUNDRY_WEAPON_EN_MAP = {
@@ -506,7 +519,7 @@ function buildFoundryStats(){
     exportSource: null,
     coreVersion: '13.351',
     systemId: 'dnd5e',
-    systemVersion: '5.3.2',
+    systemVersion: FOUNDRY_SYSTEM_VERSION,
     createdTime: now,
     modifiedTime: now,
     lastModifiedBy: null
@@ -734,18 +747,30 @@ function getInventoryQuantityByName(personagem, itemName){
   return Number(found?.quantidade || 1);
 }
 
+/* Períodos de descanso que recuperam um recurso, lidos do texto de recarga do app.
+   "Descanso curto ou longo" (Segundo Fôlego) vale para os dois. Texto sem descanso ("Por turno",
+   "Especial", "Usa espaço de magia") não gera período: o Foundry não recupera sozinho nesses casos. */
+function recargaPeriodos(recarga){
+  const texto = String(recarga || '');
+  const periodos = [];
+  if(/curto/i.test(texto)) periodos.push('sr');
+  if(/longo/i.test(texto)) periodos.push('lr');
+  return periodos;
+}
+
 function fillActorResources(personagem){
   const resources = Object.values(personagem.recursosClasse || {}).slice(0, 3);
   const entries = ['primary', 'secondary', 'tertiary'];
   const out = {};
   entries.forEach((slot, index) => {
     const res = resources[index];
+    const periodos = recargaPeriodos(res?.recarga);
     out[slot] = res ? {
       label: res.nome || '',
       value: Number(res.atual || 0),
       max: Number(res.max || 0),
-      sr: /curto/i.test(res.recarga || ''),
-      lr: /longo/i.test(res.recarga || '') || !/curto/i.test(res.recarga || '')
+      sr: periodos.includes('sr'),
+      lr: periodos.includes('lr')
     } : { label: '', value: 0, max: 0, sr: false, lr: false };
   });
   return out;
@@ -983,7 +1008,7 @@ function createFoundryEffect(changes = [], opts = {}){
       exportSource: null,
       coreVersion: '13.351',
       systemId: 'dnd5e',
-      systemVersion: '5.3.2',
+      systemVersion: FOUNDRY_SYSTEM_VERSION,
       lastModifiedBy: null
     }
   };
@@ -1368,7 +1393,7 @@ function buildFoundryResourceFeature(resourceKey, resourceValue, personagem){
       uses: {
         spent: Math.max(0, Number(resourceValue.max || 0) - Number(resourceValue.atual || 0)),
         max: String(resourceValue.max || ''),
-        recovery: resourceValue.recarga ? [{ period: /curto/i.test(resourceValue.recarga) ? 'sr' : 'lr', type: 'recoverAll' }] : []
+        recovery: recargaPeriodos(resourceValue.recarga).map(period => ({ period, type: 'recoverAll' }))
       },
       advancement: {},
       description: buildFoundryDescription(`<div class="ddb"><p>${escaparHtml(resourceValue.detalhe || '')}</p></div>`),
@@ -1543,16 +1568,28 @@ function montarFoundryItems(personagem){
   return dedupFoundryItems(items.filter(Boolean));
 }
 
-/* Remove itens repetidos (mesmo tipo e nome) e o item "Aumento de Valor de Habilidade", que não é um recurso jogável. */
+/* Remove itens repetidos (mesmo tipo e nome) e o item "Aumento de Valor de Habilidade", que não é um recurso jogável.
+   Habilidade de classe e recurso rastreável costumam ter o mesmo nome (ex.: Segundo Fôlego). Fica um item só, com a
+   descrição da habilidade e os usos (máximo e recarga) do recurso. A habilidade vem antes do recurso na montagem. */
 function dedupFoundryItems(items){
-  const vistos = new Set();
-  return items.filter(item => {
-    if(item.type === 'feat' && /^aumento de valor de habilidade$/i.test(String(item.name || '').trim())) return false;
+  const porChave = new Map();
+  const saida = [];
+  for(const item of items){
+    if(item.type === 'feat' && /^aumento de valor de habilidade$/i.test(String(item.name || '').trim())) continue;
+    if(['class', 'subclass', 'race', 'background'].includes(item.type)){ saida.push(item); continue; }
     const chave = `${item.type}|${normalizeLookupText(item.name)}`;
-    if(['class', 'subclass', 'race', 'background'].includes(item.type) || vistos.has(chave)) return item.type !== 'feat' && !vistos.has(chave) ? true : (vistos.has(chave) ? false : true);
-    vistos.add(chave);
-    return true;
-  });
+    const existente = porChave.get(chave);
+    if(!existente){
+      porChave.set(chave, item);
+      saida.push(item);
+      continue;
+    }
+    const usosNovos = item.system?.uses;
+    const novoTemUsos = !!usosNovos?.max || (usosNovos?.recovery || []).length > 0;
+    const existenteSemUsos = !existente.system?.uses?.max && !(existente.system?.uses?.recovery || []).length;
+    if(novoTemUsos && existenteSemUsos) existente.system.uses = usosNovos;
+  }
+  return saida;
 }
 
 function montarFoundryActor(){
@@ -1562,15 +1599,11 @@ function montarFoundryActor(){
   const backgroundId = getFoundryItemIdByType(items, 'background');
   const classId = getFoundryItemIdByType(items, 'class');
   const senses = getFoundrySenses(p);
-  const biographyParts = [
-    p.personalidade?.descricaoGeral ? `<p><strong>Descrição geral:</strong> ${escaparHtml(p.personalidade.descricaoGeral)}</p>` : '',
-    p.personalidade?.aparencia ? `<p><strong>Aparência:</strong> ${escaparHtml(p.personalidade.aparencia)}</p>` : '',
-    p.personalidade?.historia ? `<p><strong>História:</strong> ${escaparHtml(p.personalidade.historia)}</p>` : '',
-    (p.personalidade?.tracos || []).length ? `<p><strong>Traços:</strong> ${p.personalidade.tracos.map(escaparHtml).join(' | ')}</p>` : '',
-    (p.personalidade?.ideais || []).length ? `<p><strong>Ideais:</strong> ${p.personalidade.ideais.map(escaparHtml).join(' | ')}</p>` : '',
-    (p.personalidade?.vinculos || []).length ? `<p><strong>Vínculos:</strong> ${p.personalidade.vinculos.map(escaparHtml).join(' | ')}</p>` : '',
-    (p.personalidade?.defeitos || []).length ? `<p><strong>Defeitos:</strong> ${p.personalidade.defeitos.map(escaparHtml).join(' | ')}</p>` : ''
-  ].filter(Boolean).join('') || '<p></p>';
+  /* A biografia recebe só o texto livre: descrição geral em value e história em public, sem HTML.
+     Traços, ideais, vínculos, defeitos e aparência já têm campo próprio em details (trait, ideal, bond, flaw,
+     appearance). Antes, a biografia repetia tudo em HTML e o import devolvia esse HTML para a descrição. */
+  const descricaoBiografia = String(p.personalidade?.descricaoGeral || '');
+  const historiaBiografia = String(p.personalidade?.historia || '');
   return {
     folder: null,
     name: p.nome || 'Personagem sem nome',
@@ -1612,7 +1645,7 @@ function montarFoundryActor(){
       },
       bastion: { name: '', description: '' },
       details: {
-        biography: { value: biographyParts, public: biographyParts },
+        biography: { value: descricaoBiografia, public: historiaBiografia },
         alignment: '',
         ideal: (p.personalidade?.ideais || []).join(' | '),
         bond: (p.personalidade?.vinculos || []).join(' | '),

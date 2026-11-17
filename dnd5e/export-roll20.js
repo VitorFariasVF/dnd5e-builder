@@ -2,7 +2,12 @@
    O Roll20 não importa um arquivo de ficha sozinho. Os dois caminhos reais são:
    1) Script de API (campanha com assinatura Pro): o app gera um script que cria o personagem pelo comando de chat.
    2) Lista de campos (.json): serve para copiar valores à mão ou alimentar um importador de terceiros.
-   Os nomes dos campos seguem a ficha OGL. Eles NÃO foram testados em uma campanha real: ver AUDITORIA_FICHAS_VTT.md. */
+   Nomes conferidos na wiki do Roll20 (wiki.roll20.net/OGL): strength_base, acrobatics_prof, hp|max, ac, speed,
+   initiative_bonus/initmod, lvlN_slots_total/expended (expended guarda os espaços restantes), repeating_attack
+   (atkname, atkattr_base, atkprofflag, dmgbase). Nos fóruns: atkname e dmgbase (post 11665357); o post cita dmg2flag,
+   e o app usa dmg1flag para o primeiro bloco de dano (não confirmado).
+   Nomes NÃO confirmados em fonte: *_save_prof, spellcastingability, repeating_spell-*, repeating_inventory,
+   repeating_traits, dmgattr, dmgtype, atkflag. Nada foi testado em campanha real: ver docs/TRABALHO_DND5E_EXPORT.md. */
 
 const ROLL20_ATTR = {
   forca:'strength', destreza:'dexterity', constituicao:'constitution',
@@ -66,11 +71,11 @@ function montarAtributosRoll20(){
   });
 
   // Combate
+  // `hp|max` na ficha = max do atributo "hp" (wiki OGL). `ac` é o valor da CA (wiki OGL); não há campo custom_ac listado.
   add('hp', p.pvMax || 1, p.pvMax || 1);
-  add('custom_ac_flag', 1);
-  add('custom_ac', p.combate?.classeArmadura || 10);
+  add('ac', p.combate?.classeArmadura || 10);
   add('speed', `${p.deslocamento || 30} ft`);
-  add('initiative_bonus', 0);
+  // Iniciativa não é gravada: initiative_bonus é o total da ficha (wiki OGL). Escrever 0 zeraria o modificador de Destreza.
 
   // Moedas
   Object.entries(p.inventario?.moedas || {}).forEach(([moeda, v]) => add(moeda, Number(v) || 0));
