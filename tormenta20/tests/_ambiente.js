@@ -6,12 +6,14 @@ const path = require("path");
 
 const RAIZ = path.join(__dirname, "..", "..");       // raiz do repositório
 const PASTA = path.join(__dirname, "..");            // tormenta20/
-const SCRIPTS = ["tormenta20/rules.js", "tormenta20/state.js", "tormenta20/validator.js", "tormenta20/engine.js",
+const SCRIPTS = ["tormenta20/rules.js", "tormenta20/rules-magias.js", "tormenta20/rules-racas.js", "tormenta20/rules-equipamento.js",
+  "tormenta20/state.js", "tormenta20/validator.js", "tormenta20/engine.js",
   "tormenta20/storage.js", "tormenta20/export.js", "tormenta20/export-pdf.js"];
 
 /* Nomes declarados com `const` nos scripts: não viram propriedade do contexto, então
    expomos cada um por getter (ctx.state, ctx.T20_RACAS etc.). */
-const NOMES_CONST = ["state", "T20_SISTEMA", "T20_VERSAO_ESQUEMA", "T20_EDICAO", "T20_ATRIBUTOS", "T20_ATRIBUTO_IDS",
+const NOMES_CONST = ["state", "T20_MAGIAS", "T20_MAGIAS_PENDENTES", "T20_MAGIAS_PROGRESSAO", "T20_RACAS_COMPLETAS",
+  "T20_ARMAS", "T20_ARMADURAS", "T20_ITENS", "T20_EQUIPAMENTO_STATUS", "T20_SISTEMA", "T20_VERSAO_ESQUEMA", "T20_EDICAO", "T20_ATRIBUTOS", "T20_ATRIBUTO_IDS",
   "T20_ATRIBUTO_NOME", "T20_PONTOS_COMPRA", "T20_MODIFICADOR_FONTE", "T20_PERICIAS", "T20_PERICIA_NOMES",
   "T20_PERICIA_FONTE", "T20_TREINO_FONTE", "T20_RACAS", "T20_ORIGENS", "T20_ORIGEM_FONTE", "T20_CLASSES",
   "T20_CLASSE_IDS", "T20_CIRCULOS", "T20_CIRCULOS_FONTE", "T20_NIVEL_MIN", "T20_NIVEL_MAX", "T20_DINHEIRO_FONTE",
