@@ -143,3 +143,5 @@ Comando: `node coc7/tests/run_all.js`. Resultado: 6 arquivos e 119 testes passam
 Navegador: `node coc7/tests/e2e_navegador.js` (Chrome em `/usr/bin/google-chrome`). Passou em 1100 px e 360 px, sem erro de console e com PDF de 2 páginas.
 
 Nenhum comando de git de escrita foi executado.
+
+> **Atualização:** o app tem 19 ocupações, MOV condicional, teto de 90% como aviso e a regra completa como método (`TRABALHO_COC7_OCUPACOES.md`, `TRABALHO_COC7_REGRAS.md`). Este documento descreve a primeira verificação.

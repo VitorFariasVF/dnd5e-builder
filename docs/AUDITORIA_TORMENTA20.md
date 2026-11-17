@@ -118,3 +118,5 @@ Resultado da última execução: todos os testes de Node passam (36 + 42 + 14 + 
 - Foundry VTT real (não testado).
 - Impressão física do PDF (só geração pelo Chrome e contagem de páginas).
 - Acessibilidade com leitor de tela (só checagens de `role`, `label` e foco).
+
+> **Atualização:** o sistema agora cobre os níveis 1 a 20 e as 17 raças (`TRABALHO_T20_INTEGRACAO.md`). Esta auditoria descreve a primeira entrega (níveis 1 a 5).
