@@ -122,7 +122,7 @@ function cocBlocoIdade(inv){
     : `${r.faixa}: ${r.alvo.toUpperCase()} ${r.valor}`;
   const itens = reg.map(r => `<li>${cocEscapar(texto(r))}</li>`).join("");
   return `<section><h2>Ajustes de idade</h2><ul>${itens || "<li>Nenhum ajuste.</li>"}</ul>
-    <p class="aviso">Regras de idade NÃO VERIFICADAS em duas fontes públicas. Confira no livro antes de usar.</p></section>`;
+    <p class="aviso">Regras de idade NÃO VERIFICADAS em parte: reduções de APA e de FOR/CON/DES a partir de 50 anos, testes de EDU a partir de 40 e valores de 15 a 19 anos. Confira no livro antes de usar.</p></section>`;
 }
 
 function gerarHtmlDossie(estado){
@@ -142,7 +142,7 @@ function gerarHtmlDossie(estado){
       <h1>${nome}</h1><div class="sub">${cocEscapar(sub)}</div></div>${cocEmblemaOlho()}</header>
     <div class="duas"><div>${cocBlocoCaracteristicas(inv, fin)}</div>
       <div><section><h2>Vitais e derivados</h2>${cocBlocoVitais(estado, der)}
-        <p class="aviso">Sanidade inicial = POD. Pontos de magia = POD ÷ 5. Movimento = 8 com ajuste de idade (não verificado).</p></section></div></div>
+        <p class="aviso">Sanidade inicial = POD. Pontos de magia = POD ÷ 5. Movimento = 8 (Quick-Start), com −1 a cada faixa de 40 anos em diante. Movimento condicional da regra completa: conflito, não aplicado.</p></section></div></div>
     ${cocBlocoPericias(inv)}
     <div class="rodape"><span>Ficha de uso pessoal. Mecânica de Call of Cthulhu 7ª edição (Chaosium).</span><span>Página 1 de 2</span></div>
   </article>

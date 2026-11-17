@@ -1,8 +1,8 @@
 'use strict';
-/* Ajustes de idade em todas as faixas. Os números esperados vêm da tabela de faixas em rules.js,
-   que está NÃO VERIFICADA em duas fontes públicas: estes testes provam que o motor aplica a tabela,
-   não que a tabela é a do livro (isso fica na auditoria).
-   Conta à mão para idade 15: EDU -5 e FOR ou TAM -5 (escolha), MOV -1, sem teste de EDU, sorte em duas rolagens.
+/* Ajustes de idade em todas as faixas. Os números esperados vêm da tabela de faixas em rules.js.
+   Parte da tabela está confirmada em 2 ou mais fontes (ver docs/VERIFICACAO_COC7.md) e parte é NÃO VERIFICADA:
+   estes testes provam que o motor aplica a tabela, não que a tabela é a do livro.
+   Conta à mão para idade 15: EDU -5 e FOR ou TAM -5 (escolha), MOV 8 (sem redução antes de 40), sem teste de EDU, sorte em duas rolagens.
    Idade 40: APA -5, uma de FOR/CON/DES -5, MOV -1, testes de EDU: 20-39 (1) + 40-49 (1) = 2.
    Idade 50: APA -10 no total (40 e 50 acumulam), duas escolhas, MOV -2, testes de EDU: 1 + 1 + 1 = 3.
    Idade 90: faixas 40, 50, 60, 70 e 80 acumulam: APA -25, cinco escolhas, MOV -5 (8 - 5 = 3), testes de EDU 1 + 5 = 6. */
@@ -49,9 +49,15 @@ teste('Idade 90: 5 escolhas, APA -25, MOV 3, 6 testes de EDU', () => {
     throw new Error("mov");
   if(chamar('melhoriasEduEsperadas', 90) !== 6) throw new Error("testes");
 });
-teste('MOV: 8 base, -1 nas faixas 15-19 e 40 em diante, 8 em 20-39', () => {
-  if(chamar('movPorIdade', 15) !== -1 || chamar('movPorIdade', 25) !== 0 || chamar('movPorIdade', 45) !== -1 || chamar('movPorIdade', 60) !== -3)
-    throw new Error("mov por idade");
+teste('MOV: sem redução aos 15-39; -1 por faixa a partir de 40 (acumulado)', () => {
+  if(chamar('movPorIdade', 15) !== 0 || chamar('movPorIdade', 19) !== 0 || chamar('movPorIdade', 25) !== 0 || chamar('movPorIdade', 39) !== 0)
+    throw new Error("mov antes de 40");
+  if(chamar('movPorIdade', 45) !== -1 || chamar('movPorIdade', 50) !== -2 || chamar('movPorIdade', 60) !== -3)
+    throw new Error("mov a partir de 40");
+});
+teste('MOV de um investigador de 17 anos é 8 (regra de 2 fontes: a redução começa aos 40)', () => {
+  const d = chamar('calcDerivados', { nome: "x", idade: 17, caracteristicas: base, escolhasIdade: ["tam"], melhoriasEdu: [], sorte: 50, pontosOcupacao: {}, pontosInteresse: {}, ocupacaoId: "", escolhasGrupo: [], livresOcupacao: [], especializacoes: {} });
+  if(d.mov !== 8) throw new Error("mov " + d.mov);
 });
 
 /* Varredura de todas as idades válidas: cada faixa tem o número de escolhas e de testes que a tabela promete. */

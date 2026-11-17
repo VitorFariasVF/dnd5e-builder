@@ -177,7 +177,7 @@ function etapaIdade(){
   const { lista } = efeitosIdade(i);
   const escolhas = lista.filter(e => e.tipo === "escolha");
   corpo += `<h3>${esc(faixa.rotulo)}</h3>
-    <div class="alert warning" role="status">Regras de idade NÃO VERIFICADAS em duas fontes públicas. Confira no livro antes de usar.</div>`;
+    <div class="alert warning" role="status">Fontes desta faixa: ${esc(faixa.fonte)} Confira no livro antes de usar.</div>`;
   if(escolhas.length){
     corpo += `<h4>Reduções escolhidas</h4><div class="grid-2">` + escolhas.map((e, k) => {
       const opts = `<option value="">Escolha…</option>` + e.opcoes.map(o => `<option value="${o}"${inv.escolhasIdade[k] === o ? " selected" : ""}>${esc((cocCaracteristica(o) || { nome: o }).nome)}</option>`).join("");
@@ -264,7 +264,7 @@ function etapaInteresse(){
   }).join("");
   return `<h2>Interesse pessoal</h2>
     <p>Pontos de interesse: <b data-live="gasto-int">${r.gastoInteresse}</b> de <b data-live="pool-int">${r.poolInteresse}</b> distribuídos.</p>
-    <p class="hint">Use para perícias que não são de ocupação. Pool: INT × 2 (NÃO VERIFICADO em duas fontes).</p>
+    <p class="hint">Use para perícias que não são de ocupação. Pool: INT × 2 (confirmado em 2 fontes; o Quick-Start oficial usa outro método).</p>
     <table><thead><tr><th>Perícia</th><th class="n">Base</th><th class="n">Pontos</th><th class="n">Total</th></tr></thead><tbody>${linhas}</tbody></table>`;
 }
 
@@ -301,7 +301,7 @@ function etapaDerivados(){
       <div><b>Pontos de vida</b> <span data-live="pv">${d.pv}</span><p class="hint">(CON + TAM) ÷ 10, arredondado para baixo</p></div>
       <div><b>Sanidade inicial</b> <span data-live="san">${d.sanInicial}</span><p class="hint">Igual ao POD. Máximo <span data-live="sanmax">${d.sanMax}</span></p></div>
       <div><b>Pontos de magia</b> <span data-live="pm">${d.pm}</span><p class="hint">POD ÷ 5</p></div>
-      <div><b>Movimento</b> <span data-live="mov">${d.mov}</span><p class="hint">Base 8, com ajuste de idade (não verificado)</p></div>
+      <div><b>Movimento</b> <span data-live="mov">${d.mov}</span><p class="hint">Base 8 (Quick-Start). −1 a cada faixa de 40 anos em diante. Regra completa com MOV condicional: conflito, não aplicada</p></div>
       <div><b>Dano</b> <span data-live="dano">${esc(d.danoConhecido ? d.dano : "não calc.")}</span></div>
       <div><b>Corpo</b> <span data-live="corpo">${esc(d.danoConhecido ? d.corpo : "—")}</span></div>
     </div>
@@ -330,15 +330,19 @@ function etapaResumo(){
     `Ocupações: ${COC_OCUPACOES_FONTE}`,
     `Perícias: ${COC_PERICIAS_FONTE}`,
     `Dano e Corpo: ${COC_DANO_FONTE}`,
-    `Pontos de vida, Sanidade, Pontos de magia, Sorte e Movimento: ${COC_FONTE_QS}`
+    `Pontos de vida, Sanidade, Pontos de magia, Sorte e Movimento: ${COC_FONTE_DERIVADOS}`,
+    `Movimento base 8: ${COC_MOV_BASE.fonte}`,
+    `Pontos de interesse pessoal: ${COC_INTERESSE.fonte}`
   ];
   const naoVerificados = [
-    `Faixas de idade e reduções: ${COC_NV}.`,
+    `Idade: valores de FOR, CON, DES e APA a partir de 50 anos, testes de EDU e valores de 15 a 19 anos (ver as faixas acima).`,
     `Teste de melhoria de EDU: ${COC_MELHORIA_EDU.regra} (${COC_MELHORIA_EDU.fonte}).`,
-    `Pontos de interesse pessoal, INT × 2: ${COC_INTERESSE.fonte}.`,
-    `Movimento condicional por FOR e DES em relação ao TAM: fonte conflitante, não aplicado.`,
+    `Movimento condicional por FOR e DES em relação ao TAM: fontes em conflito, não aplicado.`,
+    `Sanidade máxima 99 − Mitos: ${COC_NV} (1 fonte).`,
     COC_DANO_ACIMA_NV + ".",
-    `Teto de ${COC_TETO_PERICIA.valor}% por perícia na criação: ${COC_TETO_PERICIA.fonte}.`
+    `Teto de ${COC_TETO_PERICIA.valor}% por perícia na criação: ${COC_TETO_PERICIA.fonte}.`,
+    `Ocupações, exceto Jornalista: fórmula, crédito e perícias de 1 fonte. ${COC_NV}.`,
+    `Bases de perícia de Arte e Ofício, Arqueologia, Psicanálise e Idioma (outro): 1 fonte. ${COC_NV}.`
   ];
   return `<h2>Resumo</h2>
     ${faixaAviso(r.erros, "erro")}${faixaAviso(r.avisos, "aviso")}

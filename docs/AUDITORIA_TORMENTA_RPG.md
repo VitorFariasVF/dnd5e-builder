@@ -84,3 +84,5 @@ Fluxo completo em 1100px e 360px, erros de console, rolagem lateral, alvos de 40
 2. Confirmar a licença do livro e registrar aqui.
 3. Adicionar testes de PV, BBA e resistências por classe e nível, contra os casos conferidos à mão.
 4. Só então decidir sobre cor de classe no PDF e sobre a exportação de VTT, se existir VTT verificado.
+
+> **Atualização (verificação independente):** o ano da edição d20 é conflitante (2003 ou 2005) e a base D&D 3.5 tem uma fonte só. Veja `VERIFICACAO_TORMENTA_RPG.md`.

@@ -6,7 +6,7 @@
    Diletante: EDU × 2 + APA × 2 = 140 + 120 = 260.
    Explorador: EDU × 2 + (APA × 2 = 260 | DES × 2 = 240 | FOR × 2 = 220).
    Detetive particular e Soldado: EDU × 2 + (DES × 2 = 240 | FOR × 2 = 220).
-   Interesse pessoal: INT × 2 = 130 (NÃO VERIFICADO em duas fontes). */
+   Interesse pessoal: INT × 2 = 130 (confirmado em 2 fontes: Roll20 Step Five e TRG). */
 const { criarAmbiente, estadoExemplo, criarRunner } = require('./ambiente');
 const { ctx, val, chamar } = criarAmbiente();
 const { teste, fim } = criarRunner('test_pericias.js');
@@ -43,6 +43,18 @@ teste('Sem alternativa escolhida, Explorador só soma a base (EDU × 2 = 140)', 
 teste('Interesse pessoal: INT × 2 = 130', () => {
   const c = chamar('caracteristicasFinais', inv("professor"));
   if(chamar('poolInteresse', c) !== 130) throw new Error(String(chamar('poolInteresse', c)));
+});
+teste('Interesse pessoal: a fórmula não aparece mais como NÃO VERIFICADO (2 fontes)', () => {
+  if(String(val('COC_INTERESSE.fonte')).includes("NÃO VERIFICADO")) throw new Error(val('COC_INTERESSE.fonte'));
+});
+teste('Bases de perícia: as de 1 fonte só (Arte, Arqueologia, Psicanálise, Idioma outro) têm nv, as demais não', () => {
+  const nv = val('COC_PERICIAS.filter(p => p.nv).map(p => p.id)');
+  const esperado = ["arqueologia", "arte", "idioma_outro", "psicanalise"];
+  if(JSON.stringify([...nv].sort()) !== JSON.stringify(esperado)) throw new Error(JSON.stringify(nv));
+});
+teste('Jornalista: fórmula EDU × 4 com crédito 9 a 30 (confirmado em 2 fontes)', () => {
+  const o = val('cocOcupacao("jornalista")');
+  if(JSON.stringify(o.formula.base) !== JSON.stringify([{ c: "edu", m: 4 }]) || o.credito[0] !== 9 || o.credito[1] !== 30) throw new Error(JSON.stringify(o));
 });
 
 /* Faixas de crédito conferidas com a tabela de ocupações (Roll20 Compendium, regras de 7ª ed.). */

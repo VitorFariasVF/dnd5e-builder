@@ -84,7 +84,7 @@ function validarIdade(estado){
     const fin = aplicarIdade(base, idade, inv.escolhasIdade, inv.melhoriasEdu).valores;
     COC_CARACTERISTICAS.forEach(c => { if(fin[c.id] < 1) vErro(erros, `${c.sigla} ficou abaixo de 1 após os ajustes de idade.`, "car-" + c.id); });
   }
-  avisos.push({ msg: "Regras de idade (faixas e reduções) NÃO VERIFICADAS em duas fontes. Confira no livro antes de usar.", campo: null });
+  avisos.push({ msg: "Regras de idade NÃO VERIFICADAS em parte: reduções de APA e de FOR/CON/DES a partir de 50 anos, testes de EDU a partir de 40 e valores de 15 a 19 anos. Confira no livro antes de usar.", campo: null });
   return fecharModo(estado.modo, erros, avisos);
 }
 
