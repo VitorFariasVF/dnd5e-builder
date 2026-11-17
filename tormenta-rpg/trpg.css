@@ -1,0 +1,38 @@
+/* Ajustes da Tormenta RPG sobre o padrão VF Tools (vf/*.css e core/*.css). Cores só por var(--...). */
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.botao-arquivo{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);cursor:pointer;font-weight:600;position:relative}
+.botao-arquivo:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+
+.trpg-lista{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.trpg-lista .card-nested{display:grid;gap:8px;padding:12px}
+
+.trpg-atributos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.trpg-atr{display:grid;gap:6px;min-width:0}
+.trpg-atr output{font-size:.9rem;color:var(--muted)}
+
+.trpg-resumo{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);gap:8px 16px;margin:12px 0}
+.trpg-resumo dt{font-weight:700;color:var(--muted)}
+.trpg-resumo dd{margin:0;min-width:0;overflow-wrap:anywhere}
+
+.stepper-dots{flex-wrap:wrap;justify-content:center;gap:6px}
+/* Bolinhas visuais continuam pequenas; a área de toque (pseudo-elemento do tema) passa a ter 40px nos dois lados */
+#app .stepper-dots button::after{inset:-10px}
+
+/* 360px: nada de rolagem lateral; campos ocupam a largura da coluna; alvos de toque de 40px */
+input,select,textarea{max-width:100%;min-height:40px}
+input,select,textarea,.card,.card-pending,.alert{box-sizing:border-box;min-width:0}
+.card{max-width:100%;overflow-wrap:anywhere}
+.actions{flex-wrap:wrap}
+.actions button,.stepper-dots button{min-width:40px;min-height:40px}
+
+@media (max-width:360px){
+  .trpg-atributos{grid-template-columns:minmax(0,1fr)}
+  .trpg-resumo{grid-template-columns:minmax(0,1fr)}
+  .trpg-resumo dt{margin-top:6px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
