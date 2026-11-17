@@ -139,7 +139,7 @@ Revisar regras contra o livro, testar exportações em um VTT real, reportar bug
 
 ## 📄 Licença
 
-Ainda sem arquivo `LICENSE`: a licença está pendente de definição. As regras dos sistemas pertencem aos seus respectivos autores e editoras; este projeto guarda só mecânica e descrições curtas próprias.
+O código deste projeto é distribuído sob a [licença MIT](LICENSE). Ela cobre só o código: as regras, nomes e marcas dos sistemas pertencem aos seus respectivos autores e editoras, e este projeto guarda só mecânica e descrições curtas próprias. Dados derivados de guias de fãs ou de repositórios de terceiros podem ter licença própria, ainda não confirmada (veja os documentos em `docs/`).
 
 ---
 
