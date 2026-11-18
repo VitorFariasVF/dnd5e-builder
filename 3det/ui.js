@@ -85,7 +85,7 @@ function tdtCorpoEtapa(n){
       <label for="nome">Nome do personagem</label><input id="nome" data-campo="nome" value="${v(p.nome)}" autocomplete="off">
       <label for="jogador">Jogador</label><input id="jogador" data-campo="jogador" value="${v(p.jogador)}" autocomplete="off">
       <label for="imagem-personagem">Imagem do personagem (PNG ou JPEG, até 5 MB)</label>
-      <div class="tdt-imagem" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${tdtImagemPrevia(p.imagem)}<input id="imagem-personagem" type="file" accept="image/png,image/jpeg" data-acao="imagem-arquivo">${tdtImagemValida(p.imagem) ? `<button type="button" class="small secondary" data-acao="imagem-remover">Remover imagem</button>` : ""}</div>
+      <div class="tdt-imagem" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${tdtImagemPrevia(p.imagem)}<input id="imagem-personagem" type="file" accept="image/png,image/jpeg" data-acao="imagem-arquivo">${tdtImagemValida(p.imagem) ? `<button type="button" class="small secondary" data-acao="imagem-remover">Remover imagem</button>` : ""}</div>${tdtAvisoImagemAtual() ? `<p class="alert warning">${v(tdtAvisoImagemAtual())}</p>` : ""}
       <label for="conceito">Conceito (uma frase)</label><input id="conceito" data-campo="conceito" value="${v(p.conceito)}" autocomplete="off">
       <label for="nivel-poder">Nível de poder</label><select id="nivel-poder" data-campo="nivelPoder">${tdtOpcoesNivel(p.nivelPoder)}</select>
       <label for="pontos-total">Pontos totais${preset ? " (fixos pelo nível de poder)" : " (pontos livres)"}</label>
@@ -637,6 +637,11 @@ function tdtImagemPrevia(src){
     ? `<img src="${src}" alt="Imagem do personagem" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--linha,#ccc)">`
     : `<span class="muted">Sem imagem</span>`;
 }
+/* Aviso do último envio fica guardado aqui e some só quando a imagem é trocada ou removida (para = imagem a que o aviso se refere). */
+let tdtAvisoImagem = { para: "", texto: "" };
+function tdtAvisoImagemAtual(){
+  return tdtAvisoImagem.para === state.personagem.imagem ? tdtAvisoImagem.texto : "";
+}
 /* PNG mantém a transparência (canal alfa) quando o resultado cabe no limite; senão cai para JPEG com fundo branco e avisa. */
 const TDT_IMAGEM_AVISO_JPEG = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
 function tdtEscolherFormatoImagem(tipoOriginal, gerarPng, gerarJpeg){
@@ -676,9 +681,9 @@ function tdtCarregarImagem(input){
     const dados = escolha.dados;
     if(!tdtImagemValida(dados)) return tdtAvisoNaTela("Não foi possível guardar esta imagem.");
     state.personagem.imagem = dados;
+    tdtAvisoImagem = { para: dados, texto: escolha.aviso };
     salvarEstado();
     tdtRender();
-    if(escolha.aviso) tdtAvisoNaTela(escolha.aviso, "aviso");
   };
   img.onerror = () => { URL.revokeObjectURL(url); tdtAvisoNaTela("Não foi possível ler esta imagem."); };
   img.src = url;
@@ -746,7 +751,7 @@ function tdtLigarEventos(){
     else if(acao === "veic-desv-remover"){ const v = state.personagem.veiculos[k]; if(v) v.desvantagens.splice(i, 1); salvarEstado(); tdtRender(); }
     else if(acao === "desv-remover"){ state.personagem.desvantagens.splice(i, 1); salvarEstado(); tdtRender(); }
     else if(acao === "limpar"){ if(window.confirm("Apagar a ficha atual e as fichas salvas deste navegador?")){ limparDadosSalvos(); substituirEstado(estadoPadrao()); tdtRender(); } }
-    else if(acao === "imagem-remover"){ state.personagem.imagem = ""; salvarEstado(); tdtRender(); }
+    else if(acao === "imagem-remover"){ state.personagem.imagem = ""; tdtAvisoImagem = { para: "", texto: "" }; salvarEstado(); tdtRender(); }
     else if(acao === "sugerir-atributos") tdtSugerirAtributosNaTela();
   });
   const aoMudar = ev => {

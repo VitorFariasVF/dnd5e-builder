@@ -109,4 +109,17 @@ teste("PDF sem imagem: sem retrato", () => {
   assert.ok(!html.includes('<header class="topo comRetrato">'));
 });
 
+teste("aviso da imagem fica na ficha: sobrevive a re-renderizações e some ao trocar ou remover a imagem", () => {
+  const r = avaliar(ctx, `(() => {
+    const AV = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
+    substituirEstado(estadoPadrao()); state.personagem.imagem = ${JSON.stringify(JPEG_OK)};
+    tdtAvisoImagem = { para: state.personagem.imagem, texto: AV };
+    const a = tdtCorpoEtapa(1).includes(AV), b = tdtCorpoEtapa(1).includes(AV);
+    state.personagem.imagem = ${JSON.stringify(PNG_OK)}; const trocou = !tdtCorpoEtapa(1).includes(AV);
+    state.personagem.imagem = ""; tdtAvisoImagem = { para: "", texto: "" };
+    return { sobreviveu: a && b, trocou, removeu: !tdtCorpoEtapa(1).includes(AV) };
+  })()`);
+  assert.deepStrictEqual(r, { sobreviveu: true, trocou: true, removeu: true });
+});
+
 sair("imagem do personagem");
