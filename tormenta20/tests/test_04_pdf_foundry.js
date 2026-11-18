@@ -24,7 +24,7 @@ t.check("PDF escapa o nome (sem <Teste> cru)", html.includes("Druida &lt;Teste&g
 t.check("PDF não tem 'undefined' nem 'NaN'", !/undefined|NaN/.test(html));
 t.check("PDF tem o PV calculado (47)", html.includes(">47<"));
 t.check("PDF mostra o aviso de não verificado", html.includes("NÃO VERIFICADO"));
-t.check("PDF tem 31 linhas de perícia", (html.match(/<tr class="(nao|)"><td>/g) || []).length === 31);
+t.check("PDF tem 29 linhas de perícia (p121)", (html.match(/<tr class="(nao|)"><td>/g) || []).length === 29);
 t.check("PDF tem o rodapé nas duas páginas", (html.match(/página \d de 2/g) || []).length === 2);
 t.check("PDF não carrega recurso externo (sem http)", !/https?:\/\//.test(html.replace(/https?:\/\/(www\.)?w3\.org[^"]*/g, "")));
 

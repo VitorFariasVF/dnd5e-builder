@@ -21,14 +21,14 @@ t.igual("cada magia tem duracao (texto ou null) e resistencia (texto ou null)",
 
 t.igual("ids das magias são únicos", new Set(magias.map(m => m.id)).size, magias.length);
 t.igual("círculo é inteiro entre 1 e 5", magias.filter(m => !Number.isInteger(m.circulo) || m.circulo < 1 || m.circulo > 5).map(m => m.nome), []);
-t.igual("tipo é arcana ou divina", magias.filter(m => m.tipo !== "arcana" && m.tipo !== "divina").map(m => m.nome), []);
+t.igual("tipo é arcana, divina ou universal (o livro marca 29 magias como universais)", magias.filter(m => !["arcana", "divina", "universal"].includes(m.tipo)).map(m => m.nome), []);
 t.igual("escola, execução e alcance preenchidos", magias.filter(m => !TEXTO(m.escola) || !TEXTO(m.execucao) || !TEXTO(m.alcance)).map(m => m.nome), []);
 t.igual("efeito é frase curta (até 160 caracteres, termina em pontuação)",
   magias.filter(m => m.efeito.length > 160 || !/[.!?]$/.test(m.efeito)).map(m => m.nome), []);
 t.igual("toda magia tem fonte", magias.filter(m => !TEXTO(m.fonte)).map(m => m.nome), []);
-t.igual("nenhuma magia verificada sem duas fontes (verificado true exige '2 fontes' na fonte)",
-  magias.filter(m => m.verificado === true && !/2 fontes/.test(m.fonte)).map(m => m.nome), []);
-t.igual("nenhuma magia está verificada: só uma fonte foi acessível", magias.filter(m => m.verificado).map(m => m.nome), []);
+t.igual("magia verificada cita a página do livro (verificado = conferido no livro oficial do usuário)",
+  magias.filter(m => m.verificado === true && !/Jogo do Ano, p\d+/.test(m.fonte)).map(m => m.nome), []);
+t.check("a maioria das magias foi conferida no livro", magias.filter(m => m.verificado).length >= 150, magias.filter(m => m.verificado).length);
 
 const porNome = nome => magias.find(m => m.nome === nome);
 const cura = porNome("Curar Ferimentos");
@@ -36,8 +36,8 @@ t.check("Curar Ferimentos: 1º círculo, divina, alcance Toque", cura && cura.ci
 const alarme = porNome("Alarme");
 t.check("Alarme: 1º círculo, arcana, esfera de 9 m", alarme && alarme.circulo === 1 && alarme.tipo === "arcana" && /9 m/.test(alarme.alvo), alarme);
 const armadura = porNome("Armadura Arcana");
-t.check("Armadura Arcana: duração NÃO informada (null) e fonte cita a lacuna", armadura && armadura.duracao === null && /NÃO VERIFICADO/.test(armadura.fonte), armadura);
-t.igual("catálogo completo cobre só o 1º círculo", [...new Set(magias.map(m => m.circulo))], [1]);
+t.check("Armadura Arcana: duração Cena, fonte do livro (p187)", armadura && armadura.duracao === "Cena" && /p187/.test(armadura.fonte), armadura);
+t.igual("catálogo cobre do 1º ao 5º círculo", [...new Set(magias.map(m => m.circulo))].sort(), [1, 2, 3, 4, 5]);
 
 const pendentes = ctx.T20_MAGIAS_PENDENTES;
 t.check("T20_MAGIAS_PENDENTES é uma lista", Array.isArray(pendentes) && pendentes.length > 0);
@@ -56,8 +56,8 @@ t.check("progressão de magias marcada como NÃO VERIFICADO sem tabela",
 /* ---- Raças completas ---- */
 const racas = ctx.T20_RACAS_COMPLETAS;
 const nomesEsperados = ["Humano", "Anão", "Elfo", "Goblin", "Hynne", "Minotauro", "Osteon", "Qareen", "Sereia/Tritão",
-  "Sílfide", "Suraggel (Aggelus)", "Suraggel (Sulfure)", "Trog", "Kliren", "Lefou", "Medusa", "Dahllan"];
-t.igual("17 raças do livro básico (lista do Núcleo)", Object.values(racas).map(r => r.nome).sort(), nomesEsperados.slice().sort());
+  "Sílfide", "Suraggel (Aggelus)", "Suraggel (Sulfure)", "Trog", "Kliren", "Lefou", "Medusa", "Dahllan", "Golem"];
+t.igual("17 raças do livro básico (18 entradas; Suraggel tem aggelus e sulfure)", Object.values(racas).map(r => r.nome).sort(), nomesEsperados.slice().sort());
 
 const TAMANHOS = [null, "Minúsculo", "Pequeno", "Médio", "Grande"];
 const racasEntradas = Object.entries(racas);
@@ -72,25 +72,26 @@ t.igual("habilidades: cada uma com nome e efeito",
   racasEntradas.filter(([k, r]) => !Array.isArray(r.habilidades) || r.habilidades.some(h => !TEXTO(h.nome) || !TEXTO(h.efeito))).map(([k]) => k), []);
 t.igual("verificado.habilidades só cita habilidades existentes",
   racasEntradas.filter(([k, r]) => r.verificado.habilidades.some(n => !r.habilidades.some(h => h.nome === n))).map(([k]) => k), []);
-t.igual("nenhum ajuste de atributo marcado como verificado (só uma fonte)",
-  racasEntradas.filter(([k, r]) => r.verificado.ajustes === true).map(([k]) => k), []);
+t.igual("ajuste marcado como verificado só quando o app aplica tudo (sem ajuste à escolha)",
+  racasEntradas.filter(([k, r]) => r.verificado.ajustes === true && r.ajusteEscolha).map(([k]) => k), []);
 
 const hynne = racas.hynne;
-t.check("Hynne: Pequeno, 6 m, confirmados em duas fontes", hynne.tamanho === "Pequeno" && hynne.deslocamento === 6 &&
+t.check("Hynne: Pequeno, 6 m, confirmados no livro", hynne.tamanho === "Pequeno" && hynne.deslocamento === 6 &&
   hynne.verificado.tamanho === true && hynne.verificado.deslocamento === true, hynne);
 t.check("Sílfide: Minúsculo, 9 m", racas.silfide.tamanho === "Minúsculo" && racas.silfide.deslocamento === 9, racas.silfide);
-t.check("Sereia/Tritão sem habilidades conferidas e com NÃO VERIFICADO",
-  racas.sereia_triton.habilidades.length === 0 && /NÃO VERIFICADO/.test(racas.sereia_triton.fonte), racas.sereia_triton);
-t.check("Anão: deslocamento 6 m aqui, conflito com 9 m de rules.js registrado (não verificado)",
-  racas.anao.deslocamento === 6 && racas.anao.verificado.deslocamento === false && /CONFLITO/.test(racas.anao.observacoes), racas.anao);
-t.check("Minotauro: ajustes FOR +2, CON +1, SAB -1 com verificado false (1 fonte)",
+t.check("Sereia/Tritão: 3 habilidades do livro, deslocamento 9 m, ajuste à escolha sem valor fixo",
+  racas.sereia_triton.habilidades.length === 3 && racas.sereia_triton.deslocamento === 9 && racas.sereia_triton.ajustes === null &&
+  /Tormenta20 Jogo do Ano/.test(racas.sereia_triton.fonte), racas.sereia_triton);
+t.check("Anão: deslocamento 6 m do livro (p026), verificado",
+  racas.anao.deslocamento === 6 && racas.anao.verificado.deslocamento === true && /p026/.test(racas.anao.fonte), racas.anao);
+t.check("Minotauro: ajustes FOR +2, CON +1, SAB -1 do livro (p024), verificado",
   racas.minotauro.ajustes.forca === 2 && racas.minotauro.ajustes.constituicao === 1 && racas.minotauro.ajustes.sabedoria === -1 &&
-  racas.minotauro.verificado.ajustes === false, racas.minotauro.ajustes);
+  racas.minotauro.verificado.ajustes === true, racas.minotauro.ajustes);
 
 /* Cadastro único: a tabela antiga de 5 raças saiu de rules.js; a ficha lê só T20_RACAS_COMPLETAS. */
 const regrasTexto = fs.readFileSync(path.join(RAIZ, "tormenta20/rules.js"), "utf8");
 t.check("rules.js não define mais T20_RACAS (um só cadastro de raças)", !/const T20_RACAS\b/.test(regrasTexto));
-t.igual("raças completas: 17 ids únicos", new Set(Object.keys(racas)).size, 17);
+t.igual("raças completas: 18 entradas (17 raças; Suraggel tem aggelus e sulfure)", new Set(Object.keys(racas)).size, 18);
 
 /* ---- Equipamento ---- */
 const listas = { T20_ARMAS: ctx.T20_ARMAS, T20_ARMADURAS: ctx.T20_ARMADURAS, T20_ITENS: ctx.T20_ITENS };

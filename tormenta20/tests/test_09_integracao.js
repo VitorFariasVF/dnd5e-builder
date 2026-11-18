@@ -37,29 +37,30 @@ montarPersonagem(ctx, { nome: "L15", nivel: 15, raca: "humano", classe: "ladino"
 d = ctx.t20Derivados(ctx.state.personagem);
 t.igual("Ladino nível 15: Ataque Furtivo 8d6", d.habilidades.find(h => h.nivel === 15 && h.nome === "Ataque Furtivo").frase, "8d6 de dano extra.");
 
-/* Bardo: PM +4 por nível (duas fontes); círculos 2º, 3º e 4º em 6, 10 e 14 (duas fontes); PV em conflito. */
+/* Bardo (p050): PM +4 por nível; círculos 2º, 3º e 4º em 6, 10 e 14 (p050); PV 12 + CON e 3 + CON por nível (p050).
+   Revisão 2026-11-17: o PV agora é calculado (antes era null, por conflito com a fonte [E]). */
 montarPersonagem(ctx, { nome: "B20", nivel: 20, raca: "humano", classe: "bardo", atributosBase: ZERO });
 d = ctx.t20Derivados(ctx.state.personagem);
 t.igual("Bardo nível 20, CAR 0: PM = 4 × 20 = 80", d.pm, 80);
-t.igual("Bardo nível 20: PV não calculado (conflito de fontes)", d.pv, null);
-t.igual("Bardo nível 20: círculo máximo 4º (duas fontes)", [d.circuloMaximo, d.circuloVerificado], [4, true]);
+t.igual("Bardo nível 20, CON 0: PV = 12 + 3 × 19 = 69 (p050)", d.pv, 69);
+t.igual("Bardo nível 20: círculo máximo 4º (livro, p050)", [d.circuloMaximo, d.circuloVerificado], [4, true]);
 const circulos = [5, 6, 10, 13, 14].map(n => { montarPersonagem(ctx, { nome: "B", nivel: n, raca: "humano", classe: "bardo", atributosBase: ZERO }); return ctx.t20Derivados(ctx.state.personagem).circuloMaximo; });
 t.igual("Bardo: círculo máximo nos níveis 5, 6, 10, 13 e 14", circulos, [1, 2, 3, 3, 4]);
-t.igual("Bardo nível 5: círculo da tabela de rules.js (não verificado)", (() => { montarPersonagem(ctx, { nome: "B", nivel: 5, raca: "humano", classe: "bardo", atributosBase: ZERO }); return ctx.t20Derivados(ctx.state.personagem).circuloVerificado; })(), false);
+t.igual("Bardo nível 5: círculo 1º confirmado no livro (p050)", (() => { montarPersonagem(ctx, { nome: "B", nivel: 5, raca: "humano", classe: "bardo", atributosBase: ZERO }); return ctx.t20Derivados(ctx.state.personagem).circuloVerificado; })(), true);
 
-/* Círculo com fontes em conflito (Arcanista e Clérigo) fica sem valor acima do 5º: não bloqueia magia. */
+/* Arcanista (p043): 2º no 5º, 3º no 9º, 4º no 13º, 5º no 17º. Antes: sem valor acima do 5º (conflito). */
 montarPersonagem(ctx, { nome: "Arc14", nivel: 14, raca: "humano", classe: "arcanista", atributoMagia: "inteligencia", atributosBase: ZERO });
 d = ctx.t20Derivados(ctx.state.personagem);
-t.igual("Arcanista nível 14: círculo não informado (fontes conflitam), sem selo de 2 fontes", [d.circuloMaximo, d.circuloVerificado], [null, false]);
-t.igual("Arcanista nível 14: magia de 4º círculo não bloqueia; etapa avisa círculo NÃO VERIFICADO", (() => {
+t.igual("Arcanista nível 14: círculo 4º confirmado no livro (p043)", [d.circuloMaximo, d.circuloVerificado], [4, true]);
+t.igual("Arcanista nível 14: magia de 4º círculo não bloqueia nem avisa (círculo confirmado)", (() => {
   montarPersonagem(ctx, { nome: "Arc14", nivel: 14, raca: "humano", classe: "arcanista", atributoMagia: "inteligencia", atributosBase: ZERO,
     magias: [{ nome: "Campo Antimagia", circulo: 4 }] });
   const p = ctx.state.personagem;
   return [erros(9, "estrito", p).some(e => /acima do disponível/.test(e.msg)), avisos(9, "estrito", p).some(a => /círculo máximo/i.test(a.msg))];
-})(), [false, true]);
+})(), [false, false]);
 montarPersonagem(ctx, { nome: "Dru14", nivel: 14, raca: "humano", classe: "druida", atributosBase: ZERO });
 d = ctx.t20Derivados(ctx.state.personagem);
-t.igual("Druida nível 14: círculo 4º da linha (1 fonte: valor com selo de não verificado)", [d.circuloMaximo, d.circuloVerificado], [4, false]);
+t.igual("Druida nível 14: círculo 4º da linha, confirmado no livro (p067)", [d.circuloMaximo, d.circuloVerificado], [4, true]);
 montarPersonagem(ctx, { nome: "Bar14", nivel: 14, raca: "humano", classe: "bardo", atributosBase: ZERO });
 t.igual("Bardo nível 14: círculo 4º com 2 fontes", [ctx.t20Derivados(ctx.state.personagem).circuloMaximo, ctx.t20Derivados(ctx.state.personagem).circuloVerificado], [4, true]);
 
@@ -69,7 +70,8 @@ d = ctx.t20Derivados(ctx.state.personagem);
 t.igual("PV digitado à mão substitui o PV não calculado", [d.pv, d.pvOrigem], [150, "manual"]);
 t.igual("PV digitado à mão: avisos de etapa 11 não pedem PV", avisos(11, "estrito", ctx.state.personagem).some(a => /PV de Bardo/.test(a.msg)), false);
 montarPersonagem(ctx, { nome: "B20v", nivel: 20, raca: "humano", classe: "bardo", atributosBase: ZERO, pvManual: null });
-t.igual("PV em branco: volta a não calculado e a etapa 11 pede o valor", [ctx.t20Derivados(ctx.state.personagem).pv, avisos(11, "estrito", ctx.state.personagem).some(a => /PV de Bardo/.test(a.msg))], [null, true]);
+/* Revisão 2026-11-17: PV do Bardo é calculado pelo livro; em branco volta ao cálculo (69) e a etapa 11 não pede PV. */
+t.igual("PV em branco: volta ao cálculo do livro (69) e a etapa 11 não pede o valor", [ctx.t20Derivados(ctx.state.personagem).pv, avisos(11, "estrito", ctx.state.personagem).some(a => /PV de Bardo/.test(a.msg))], [69, false]);
 
 /* Valores digitados à mão: inteiros dentro da faixa; zero de PV é recusado no estrito. */
 montarPersonagem(ctx, { nome: "Dig", nivel: 20, raca: "humano", classe: "bardo", atributosBase: ZERO, pvManual: 0 });
@@ -80,28 +82,29 @@ t.igual("PV 120, PM 0 e treino 8 à mão: aceitos no estrito", erros(11, "estrit
 /* Treino digitado à mão vale nas perícias treinadas. */
 montarPersonagem(ctx, { nome: "Tm", nivel: 3, raca: "humano", classe: "ladino", atributosBase: ZERO, treinoManual: 7, periciasEscolhidas: ["Atuação"] });
 d = ctx.t20Derivados(ctx.state.personagem);
-t.igual("treino à mão = 7 e perícia treinada usa o treino à mão", [d.bonusTreino, d.treinoOrigem, d.pericias.find(x => x.nome === "Atuação").bonus], [7, "manual", 7]);
+/* Revisão 2026-11-17: o treino à mão substitui a metade do nível; a treinada soma também +2 de treinamento (p120). */
+t.igual("treino à mão = 7 e perícia treinada usa 7 + 2 de treinamento (p120)", [d.bonusTreino, d.treinoOrigem, d.pericias.find(x => x.nome === "Atuação").bonus], [7, "manual", 9]);
 
-/* Habilidades sem efeito lido: Guerreiro nível 20 tem Ataque Extra (6º) e Campeão (20º) sem frase. */
+/* Habilidades: Guerreiro nível 20 tem Ataque Extra (6º) e Campeão (20º) com efeito do livro (p072). Antes: sem efeito lido. */
 montarPersonagem(ctx, { nome: "G20", nivel: 20, raca: "humano", classe: "guerreiro", atributosBase: ZERO });
-t.igual("Guerreiro nível 20: duas habilidades sem efeito lido", ctx.t20Derivados(ctx.state.personagem).habilidadesSemEfeito, 2);
+t.igual("Guerreiro nível 20: nenhuma habilidade sem efeito lido (livro, p072)", ctx.t20Derivados(ctx.state.personagem).habilidadesSemEfeito, 0);
 
 /* ---- 2. Raças completas: só o que a fonte informou ---- */
 const R = ctx.T20_RACAS_COMPLETAS;
-t.igual("17 raças na lista única", Object.keys(R).length, 17);
+t.igual("17 raças na lista única (18 entradas: Suraggel tem aggelus e sulfure)", Object.keys(R).length, 18);
 montarPersonagem(ctx, { nome: "Min", nivel: 1, raca: "minotauro", classe: "guerreiro", atributosBase: comAtr({ forca: 1 }) });
 t.igual("Minotauro: FOR 1 + 2 (ajuste informado) = 3", ctx.t20AtributosFinais(ctx.state.personagem).forca, 3);
-t.igual("Minotauro: deslocamento não informado = null", ctx.t20Derivados(ctx.state.personagem).deslocamento, null);
+t.igual("Minotauro: deslocamento padrão = 9 (p112)", ctx.t20Derivados(ctx.state.personagem).deslocamento, 9);
 montarPersonagem(ctx, { nome: "Ane", nivel: 1, raca: "anao", classe: "guerreiro", atributosBase: ZERO });
-t.igual("Anão: deslocamento 6 m da fonte (conflito com 9 m fica registrado nas observações)", [ctx.t20Derivados(ctx.state.personagem).deslocamento, /CONFLITO/.test(R.anao.observacoes)], [6, true]);
+t.igual("Anão: deslocamento 6 m do livro (p026)", [ctx.t20Derivados(ctx.state.personagem).deslocamento, /p026/.test(R.anao.fonte)], [6, true]);
 montarPersonagem(ctx, { nome: "Sir", nivel: 1, raca: "silfide", classe: "guerreiro", atributosBase: ZERO });
-t.igual("Sílfide: 9 m, sem ajuste (ajuste não informado: ninguém soma)", [ctx.t20Derivados(ctx.state.personagem).deslocamento, ctx.t20AtributosFinais(ctx.state.personagem).forca], [9, 0]);
+t.igual("Sílfide: 9 m e Força –2 do livro aplicada", [ctx.t20Derivados(ctx.state.personagem).deslocamento, ctx.t20AtributosFinais(ctx.state.personagem).forca], [9, -2]);
 montarPersonagem(ctx, { nome: "Ser", nivel: 1, raca: "sereia_triton", classe: "guerreiro", atributosBase: ZERO });
-t.igual("Sereia/Tritão: nada aplicado (deslocamento null, sem habilidades)", [ctx.t20Derivados(ctx.state.personagem).deslocamento, ctx.t20RacaInfo("sereia_triton").habilidades.length], [null, 0]);
+t.igual("Sereia/Tritão: deslocamento 9 m e 3 habilidades do livro; ajuste à escolha não aplicado", [ctx.t20Derivados(ctx.state.personagem).deslocamento, ctx.t20RacaInfo("sereia_triton").habilidades.length], [9, 3]);
 montarPersonagem(ctx, { nome: "Hum", nivel: 1, raca: "humano", classe: "guerreiro", atributosBase: ZERO });
-t.igual("Humano: 2 perícias extras (Versátil) e nenhum deslocamento inventado", [ctx.t20PericiasDisponiveis(ctx.state.personagem, ctx.t20AtributosFinais(ctx.state.personagem)).extraRacial, ctx.t20Derivados(ctx.state.personagem).deslocamento], [2, null]);
+t.igual("Humano: 2 perícias extras (Versátil) e deslocamento padrão 9 m", [ctx.t20PericiasDisponiveis(ctx.state.personagem, ctx.t20AtributosFinais(ctx.state.personagem)).extraRacial, ctx.t20Derivados(ctx.state.personagem).deslocamento], [2, 9]);
 const avHum = avisos(3, "estrito", ctx.state.personagem);
-t.check("etapa raça: Humano gera aviso de NÃO VERIFICADO (deslocamento e tamanho), nunca erro", avHum.some(a => /deslocamento/.test(a.msg)) && erros(3, "estrito", ctx.state.personagem).length === 0);
+t.check("etapa raça: Humano gera aviso do ajuste à escolha (não aplicado pelo app), nunca erro", avHum.some(a => /ajustes/.test(a.msg)) && !avHum.some(a => /deslocamento/.test(a.msg)) && erros(3, "estrito", ctx.state.personagem).length === 0);
 
 /* ---- 3. Catálogo de poderes: pré-requisitos mecânicos (estrito = erro, livre = aviso) ---- */
 function poderes(classe, nivel, lista, extra){
@@ -147,11 +150,14 @@ t.igual("gerais (Esquiva) aparecem para qualquer classe", ctx.t20PoderesDisponiv
 
 /* ---- 4. Catálogo de magias por círculo ---- */
 t.igual("círculo 1 tem Curar Ferimentos e não tem Bola de Fogo", [ctx.t20MagiasDoCirculo(1).some(m => m.nome === "Curar Ferimentos"), ctx.t20MagiasDoCirculo(1).some(m => m.nome === "Bola de Fogo")], [true, false]);
-t.igual("círculo 2 traz Bola de Fogo como pendente", ctx.t20MagiasDoCirculo(2).find(m => m.nome === "Bola de Fogo").pendente, true);
+t.igual("círculo 2 traz Bola de Fogo do catálogo do livro (não pendente)", ctx.t20MagiasDoCirculo(2).find(m => m.nome === "Bola de Fogo").pendente, false);
+t.igual("círculo 4 ainda traz Sopro de Dragão como pendente (só o índice)", ctx.t20MagiasDoCirculo(4).find(m => m.nome === "Sopro de Dragão").pendente, true);
 let mg = montarPersonagem(ctx, { nome: "M", nivel: 1, raca: "anao", classe: "clerigo", atributosBase: comAtr({ sabedoria: 3, destreza: 2, constituicao: 2, carisma: 2, inteligencia: 1 }),
   magias: [{ nome: "Curar Ferimentos", circulo: 1 }, { nome: "Bola de Fogo", circulo: 1 }, { nome: "Bênção", circulo: 1 }] });
 t.igual("magia de 2º círculo posta no 1º: erro de círculo no estrito", erros(9, "estrito", mg.personagem).some(e => /Bola de Fogo é de 2º/.test(e.msg)), true);
-t.igual("magia do catálogo pendente: aviso de execução/alcance NÃO VERIFICADOS", avisos(9, "estrito", mg.personagem).some(a => /NÃO VERIFICADOS/.test(a.msg)), true);
+const mgPend = montarPersonagem(ctx, { nome: "M", nivel: 1, raca: "anao", classe: "clerigo", atributosBase: comAtr({ sabedoria: 3, destreza: 2, constituicao: 2, carisma: 2, inteligencia: 1 }),
+  magias: [{ nome: "Curar Ferimentos", circulo: 1 }, { nome: "Sopro de Dragão", circulo: 4 }, { nome: "Bênção", circulo: 1 }] });
+t.igual("magia do catálogo pendente: aviso de execução/alcance NÃO VERIFICADOS", avisos(9, "estrito", mgPend.personagem).some(a => /NÃO VERIFICADOS/.test(a.msg)), true);
 mg = montarPersonagem(ctx, { nome: "M", nivel: 1, raca: "anao", classe: "clerigo", atributosBase: comAtr({ sabedoria: 3 }),
   magias: [{ nome: "Curar Ferimentos", circulo: 1 }, { nome: "Sopro Solar Inventado", circulo: 1, livre: true }, { nome: "Bênção", circulo: 1 }] });
 t.igual("magia digitada fora do catálogo: aviso, não erro", [erros(9, "estrito", mg.personagem).length, avisos(9, "estrito", mg.personagem).some(a => /fora do catálogo/.test(a.msg))], [0, true]);
@@ -172,7 +178,7 @@ t.igual("esquema 2: PV à mão, poderes do catálogo e digitado sobrevivem à id
 
 const antigo = JSON.stringify({ sistema: "tormenta20", versaoEsquema: 1, modo: "estrito", etapa: 8,
   personagem: { nome: "Velho", nivel: 3, raca: "elfo", classe: "ladino", poderes: [{ nome: "Devoto Fiel", tipo: "classe", nivel: 1, nota: "" }],
-    magias: [{ nome: "Curar Ferimentos", circulo: 1 }, { nome: "Sono", circulo: 1 }] } });
+    magias: [{ nome: "Curar Ferimentos", circulo: 1 }, { nome: "Sopro Solar Inventado", circulo: 1 }] } });
 const r1 = ctx.t20ImportarBackup(antigo);
 t.igual("esquema 1 ainda importa", r1.ok, true);
 t.igual("esquema 1: poder digitado vira livre, sem id", [ctx.state.personagem.poderes[0].livre, ctx.state.personagem.poderes[0].id], [true, null]);
@@ -190,11 +196,12 @@ t.check("PDF nível 20: seção de progressão do 6º ao 20º", html.includes("P
 t.check("PDF nível 20: habilidade do 20º nível com efeito", html.includes("A Pessoa Certa para o Trabalho"));
 t.check("PDF nível 20: poder do catálogo com tipo", html.includes("Oportunismo") && html.includes("Poder de classe"));
 t.check("PDF nível 20: sem undefined nem NaN", !/undefined|NaN/.test(html));
-t.check("PDF nível 20: aviso de guias de fãs preservado", html.includes("Regras de guias de fãs, não conferidas com o livro oficial"));
+t.check("PDF nível 20: aviso de dados em conferência preservado", html.includes("Dados do Livro Básico, ainda em conferência"));
 
 montarPersonagem(ctx, { nome: "PDFb", nivel: 20, raca: "humano", classe: "bardo", atributosBase: ZERO });
 html = ctx.t20GerarHtmlFicha(ctx.state);
-t.check("PDF Bardo nível 20 sem PV: vital mostra — e 'não verificado'", /<strong>—<\/strong><small>não verificado<\/small>/.test(html));
+/* Revisão 2026-11-17: PV do Bardo vem do livro (p050): 69 com CON 0. Antes o quadro mostrava "não verificado". */
+t.check("PDF Bardo nível 20 sem PV à mão: vital mostra 69 (livro, p050)", html.includes("<strong>69</strong>"));
 ctx.state.personagem.pvManual = 150;
 html = ctx.t20GerarHtmlFicha(ctx.state);
 t.check("PDF Bardo nível 20 com PV à mão: mostra 150 e 'digitado à mão'", html.includes("<strong>150</strong>") && html.includes("digitado à mão"));
@@ -233,8 +240,9 @@ montarPersonagem(ctxUi, cenarios[1]);
 ctxUi.state.modo = "estrito";
 ctxUi.state.etapa = 11;
 const telaBardo = ctxUi.t20HtmlFicha();
-t.check("tela de derivados do Bardo 20: PV marcado NÃO VERIFICADO e PM sem selo de 2 fontes", /não verificado/.test(telaBardo) && telaBardo.includes("Níveis 6 a 20"));
-t.check("tela de magias: magia do 2º círculo aparece como pendente (só o nome conferido)", (() => { ctxUi.state.etapa = 9; return ctxUi.t20HtmlFicha().includes("só o nome conferido"); })());
+t.check("tela de derivados do Bardo 20: PV calculado pelo livro (p050) aparece, e tabela do 6º ao 20º",
+  telaBardo.includes("Níveis 6 a 20") && telaBardo.includes(String(ctx.t20Derivados(ctx.state.personagem).pv)) && ctx.t20Derivados(ctx.state.personagem).pv === 89);
+t.check("tela de magias: magia do 2º círculo do livro aparece completa (sem o aviso de só o nome conferido)", (() => { ctxUi.state.etapa = 9; const h = ctxUi.t20HtmlFicha(); return h.includes("Bola de Fogo") && !h.includes("Bola de Fogo (só o nome conferido"); })());
 ctxUi.state.etapa = 8;
 t.check("tela de poderes: poder livre mostra o campo de nome", (() => { montarPersonagem(ctxUi, cenarios[0]); ctxUi.state.etapa = 8; return ctxUi.t20HtmlFicha().includes('id="poder-nome-1"'); })());
 

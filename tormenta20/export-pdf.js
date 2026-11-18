@@ -45,7 +45,7 @@ function t20PdfProgressao(d, nivel){
     return `<tr><td class="num">${r.nivel}</td><td class="num">${r.pv === null ? "<span class=\"nv\">—</span>" : t20Esc(t20FormatarBonus(r.pv))}</td><td class="num">${r.pm === null ? "<span class=\"nv\">—</span>" : t20Esc(t20FormatarBonus(r.pm))}</td><td class="num">${r.treino === null ? "<span class=\"nv\">—</span>" : t20Esc(t20FormatarBonus(r.treino))}</td><td class="num">${r.circulo === null ? "<span class=\"nv\">—</span>" : t20Esc(r.circulo)}</td><td>${habs || "<span class=\"suave\">—</span>"}</td></tr>`;
   }).join("");
   return `<table class="niveis"><thead><tr><th>Nível</th><th class="num">PV +</th><th class="num">PM +</th><th class="num">Treino</th><th class="num">Círculo</th><th>Habilidades de classe</th></tr></thead><tbody>${linhas}</tbody></table>
-    <p class="pequeno">Valores de guias de fãs. Onde não há 2 fontes, o dado é NÃO VERIFICADO.</p>`;
+    <p class="pequeno">Valores do Livro Básico (Jogo do Ano), em conferência. O que não foi lido com segurança é NÃO VERIFICADO.</p>`;
 }
 
 function t20GerarHtmlFicha(st){
@@ -61,7 +61,7 @@ function t20GerarHtmlFicha(st){
   if(cls.nome && d.pv === null) notas.push(`PV de ${cls.nome}: não calculado (fontes divergem); preencher à mão.`);
   else if(cls.nome && d.pvOrigem !== "manual" && !d.pvVerificado) notas.push(`PV de ${cls.nome}: 1 fonte (NÃO VERIFICADO).`);
   if(cls.nome && d.pm === null) notas.push(`PM de ${cls.nome}: não calculado; preencher à mão.`);
-  if(p.nivel > T20_NIVEL_BASE) notas.push(`Níveis 6 a ${p.nivel}: guias de fãs; só o marcado com 2 fontes está confirmado.`);
+  if(p.nivel > T20_NIVEL_BASE) notas.push(`Níveis 6 a ${p.nivel}: dados do Livro Básico, em conferência; confira no seu exemplar.`);
   if(raca) notas.push(`Raça ${raca.nome}: dados de 1 fonte, exceto os marcados como confirmados.`);
   notas.push("Bônus de perícia não treinada e resistências: NÃO VERIFICADO.");
   notas.push("Dinheiro inicial, poderes por nível e armas e armaduras: NÃO VERIFICADO.");
@@ -123,7 +123,7 @@ function t20GerarHtmlFicha(st){
 
   const pers = p.personalidade || {};
   const cabecalho = `<header class="topo"><div class="brasao" style="--cor:${cor}"><span>${t20Esc((cls.nome || "T").charAt(0))}</span></div><div class="titulo"><h1>${t20Esc(p.nome || "Personagem sem nome")}</h1><p class="linha-classe" style="--cor:${cor}">${subtitulo}</p><p class="meta">Jogador: ${t20Esc(p.jogador || "—")} · Modo: ${t20Esc(s.modo || "—")} · ${t20Esc(T20_EDICAO)}</p></div><div class="selo" style="--cor:${cor}">Tormenta20<strong>${s.modo === "estrito" ? "Ficha em modo estrito" : "Ficha em modo livre"}</strong></div></header>`;
-  const rodape = n => `<div class="rodape">Regras de guias de fãs, não conferidas com o livro oficial · Criador de fichas RPG · VF Tools · Tormenta20 · página ${n} de 2</div>`;
+  const rodape = n => `<div class="rodape">Dados do Livro Básico, ainda em conferência · Criador de fichas RPG · VF Tools · Tormenta20 · página ${n} de 2</div>`;
 
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t20Esc(p.nome || "Ficha")} — Ficha Tormenta20</title><style>${T20_PDF_CSS}</style></head><body>
   <div class="barra"><span>Pré-visualização da ficha (A4, 2 páginas)</span><button type="button" onclick="window.print()">Imprimir / Salvar PDF</button></div>

@@ -426,7 +426,7 @@ function t20PassoDerivados(){
   const niveis = p.nivel > T20_NIVEL_BASE
     ? `<h3>Níveis 6 a ${t20Esc(p.nivel)}</h3>
       <div class="table-wrap"><table class="table-like"><thead><tr><th scope="col">Nível</th><th scope="col" class="num">PV +</th><th scope="col" class="num">PM +</th><th scope="col" class="num">Treino</th><th scope="col" class="num">Círculo</th><th scope="col">Poder de classe</th><th scope="col">Habilidades</th></tr></thead><tbody>${d.niveis.map(r => `<tr><td>${r.nivel}</td><td class="num">${valorOuNao(r.pv)}</td><td class="num">${valorOuNao(r.pm)}</td><td class="num">${t20Esc(t20FormatarBonus(r.treino))}</td><td class="num">${valorOuNao(r.circulo)}</td><td>${r.poderDeClasse ? "sim" : "não"}</td><td>${r.habilidades.length ? r.habilidades.map(h => `<div><b>${t20Esc(h.nome)}</b>: ${h.frase ? t20Esc(h.frase) : `<span class="muted">efeito NÃO VERIFICADO</span>`}</div>`).join("") : `<span class="muted">—</span>`}</td></tr>`).join("")}</tbody></table></div>
-      <p class="hint">Os valores vêm de guias de fãs. O selo de 2 fontes aparece só onde há confirmação; o resto é NÃO VERIFICADO.</p>`
+      <p class="hint">Os valores vêm do Livro Básico (Jogo do Ano), ainda em conferência. O selo de confirmação aparece só onde o dado foi conferido; o resto é NÃO VERIFICADO.</p>`
     : `<p class="hint">Níveis 1 a ${T20_NIVEL_BASE}: habilidades de classe não cadastradas neste app (NÃO VERIFICADO).</p>`;
   return `${grade}
   ${circulo}

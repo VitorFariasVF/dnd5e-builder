@@ -54,13 +54,15 @@ t.igual("toda raça tem fonte", semFonteRaca, []);
 const semFonteClasse = Object.entries(ctx.T20_CLASSES).filter(([k, c]) => !c.fontePv || !c.fontePericias || !c.fonteMagias).map(([k]) => k);
 t.igual("toda classe tem fonte de PV, perícias e magias", semFonteClasse, []);
 t.igual("14 classes do livro básico", ctx.T20_CLASSE_IDS.length, 14);
-t.igual("31 perícias", ctx.T20_PERICIAS.length, 31);
+/* Revisão 2026-11-17 (p121, índice de perícias do livro): 29 perícias. Artes não existe e Medicina é poder. Antes: 31. */
+t.igual("29 perícias (livro, p121)", ctx.T20_PERICIAS.length, 29);
 t.igual("níveis: 14 classes com linha por nível 6 a 20", Object.keys(ctx.T20_NIVEIS.classes).length, 14);
 t.check("catálogo de poderes carregado (objeto por id)", Object.keys(ctx.T20_PODERES).length > 100);
 t.igual("35 origens", ctx.T20_ORIGENS.length, 35);
 t.igual("6 atributos", ctx.T20_ATRIBUTOS.length, 6);
-t.check("toda fonte de origem informa que benefícios específicos não foram verificados",
-  /NÃO VERIFICADO/.test(ctx.T20_ORIGEM_FONTE));
+/* Revisão 2026-11-17: os benefícios das 35 origens vêm da Tabela 1-19 (p093) e estão em T20_ORIGENS_BENEFICIOS. */
+t.igual("35 origens com benefícios cadastrados (p093)", Object.keys(ctx.T20_ORIGENS_BENEFICIOS).length, 35);
+t.check("fonte das origens cita o livro (p093)", /p093/.test(ctx.T20_ORIGEM_FONTE));
 t.igual("pontos de compra: total 10", ctx.T20_PONTOS_COMPRA.total, 10);
 t.igual("níveis suportados: 1 a 20 (tabelas até o 5º; T20_NIVEIS do 6º)", [ctx.T20_NIVEL_MIN, ctx.T20_NIVEL_MAX, ctx.T20_NIVEL_BASE], [1, 20, 5]);
 const cores = Object.values(ctx.T20_CLASSES).map(c => c.cor);

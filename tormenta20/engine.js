@@ -67,23 +67,25 @@ function t20PMNivel(classeId, k){
   return l ? l.pm : null;
 }
 
-/* PV total no nível n: PV inicial + CON no 1º nível; cada nível soma o PV do nível + CON (CON conta em todos os níveis).
-   Retorna null se a classe não tem PV confirmado para algum nível até n. */
+/* PV total no nível n (p041 e p112): PV inicial + CON no 1º nível; cada nível seguinte soma o PV do nível + CON,
+   com mínimo de 1 PV ganho ao subir de nível (p041). Retorna null se a classe não tem PV para algum nível até n. */
 function t20PVTotal(classe, nivel, con){
   const c = T20_CLASSES[classe];
   if(!c || c.pvInicial === null) return null;
   const n = Number(nivel) || 1;
-  let total = c.pvInicial + (Number(con) || 0) * n;
+  const conNum = Number(con) || 0;
+  let total = c.pvInicial + conNum;
   for(let k = 2; k <= n; k++){
     const pv = t20PVNivel(classe, k);
     if(pv === null) return null;
-    total += pv;
+    total += Math.max(1, pv + conNum);
   }
   return total;
 }
-/* PM total: soma o PM de cada nível até n. Conjuradores somam o modificador do atributo-chave (uma vez, no total).
-   Retorna null se algum nível não tem PM informado. */
-function t20PMTotal(classe, nivel, valorAtributoMagia){
+/* PM total: soma o PM de cada nível até n. Conjuradores somam o modificador do atributo-chave (uma vez, no total);
+   extraAtributoNivel1 é o atributo que soma ao PM só no 1º nível (Paladino, p082: Carisma). Retorna null se algum
+   nível não tem PM informado. */
+function t20PMTotal(classe, nivel, valorAtributoMagia, extraAtributoNivel1){
   const c = T20_CLASSES[classe];
   if(!c) return null;
   const n = Number(nivel) || 1;
@@ -93,7 +95,9 @@ function t20PMTotal(classe, nivel, valorAtributoMagia){
     if(pm === null) return null;
     total += pm;
   }
-  return total + (c.conjurador ? Number(valorAtributoMagia) || 0 : 0);
+  total += c.conjurador ? Number(valorAtributoMagia) || 0 : 0;
+  total += c.pmAtributoNivel1 ? Number(extraAtributoNivel1) || 0 : 0;
+  return total;
 }
 /* Selos. PV e PM até o nível base seguem a flag de rules.js (verificadoPv, que cobre PV e PM);
    do nível 6 em diante, cada linha de T20_NIVEIS precisa estar marcada como verificada. */
@@ -125,8 +129,15 @@ function t20TreinoNivel(classe, nivel){
   }
   return t20Metade(n);
 }
-/* O campo treino de T20_NIVEIS é uma regra de 1 fonte ([R]); só fica verificado se o próprio dado disser isso. */
+/* Regra de metade do nível e de treino: confirmadas no livro (p041, p120). O campo verificado de T20_NIVEIS manda. */
 function t20TreinoVerificado(){ return T20_NIVEIS.treino.verificado === true; }
+/* Bônus de treinamento (p120): só nas perícias treinadas, +2 do 1º ao 6º nível, +4 do 7º ao 14º, +6 do 15º em diante. */
+function t20BonusTreinamento(nivel){
+  const n = Number(nivel) || 1;
+  let b = 0;
+  for(const faixa of T20_BONUS_TREINAMENTO){ if(n >= faixa.nivel) b = faixa.bonus; }
+  return b;
+}
 
 function t20Defesa(destreza, def){
   const d = def || {};
@@ -136,10 +147,13 @@ function t20Deslocamento(racaId){
   const r = t20RacaInfo(racaId);
   return r ? r.deslocamento : null;
 }
-/* Círculo máximo até o 5º nível (tabela de rules.js; NÃO VERIFICADO). */
-function t20CirculoMaximo(nivel){
+/* Círculo máximo de uma classe no nível n pela tabela de rules.js (T20_CIRCULOS, por classe; p043, p050, p063, p067).
+   Sem tabela da classe: 0. Só serve até o nível base; depois, a linha de T20_NIVEIS manda. */
+function t20CirculoMaximo(nivel, classe){
+  const tabela = classe && T20_CIRCULOS[classe];
+  if(!tabela) return 0;
   let c = 0;
-  for(const linha of T20_CIRCULOS){ if((Number(nivel) || 1) >= linha.nivel) c = linha.circulo; }
+  for(const [nivelMin, circulo] of tabela){ if((Number(nivel) || 1) >= nivelMin) c = circulo; }
   return c;
 }
 /* Círculo máximo da classe: até o nível base, a tabela de rules.js; depois, o círculo da linha da classe.
@@ -148,13 +162,15 @@ function t20CirculoMaximoClasse(classe, nivel){
   const n = Number(nivel) || 1;
   const c = T20_CLASSES[classe];
   if(!c || !c.conjurador) return 0;
-  if(n <= T20_NIVEL_BASE) return t20CirculoMaximo(n);
+  if(n <= T20_NIVEL_BASE) return t20CirculoMaximo(n, classe);
   const l = t20LinhaNivel(classe, n);
   return l ? l.circulo : null;
 }
+/* Até o nível base, o círculo vem da tabela da classe (verificada no livro quando a classe tem tabela).
+   Do 6º em diante, vale o selo da linha de T20_NIVEIS. */
 function t20CirculoVerificado(classe, nivel){
   const n = Number(nivel) || 1;
-  if(n <= T20_NIVEL_BASE) return false;   // tabela de rules.js: NÃO VERIFICADO
+  if(n <= T20_NIVEL_BASE) return !!(T20_CIRCULOS[classe] && T20_CLASSES[classe] && T20_CLASSES[classe].conjurador);
   const l = t20LinhaNivel(classe, n);
   return !!(l && l.verificado.circulo);
 }
@@ -180,17 +196,18 @@ function t20HabilidadesClasse(classe, nivel){
 /* Perícias ---------------------------------------------------------- */
 function t20Pericia(nome){ return T20_PERICIAS.find(p => p.nome === nome) || null; }
 
-/* Quantas perícias o personagem treina, por fonte:
+/* Quantas perícias o personagem treina, por fonte (p038, p120):
    - fixas da classe (automáticas);
    - grupo fixo (uma opção entre as da lista);
-   - livres: perícias por nível × nível + Inteligência positiva (uma vez) + extras da raça (Versátil). */
+   - livres: as perícias da Tabela 1-3 ("mais N", ganhas só no 1º nível, p038 e p041) + Inteligência positiva
+     (p023 e p120: um número de perícias treinadas igual à INT) + extras da raça (Versátil). Subir de nível não dá perícia. */
 function t20PericiasDisponiveis(p, atributosFinais){
   const c = T20_CLASSES[p.classe];
   if(!c) return null;
   const grupo = c.grupoFixo ? c.grupoFixo.qtd : 0;
   const intPos = Math.max(0, Number(atributosFinais.inteligencia) || 0);
   const racial = (t20RacaInfo(p.raca) || {}).periciasExtras || 0;
-  const livres = c.periciasPorNivel * (Number(p.nivel) || 1) + intPos + racial;
+  const livres = c.periciasPorNivel + intPos + racial;
   return { fixas: c.fixas.slice(), grupoFixoQtd: grupo, livres, extraRacial: racial, intPos };
 }
 
@@ -283,16 +300,19 @@ function t20Derivados(p){
   const pmManual = t20NumeroOuNulo(p.pmManual);
   const treinoManual = t20NumeroOuNulo(p.treinoManual);
   const pvCalc = c ? t20PVTotal(p.classe, nivel, atr.constituicao) : null;
-  const pmCalc = c ? t20PMTotal(p.classe, nivel, valorMagia) : null;
+  const extraPMNivel1 = c && c.pmAtributoNivel1 ? atr[c.pmAtributoNivel1] : 0;
+  const pmCalc = c ? t20PMTotal(p.classe, nivel, valorMagia, extraPMNivel1) : null;
   const treinoCalc = t20TreinoNivel(p.classe, nivel);
   const treino = treinoManual !== null ? treinoManual : treinoCalc;
+  const bonusTreinamento = t20BonusTreinamento(nivel);
 
+  /* Valor de perícia (p120) = metade do nível (treino) + atributo-chave + bônus de treinamento, se treinada. */
   const pericias = T20_PERICIAS.map(per => {
     const treinada = treinadas.has(per.nome);
     const base = atr[per.attr] || 0;
     return {
       nome: per.nome, attr: per.attr, treinada,
-      bonus: base + (treinada ? treino : 0),
+      bonus: base + treino + (treinada ? bonusTreinamento : 0),
       soTreinado: !!per.soTreinado,
       penalidadeArmadura: !!per.penalidadeArmadura
     };
@@ -310,6 +330,7 @@ function t20Derivados(p){
     defesa: t20Defesa(atr.destreza, p.defesa),
     deslocamento: t20Deslocamento(p.raca),
     bonusTreino: treino,
+    bonusTreinamento,
     treinoOrigem: treinoManual !== null ? "manual" : "calculado",
     treinoVerificado: t20TreinoVerificado(),
     atributoMagia: attrMagia,

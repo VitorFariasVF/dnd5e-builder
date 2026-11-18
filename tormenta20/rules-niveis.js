@@ -7,188 +7,229 @@
                                     notas, niveis: [ <linha por nível 6..20> ] } } }
    Linha de nível:
      nivel       número do nível (6 a 20)
-     pv, pm      PV e PM ganhos NESTE nível (null em pv = conflito entre fontes, ver notas)
-     treino      bônus de treinamento neste nível (metade do nível, arredondada para baixo)
-     circulo     maior círculo de magia disponível neste nível (null = não informado na fonte)
+     pv, pm      PV e PM ganhos NESTE nível (+ CON no caso de PV)
+     treino      metade do nível, arredondada para baixo (bônus de perícia em todas, p041 e p120)
+     circulo     maior círculo de magia disponível neste nível (null = classe sem magia de classe)
      magiaNova   true se o nível dá uma magia nova (null não aplicável; false = não conjurador)
      poderDeClasse  true se o nível dá uma escolha de poder de classe
-     habilidades [{nome, frase}] habilidades de classe do nível; frase null = efeito não lido na fonte
-     poderes     ids (em T20_PODERES) cujo acesso começa neste nível
-     verificado  {pv, pm, circulo, magia}: true só com duas fontes independentes
+     habilidades [{nome, frase}] habilidades de classe do nível; frase null = efeito não lido no livro
+     poderes     ids (em T20_PODERES) cujo pré-requisito de nível aparece no livro neste nível
+     verificado  {pv, pm, circulo, magia}: true quando o livro confirma o dado
 
-   Fontes (fãs e guias; o livro e a ficha oficial da Jambô não puderam ser abertos):
-     [E] exegetadearton.com.br, página de cada classe (progressão e poderes com nível)
-     [R] Rotina de Mestre, guia do Ladino e guia do Bardo (conferem partes de [E])
-   Todo dado vem de [E] salvo quando indicado. PV/PM ganhos conferem com T20_CLASSES de rules.js (teste 07).
-   Para o que não estava nas fontes, a linha fica sem habilidade e a lacuna vai em docs/TRABALHO_T20_NIVEIS_PODERES.md.
-   Mecânica somente: frases curtas em palavras próprias, sem texto de livro. */
+   Fonte primária desta revisão (2026-11-17): livro-base do usuário, Tormenta20 Jogo do Ano. Cita-se a página do PDF (pNNN).
+   Tabelas de progressão: p043 (Arcanista), p047 (Bárbaro), p050 (Bardo), p053 (Bucaneiro), p056 (Caçador),
+   p059 (Cavaleiro), p063 (Clérigo), p067 (Druida), p071 (Guerreiro), p074 (Inventor), p079 (Ladino), p082 (Lutador),
+   p085 (Nobre), p088 (Paladino). Pré-requisitos de poder: texto de cada classe (ex.: "Pré-requisitos: ... 6º nível").
+   Poderes que o livro não traz com nível foram removidos das listas: continuam no catálogo de rules-poderes.js,
+   para o dono desse arquivo decidir. Mecânica somente: frases curtas em palavras próprias, sem texto de livro. */
 
-const T20_NIVEIS_FONTE_E = "[E] exegetadearton.com.br, página da classe (NÃO VERIFICADO em segunda fonte)";
+const T20_NIVEIS_FONTE = "Tormenta20 Jogo do Ano, livro do usuário (página da classe e tabela de progressão)";
 
 /* Especificação por classe. Os níveis são montados por t20NiveisMontar (abaixo). */
 const T20_NIVEIS_ESPEC = {
   arcanista: {
-    nome: "Arcanista", fonte: T20_NIVEIS_FONTE_E, pv: 2, pm: 6, poderDeClasseDe: 2, magia: "todos",
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
-    habs: { 20: [{ nome: "Alta Arcana", frase: "Custo em PM das magias arcanas cai pela metade." }] },
-    poderes: { 6: ["heranca-aprimorada"], 8: ["mestre-em-escola"], 9: ["contramagica-superior", "trama-celere"],
-      10: ["fluxo-de-mana"], 11: ["heranca-superior"], 17: ["apoteose", "sifao-de-mana"] },
-    notas: "Círculo não informado: [E] dá 2º no 5º e 3º no 9º, e o Bardo e o Druida em [E] dão 2º no 6º, 3º no 10º e 4º no 14º. As fontes conflitam, então a linha fica sem círculo (NÃO VERIFICADO). Níveis 13 e 17 não entram. Magia nova: uma por nível, conforme [E]."
+    nome: "Arcanista", fonte: `${T20_NIVEIS_FONTE}: p043`, pv: 2, pm: 6, poderDeClasseDe: 2, magia: "todos",
+    circulos: [[5, 2], [9, 3], [13, 4], [17, 5]], verif: { pv: true, pm: true, circ: true, magia: true },
+    habs: {
+      9: [{ nome: "Magias (3º círculo)", frase: "Pode lançar magias de 3º círculo." }],
+      13: [{ nome: "Magias (4º círculo)", frase: "Pode lançar magias de 4º círculo." }],
+      17: [{ nome: "Magias (5º círculo)", frase: "Pode lançar magias de 5º círculo." }],
+      20: [{ nome: "Alta Arcana", frase: "Custo em PM das magias arcanas cai pela metade." }]
+    },
+    poderes: { 6: ["heranca-aprimorada"], 8: ["mestre-em-escola"], 10: ["fluxo-de-mana"], 11: ["heranca-superior"] },
+    notas: "PV e PM confirmados (p043). Círculos: 2º no 5º, 3º no 9º, 4º no 13º, 5º no 17º (p043). Magia nova a cada nível, de qualquer círculo (p043). Mago começa com 4 magias (p043): caminho não modelado. Poderes sem nível no livro (ex.: Contramágica Aprimorada, Dissipar Magia) não entram."
   },
   barbaro: {
-    nome: "Bárbaro", fonte: T20_NIVEIS_FONTE_E, pv: 6, pm: 3, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
+    nome: "Bárbaro", fonte: `${T20_NIVEIS_FONTE}: p047`, pv: 6, pm: 3, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
-      8: [{ nome: "Redução de Dano", frase: "Sobe para 4 (derivado da regra de +2 a cada três níveis a partir do 5º)." }],
-      11: [{ nome: "Redução de Dano", frase: "Sobe para 6 (derivado da mesma regra)." }],
-      14: [{ nome: "Redução de Dano", frase: "Sobe para 8 (derivado da mesma regra)." }],
-      17: [{ nome: "Redução de Dano", frase: "Sobe para 10, o teto da classe." }],
+      6: [{ nome: "Fúria +3", frase: "Bônus de ataque e dano da Fúria sobe para +3." }],
+      8: [{ nome: "Redução de Dano", frase: "Redução de dano sobe para 4." }],
+      9: [{ nome: "Instinto Selvagem +2", frase: "Bônus de dano, Percepção e Reflexos sobe para +2." }],
+      11: [{ nome: "Fúria +4", frase: "Bônus de ataque e dano da Fúria sobe para +4." }, { nome: "Redução de Dano", frase: "Redução de dano sobe para 6." }],
+      14: [{ nome: "Redução de Dano", frase: "Redução de dano sobe para 8." }],
+      15: [{ nome: "Instinto Selvagem +3", frase: "Bônus de dano, Percepção e Reflexos sobe para +3." }],
+      16: [{ nome: "Fúria +5", frase: "Bônus de ataque e dano da Fúria sobe para +5." }],
+      17: [{ nome: "Redução de Dano", frase: "Redução de dano sobe para 10, o máximo da classe." }],
       20: [{ nome: "Fúria Titânica", frase: "O bônus da Fúria dobra." }]
     },
-    poderes: { 6: ["critico-brutal", "espiritualista"], 7: ["manifestar-totem"], 8: ["pele-de-aco"],
-      10: ["instinto-indomavel"], 11: ["furia-elemental", "invocar-os-ancestrais", "revide"],
-      15: ["instinto-furioso"], 17: ["enigma-do-aco"] },
-    notas: "Incrementos de PV e PM vêm só de [E]. Os níveis da Redução de Dano são derivados da regra de [E], não de tabela."
+    poderes: { 6: ["critico-brutal"], 8: ["pele-de-aco"] },
+    notas: "PV e PM confirmados (p047). Fúria sobe +1 a cada cinco níveis (p047), na tabela em 6, 11 e 16. Redução de dano 2 no 5º e +2 a cada três níveis até 10 no 17º (p047 e p048). Totem Espiritual (poder, pré-requisito 4º nível) não entra na lista por ser poder de classe sem nível de acesso na tabela."
   },
   bardo: {
-    nome: "Bardo", fonte: "[E] exegetadearton.com.br (progressão) e [R] Rotina de Mestre, guia do Bardo (círculos e magias)",
-    pv: null, pm: 4, poderDeClasseDe: 2, magia: "pares",
-    circulos: [[6, 2], [10, 3], [14, 4]], verif: { pv: false, pm: true, circ: true, magia: true },
-    habs: { 20: [{ nome: "Artista Completo", frase: "Inspiração vira ação livre e o custo em PM das habilidades de bardo cai pela metade." }] },
-    poderes: { 6: ["estrelato", "prestidigitacao", "performance-crescendo", "artista-versatil"],
-      10: ["danca-das-laminas", "manipular-em-massa"], 11: ["inspiracao-espirituosa"],
-      17: ["celebridade-artoniana", "ressoar"] },
-    notas: "CONFLITO de PV: [E] 16 inicial e +4 por nível; [R] 12 mais CON e +3 mais CON por nível. PV por nível fica null. PM +4 confere nas duas. CONFLITO de poderes: [E] dá poder de bardo em todo nível a partir do 2º; [R] só em níveis ímpares. Magias nos níveis pares: [E] e [R] concordam. Os níveis de aprimoramento da Inspiração não entram (as fontes divergem)."
+    nome: "Bardo", fonte: `${T20_NIVEIS_FONTE}: p050`, pv: 3, pm: 4, poderDeClasseDe: 2, magia: "pares",
+    circulos: [[6, 2], [10, 3], [14, 4]], verif: { pv: true, pm: true, circ: true, magia: true },
+    habs: {
+      6: [{ nome: "Magias (2º círculo)", frase: "Pode lançar magias de 2º círculo." }],
+      9: [{ nome: "Inspiração +3", frase: "Bônus da Inspiração sobe para +3." }],
+      10: [{ nome: "Magias (3º círculo)", frase: "Pode lançar magias de 3º círculo." }],
+      13: [{ nome: "Inspiração +4", frase: "Bônus da Inspiração sobe para +4." }],
+      14: [{ nome: "Magias (4º círculo)", frase: "Pode lançar magias de 4º círculo." }],
+      17: [{ nome: "Inspiração +5", frase: "Bônus da Inspiração sobe para +5." }],
+      20: [{ nome: "Artista Completo", frase: "Inspiração vira ação livre e o custo em PM das habilidades de bardo cai pela metade." }]
+    },
+    poderes: { 6: ["estrelato", "prestidigitacao"], 10: ["danca-das-laminas", "manipular-em-massa"] },
+    notas: "PV confirmado: 12 + CON e 3 + CON por nível (p050). PM confirmado: 4 por nível (p050). Círculos 2º, 3º e 4º no 6º, 10º e 14º (p050). Magia nova em cada nível par (p050). Poder de bardo a partir do 2º nível (p050). Fonte [E] (16 e +4) não confere com o livro."
   },
   bucaneiro: {
-    nome: "Bucaneiro", fonte: T20_NIVEIS_FONTE_E, pv: 4, pm: 3, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
+    nome: "Bucaneiro", fonte: `${T20_NIVEIS_FONTE}: p053`, pv: 4, pm: 3, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
+      7: [{ nome: "Esquiva Sagaz +2", frase: "Bônus de Defesa e Reflexos da Esquiva Sagaz sobe para +2." }],
       10: [{ nome: "Evasão Aprimorada", frase: "Sem dano em sucesso e metade do dano em falha no teste de Reflexos." }],
+      11: [{ nome: "Esquiva Sagaz +3", frase: "Bônus de Defesa e Reflexos da Esquiva Sagaz sobe para +3." }],
+      15: [{ nome: "Esquiva Sagaz +4", frase: "Bônus de Defesa e Reflexos da Esquiva Sagaz sobe para +4." }],
+      19: [{ nome: "Esquiva Sagaz +5", frase: "Bônus de Defesa e Reflexos da Esquiva Sagaz sobe para +5." }],
       20: [{ nome: "Sorte de Nimb", frase: "Gasta 5 PM para rolar de novo um teste recém-feito." }]
     },
-    poderes: { 6: ["amigos-no-porto", "pegou-no-chapeu"], 7: ["remise"], 10: ["touche"],
-      11: ["lorotas-da-terra-e-do-mar", "amigo-do-passado"], 12: ["ripostar"], 17: ["lobo-do-mar"] },
-    notas: "Esquiva Sagaz sobe +1 a cada quatro níveis, mas [E] não diz em quais níveis; fica de fora."
+    poderes: { 6: ["amigos-no-porto"], 10: ["touche"], 12: ["ripostar"] },
+    notas: "PV e PM confirmados (p053). Esquiva Sagaz +1 no 3º e +1 a cada quatro níveis: 7º, 11º, 15º e 19º (p053 e tabela). Evasão no 2º (p053) fica fora da faixa."
   },
   cacador: {
-    nome: "Caçador", fonte: T20_NIVEIS_FONTE_E, pv: 4, pm: 4, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
-    habs: { 20: [{ nome: "Mestre Caçador", frase: "Marca da Presa vira ação livre; gasta 5 PM para +2 na margem de ameaça." }] },
-    poderes: { 6: ["bote", "camuflagem", "escaramuca"], 8: ["sequencia-do-predador"],
-      11: ["avanco-do-predador", "sequencia-dilaceradora", "sede-de-sangue"],
-      12: ["chuva-de-laminas", "escaramuca-superior"], 17: ["tempestade-de-laminas"], 20: ["mestre-armadilheiro"] },
-    notas: "[E] traz 'escolha de poder' em todo nível de 6 a 20, sem dizer o início (2º ou outro); o início fica fora desta faixa. Marca da Presa e Explorador sobem a cada quatro e cinco níveis; os níveis exatos não foram informados e não entram."
+    nome: "Caçador", fonte: `${T20_NIVEIS_FONTE}: p056`, pv: 4, pm: 4, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
+    habs: {
+      7: [{ nome: "Explorador", frase: "Escolhe outro terreno ou soma +2 a um terreno já escolhido." }],
+      9: [{ nome: "Marca da Presa", frase: "Dano extra da Marca da Presa sobe para +1d12." }],
+      11: [{ nome: "Explorador", frase: "Escolhe outro terreno ou soma +2 a um terreno já escolhido." }],
+      13: [{ nome: "Marca da Presa", frase: "Dano extra da Marca da Presa sobe para +2d8." }],
+      15: [{ nome: "Explorador", frase: "Escolhe outro terreno ou soma +2 a um terreno já escolhido." }],
+      17: [{ nome: "Marca da Presa", frase: "Dano extra da Marca da Presa sobe para +2d10." }],
+      19: [{ nome: "Explorador", frase: "Escolhe outro terreno ou soma +2 a um terreno já escolhido." }],
+      20: [{ nome: "Mestre Caçador", frase: "Marca da Presa vira ação livre; gasta 5 PM para +2 na margem de ameaça." }]
+    },
+    poderes: { 6: ["bote", "camuflagem", "escaramuca"], 12: ["chuva-de-laminas", "escaramuca-superior"] },
+    notas: "PV e PM confirmados (p056). Marca da Presa: 1d4, 1d8, 1d12, 2d8 e 2d10 nos níveis 1, 5, 9, 13 e 17 (p056). Explorador no 3º e a cada quatro níveis (p057): 7º, 11º, 15º e 19º. Poder de caçador a partir do 2º (p056). Perícias: conflito interno do livro (p038 x p056), ver T20_CLASSES."
   },
   cavaleiro: {
-    nome: "Cavaleiro", fonte: T20_NIVEIS_FONTE_E, pv: 5, pm: 3, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
+    nome: "Cavaleiro", fonte: `${T20_NIVEIS_FONTE}: p059`, pv: 5, pm: 3, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
+      7: [{ nome: "Baluarte (aliados adjacentes)", frase: "Pode dar o mesmo bônus a aliados adjacentes com +2 PM." }, { nome: "Duelo +3", frase: "Bônus do Duelo sobe para +3." }],
+      9: [{ nome: "Baluarte +6", frase: "Bônus do Baluarte sobe para +6." }],
       11: [{ nome: "Resoluto", frase: "Refaz um teste para se livrar de condição." }],
+      12: [{ nome: "Duelo +4", frase: "Bônus do Duelo sobe para +4." }],
+      13: [{ nome: "Baluarte +8", frase: "Bônus do Baluarte sobe para +8." }],
+      15: [{ nome: "Baluarte (aliados em alcance curto)", frase: "Pode dar o mesmo bônus a aliados em alcance curto com +5 PM." }],
+      17: [{ nome: "Baluarte +10", frase: "Bônus do Baluarte sobe para +10." }, { nome: "Duelo +5", frase: "Bônus do Duelo sobe para +5." }],
       20: [{ nome: "Bravura Final", frase: "Continua de pé com 3 PM ao chegar a 0 PV ou menos." }]
     },
-    poderes: { 6: ["autoridade-feudal"], 10: ["titulo"], 11: ["mestre-das-posturas"],
-      12: ["especializacao-em-armadura"], 14: ["estandarte"], 17: ["grao-mestre"] },
-    notas: "Baluarte (a cada quatro níveis) e Duelo (a cada cinco) sobem em níveis não informados; ficam de fora."
+    poderes: { 6: ["autoridade-feudal"], 10: ["titulo"], 12: ["especializacao-em-armadura"], 14: ["estandarte"] },
+    notas: "PV e PM confirmados (p059). Baluarte +2 no 1º, +4 no 5º, +6 no 9º, +8 no 13º, +10 no 17º (tabela p059). Duelo +2 no 2º, +3 no 7º, +4 no 12º, +5 no 17º (tabela p059). Resoluto no 11º e Bravura Final no 20º (p061)."
   },
   clerigo: {
-    nome: "Clérigo", fonte: T20_NIVEIS_FONTE_E, pv: 4, pm: 5, poderDeClasseDe: 2, magia: "todos",
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
-    habs: { 20: [{ nome: "Mão da Divindade", frase: "Lança três magias divinas sem custo de PM, mas fica atordoado depois." }] },
-    poderes: { 6: ["forca-da-devocao"], 7: ["arma-divina"], 9: ["canalizar-poderoso", "presente-dos-deuses"],
-      11: ["canalizar-abencoado", "canalizar-concentrado", "canalizar-profanado"], 12: ["mestre-celebrante"],
-      17: ["missa-compartilhar-milagre", "representante-divino"] },
-    notas: "Círculo não informado: conflita com Bardo e Druida (ver Arcanista), então a linha fica sem círculo (NÃO VERIFICADO). A página diz magia de qualquer círculo a cada nível. PM +5 confere com [R] só no 1º nível (exemplo), então fica sem verificação."
+    nome: "Clérigo", fonte: `${T20_NIVEIS_FONTE}: p063`, pv: 4, pm: 5, poderDeClasseDe: 2, magia: "todos",
+    circulos: [[5, 2], [9, 3], [13, 4], [17, 5]], verif: { pv: true, pm: true, circ: true, magia: true },
+    habs: {
+      9: [{ nome: "Magias (3º círculo)", frase: "Pode lançar magias de 3º círculo." }],
+      13: [{ nome: "Magias (4º círculo)", frase: "Pode lançar magias de 4º círculo." }],
+      17: [{ nome: "Magias (5º círculo)", frase: "Pode lançar magias de 5º círculo." }],
+      20: [{ nome: "Mão da Divindade", frase: "Lança três magias divinas sem custo de PM, mas fica atordoado depois." }]
+    },
+    poderes: { 12: ["mestre-celebrante"] },
+    notas: "PV e PM confirmados (p063). Círculos: 2º no 5º, 3º no 9º, 4º no 13º, 5º no 17º (p063). Magia nova a cada nível, de qualquer círculo (p063). Poder de clérigo a partir do 2º (p063). Mestre Celebrante é pré-requisito de 12º nível (p065)."
   },
   druida: {
-    nome: "Druida", fonte: T20_NIVEIS_FONTE_E, pv: 4, pm: 4, poderDeClasseDe: 2, magia: "pares",
-    circulos: [[6, 2], [10, 3], [14, 4]], verif: { pv: false, pm: false, circ: false, magia: false },
-    habs: { 20: [{ nome: "Força da Natureza", frase: "Magias custam 2 PM a menos e CD +2; em terreno natural, 4 PM a menos e CD +4." }] },
-    poderes: { 6: ["forma-selvagem-aprimorada", "companheiro-animal-aprimorado", "companheiro-aberrante"],
-      8: ["companheiro-animal-magico"], 10: ["espirito-dos-equinocios", "espirito-dos-solsticios", "confluencia-elemental"],
-      11: ["metamorfose-instantanea", "oraculo-da-natureza"], 12: ["forma-selvagem-superior"],
-      17: ["forca-da-natureza-db"], 18: ["companheiro-animal-lendario", "forma-primal"] },
-    notas: "PM = +4 por nível mais SAB no total (SAB não entra aqui). Círculos e magias pares vêm só de [E] (a [R] que cita o Druida não foi reaberta)."
+    nome: "Druida", fonte: `${T20_NIVEIS_FONTE}: p067`, pv: 4, pm: 4, poderDeClasseDe: 2, magia: "pares",
+    circulos: [[6, 2], [10, 3], [14, 4]], verif: { pv: true, pm: true, circ: true, magia: true },
+    habs: {
+      6: [{ nome: "Magias (2º círculo)", frase: "Pode lançar magias de 2º círculo." }],
+      10: [{ nome: "Magias (3º círculo)", frase: "Pode lançar magias de 3º círculo." }],
+      14: [{ nome: "Magias (4º círculo)", frase: "Pode lançar magias de 4º círculo." }],
+      20: [{ nome: "Força da Natureza", frase: "Magias custam 2 PM a menos e CD +2; em terreno natural, 4 PM a menos e CD +4." }]
+    },
+    poderes: { 6: ["forma-selvagem-aprimorada", "companheiro-animal-aprimorado"], 8: ["companheiro-animal-magico"],
+      10: ["espirito-dos-equinocios", "espirito-dos-solsticios"], 12: ["forma-selvagem-superior"],
+      18: ["companheiro-animal-lendario", "forma-primal"] },
+    notas: "PV e PM confirmados (p067). Círculos 2º, 3º e 4º no 6º, 10º e 14º (p067). Magia nova em cada nível par (p067). Força da Natureza no 20º (p069). Sabedoria soma uma vez ao PM (p067)."
   },
   guerreiro: {
-    nome: "Guerreiro", fonte: T20_NIVEIS_FONTE_E, pv: 5, pm: 3, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
+    nome: "Guerreiro", fonte: `${T20_NIVEIS_FONTE}: p071`, pv: 5, pm: 3, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
-      6: [{ nome: "Ataque Extra", frase: null }],
-      20: [{ nome: "Campeão", frase: null }]
+      6: [{ nome: "Ataque Extra", frase: "Pode gastar 2 PM para um ataque adicional, uma vez por rodada, ao usar agredir." }],
+      9: [{ nome: "Ataque Especial +12", frase: "Bônus máximo do Ataque Especial sobe para +12." }],
+      13: [{ nome: "Ataque Especial +16", frase: "Bônus máximo do Ataque Especial sobe para +16." }],
+      17: [{ nome: "Ataque Especial +20", frase: "Bônus máximo do Ataque Especial sobe para +20." }],
+      20: [{ nome: "Campeão", frase: "Dano dos ataques sobe um passo; ao acertar Ataque Especial ou Golpe Pessoal, recupera metade dos PM gastos." }]
     },
-    poderes: { 6: ["tornado-de-dor", "mente-disciplinada"], 10: ["planejamento-marcial"],
-      11: ["determinacao-inabalavel", "ordens-de-engajamento"], 12: ["especializacao-em-armadura", "mestre-em-arma"],
-      14: ["operacoes-combinadas"], 17: ["velho-de-guerra"] },
-    notas: "Ataque Extra e Campeão: a fonte não descreve o efeito, então a frase fica null. Ataque Especial (1º) e Durão (3º) ficam fora da faixa. Escalonamento do Ataque Especial não detalhado na fonte."
+    poderes: { 6: ["tornado-de-dor"], 10: ["planejamento-marcial"], 12: ["especializacao-em-armadura", "mestre-em-arma"] },
+    notas: "PV e PM confirmados (p071). Ataque Especial +4 no 1º, +8 no 5º, +12 no 9º, +16 no 13º e +20 no 17º (tabela p071). Ataque Extra no 6º e Campeão no 20º (p072). Durão no 3º fica fora da faixa."
   },
   inventor: {
-    nome: "Inventor", fonte: T20_NIVEIS_FONTE_E, pv: 3, pm: 4, poderDeClasseDe: 2, magia: null,
-    circulos: [[6, 2]], verif: { pv: false, pm: false, circ: false, magia: false },
+    nome: "Inventor", fonte: `${T20_NIVEIS_FONTE}: p074`, pv: 3, pm: 4, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
-      7: [{ nome: "Encontrar Fraqueza", frase: "Analisa objetos para achar fraquezas; +2 em ataques contra armadura ou construtos." }],
-      8: [{ nome: "Item Superior", frase: "Pode ter 3 melhorias." }],
-      9: [{ nome: "Item Mágico Menor", frase: "Recebe um item mágico menor e pode fabricar itens desse tipo." }],
+      7: [{ nome: "Encontrar Fraqueza", frase: "Analisa objetos para achar fraquezas; +2 em testes de ataque contra armadura ou construtos." }],
+      8: [{ nome: "Fabricar Item Superior", frase: "Pode ter 3 melhorias." }],
+      9: [{ nome: "Fabricar Item Mágico (menor)", frase: "Recebe um item mágico menor e pode fabricar itens desse tipo." }],
       10: [{ nome: "Olho do Dragão", frase: "Analisa um item com ação completa." }],
-      11: [{ nome: "Item Superior", frase: "Pode ter 4 melhorias." }],
-      13: [{ nome: "Item Mágico Médio", frase: "Recebe um item mágico médio e pode fabricar itens desse tipo." }],
-      17: [{ nome: "Item Mágico Maior", frase: "Recebe um item mágico maior e pode fabricar itens desse tipo." }],
+      11: [{ nome: "Fabricar Item Superior", frase: "Pode ter 4 melhorias." }],
+      13: [{ nome: "Fabricar Item Mágico (médio)", frase: "Recebe um item mágico médio e pode fabricar itens desse tipo." }],
+      17: [{ nome: "Fabricar Item Mágico (maior)", frase: "Recebe um item mágico maior e pode fabricar itens desse tipo." }],
       20: [{ nome: "Obra-Prima", frase: "Cria um item autoral, a ser aprovado pelo mestre." }]
     },
-    poderes: { 6: ["alquimista-iniciado"], 10: ["mestre-alquimista"], 11: ["golpe-de-genio"],
-      12: ["traje-de-batalha"], 17: ["genio-inovador"] },
-    notas: "Círculo 2 vale para engenhocas e fórmulas, só explícito no 6º nível; o intervalo 'a cada quatro níveis' não foi fechado. Autômato vira veterano no 7º e mestre no 15º (não entra)."
+    poderes: { 10: ["mestre-alquimista"] },
+    notas: "PV e PM confirmados (p074). Fabricar Item Superior: 1 melhoria no 2º; 2, 3 e 4 melhorias no 5º, 8º e 11º (p068 e tabela). Itens mágicos: menor no 9º, médio no 13º, maior no 17º (p076). Fórmulas e engenhocas: 2º círculo a partir do 6º (p076): não é círculo de magia de classe, por isso circulo fica null. Alquimista Iniciado sem nível no livro: fora da lista."
   },
   ladino: {
-    nome: "Ladino", fonte: "[E] exegetadearton.com.br (progressão) e [R] Rotina de Mestre, guia do Ladino (PV, PM e dano)",
-    pv: 3, pm: 4, poderDeClasseDe: 2, magia: null, ataqueFurtivo: true,
+    nome: "Ladino", fonte: `${T20_NIVEIS_FONTE}: p079`, pv: 3, pm: 4, poderDeClasseDe: 2, magia: null, ataqueFurtivo: true,
     circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
       8: [{ nome: "Olhos nas Costas", frase: "Não pode ser flanqueado." }],
       10: [{ nome: "Evasão Aprimorada", frase: "Sem dano em sucesso e metade do dano em falha no teste de Reflexos." }],
       20: [{ nome: "A Pessoa Certa para o Trabalho", frase: "Gasta 5 PM para +10 em ataque furtivo ou perícia de ladino." }]
     },
-    poderes: { 6: ["oportunismo"], 7: ["roubo-de-mana"], 8: ["veneno-persistente"],
-      11: ["mestre-impostor", "mestre-assassino", "mestre-envenenador", "truque-magico-aprimorado", "assassino-em-serie"],
-      13: ["ladrao-arcano"], 17: ["rei-do-crime", "senhor-do-submundo"], 20: ["ameaca-brutal"] },
-    notas: "PV +3 e PM +4 confirmados nas duas fontes. Ataque Furtivo: começa com 1d6 e ganha 1d6 a cada dois níveis (regra de [E] e [R]); o 9º (5d6) e o 15º (8d6) conferem nas duas. Os demais níveis seguem a regra, mas não foram listados na fonte."
+    poderes: { 6: ["oportunismo"], 7: ["roubo-de-mana"], 8: ["veneno-persistente"], 13: ["ladrao-arcano"] },
+    notas: "PV e PM confirmados (p079). Ataque Furtivo: 1d6 no 1º e +1d6 a cada dois níveis, em níveis ímpares a partir do 3º (tabela p079). Evasão no 2º (p079) fica fora da faixa. Esquiva Sobrenatural no 4º fica fora da faixa."
   },
   lutador: {
-    nome: "Lutador", fonte: T20_NIVEIS_FONTE_E, pv: 5, pm: 3, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
+    nome: "Lutador", fonte: `${T20_NIVEIS_FONTE}: p082`, pv: 5, pm: 3, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
-      7: [{ nome: "Casca Grossa", frase: "Aumenta a Defesa em 1." }],
-      9: [{ nome: "Golpe Violento", frase: "Multiplicador de crítico desarmado sobe em 1." }],
-      11: [{ nome: "Casca Grossa", frase: "Aumenta a Defesa em 1." }],
-      15: [{ nome: "Casca Grossa", frase: "Aumenta a Defesa em 1." }],
-      19: [{ nome: "Casca Grossa", frase: "Aumenta a Defesa em 1." }],
-      20: [{ nome: "Dono da Rua", frase: "Dano desarmado de 2d10 contra criaturas Médias e dois ataques ao agredir." }]
+      7: [{ nome: "Casca Grossa", frase: "Bônus de Defesa da Casca Grossa sobe em +1." }],
+      9: [{ nome: "Briga", frase: "Dano desarmado sobe para 1d10 (criaturas Médias)." }, { nome: "Golpe Violento", frase: "Multiplicador de crítico desarmado sobe em 1." }],
+      11: [{ nome: "Casca Grossa", frase: "Bônus de Defesa da Casca Grossa sobe em +2." }],
+      13: [{ nome: "Briga", frase: "Dano desarmado sobe para 2d6 (criaturas Médias)." }],
+      15: [{ nome: "Casca Grossa", frase: "Bônus de Defesa da Casca Grossa sobe em +3." }],
+      17: [{ nome: "Briga", frase: "Dano desarmado sobe para 2d8 (criaturas Médias)." }],
+      19: [{ nome: "Casca Grossa", frase: "Bônus de Defesa da Casca Grossa sobe em +4." }],
+      20: [{ nome: "Briga", frase: "Dano desarmado sobe para 2d10 (criaturas Médias)." }, { nome: "Dono da Rua", frase: "Ao usar agredir, faz dois ataques (e um terceiro com Golpe Relâmpago)." }]
     },
-    poderes: { 6: ["trocacao", "onda-de-choque"], 7: ["gingado-elusivo"],
-      8: ["trocacao-tumultuosa", "punhos-de-adamante", "confianca-dos-ringues", "imobilizacao"],
-      10: ["trincado"], 11: ["nome-na-arena"], 12: ["sequencia-destruidora"], 17: ["invencivel"] },
-    notas: "Degraus do dano desarmado (8, 12, 16, 20) são inferidos de 'a cada quatro níveis'; só o 20º está explícito. Não entram como habilidade."
+    poderes: { 6: ["trocacao"], 8: ["trocacao-tumultuosa", "punhos-de-adamante", "confianca-dos-ringues", "imobilizacao"],
+      10: ["trincado"], 11: ["nome-na-arena"], 12: ["sequencia-destruidora"] },
+    notas: "PV e PM confirmados (p082). Briga: 1d6 no 1º, 1d8 no 5º, 1d10 no 9º, 2d6 no 13º, 2d8 no 17º e 2d10 no 20º (tabela p082). Casca Grossa: soma CON na Defesa a partir do 3º (p083), +1 no 7º e a cada quatro níveis (p083). Golpe Cruel (5º) fica fora da faixa."
   },
   nobre: {
-    nome: "Nobre", fonte: T20_NIVEIS_FONTE_E, pv: 3, pm: 4, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
-    habs: { 20: [{ nome: "Realeza", frase: "Aumenta a CD da Presença Aristocrática e converte inimigos derrotados por Palavras Afiadas." }] },
+    nome: "Nobre", fonte: `${T20_NIVEIS_FONTE}: p085`, pv: 4, pm: 4, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
+    habs: {
+      6: [{ nome: "Palavras Afiadas (4d6)", frase: "Dano de Palavras Afiadas sobe para 4d6." }],
+      10: [{ nome: "Palavras Afiadas (6d6)", frase: "Dano de Palavras Afiadas sobe para 6d6." }],
+      14: [{ nome: "Palavras Afiadas (8d6)", frase: "Dano de Palavras Afiadas sobe para 8d6." }],
+      18: [{ nome: "Palavras Afiadas (10d6)", frase: "Dano de Palavras Afiadas sobe para 10d6." }],
+      20: [{ nome: "Realeza", frase: "Aumenta a CD da Presença Aristocrática e converte inimigos derrotados por Palavras Afiadas." }]
+    },
     poderes: { 6: ["autoridade-feudal", "estrategista", "liderar-pelo-exemplo"],
       8: ["armadura-brilhante", "grito-tiranico", "inspirar-gloria", "lingua-de-ouro"],
       10: ["titulo"], 12: ["general"], 16: ["presenca-majestosa"] },
-    notas: "Palavras Afiadas sobe a cada quatro níveis, mas a tabela de dano não aparece na página; fica de fora."
+    notas: "PV e PM confirmados (p085). Palavras Afiadas: 2d6 no 2º, 4d6 no 6º, 6d6 no 10º, 8d6 no 14º e 10d6 no 18º (tabela p085). Gritar Ordens no 4º e Presença Aristocrática no 5º ficam fora da faixa."
   },
   paladino: {
-    nome: "Paladino", fonte: T20_NIVEIS_FONTE_E, pv: 5, pm: 4, poderDeClasseDe: 2, magia: null,
-    circulos: null, verif: { pv: false, pm: false, circ: false, magia: false },
+    nome: "Paladino", fonte: `${T20_NIVEIS_FONTE}: p088`, pv: 5, pm: 3, poderDeClasseDe: 2, magia: null,
+    circulos: null, verif: { pv: true, pm: true, circ: false, magia: false },
     habs: {
-      6: [{ nome: "Cura pelas Mãos aprimorada", frase: "Gasta +1 PM para anular uma condição." }],
-      20: [{ nome: "Vingador Sagrado", frase: "Forma com voo 18 m, redução de dano 20 e Golpe Divino mais barato." }]
+      6: [{ nome: "Cura pelas Mãos", frase: "Cura 2d8+2 PV. Gasta +1 PM para anular uma condição." }],
+      9: [{ nome: "Golpe Divino +3d8", frase: "Dano extra do Golpe Divino sobe para +3d8." }],
+      10: [{ nome: "Cura pelas Mãos", frase: "Cura 3d8+3 PV." }],
+      13: [{ nome: "Golpe Divino +4d8", frase: "Dano extra do Golpe Divino sobe para +4d8." }],
+      14: [{ nome: "Cura pelas Mãos", frase: "Cura 4d8+4 PV." }],
+      17: [{ nome: "Golpe Divino +5d8", frase: "Dano extra do Golpe Divino sobe para +5d8." }],
+      18: [{ nome: "Cura pelas Mãos", frase: "Cura 5d8+5 PV." }],
+      20: [{ nome: "Vingador Sagrado", frase: "Com 10 PM, forma com voo 18 m e redução de dano 20 até o fim da cena." }]
     },
-    poderes: { 6: ["aura-de-cura", "aura-poderosa", "aura-de-arrependimento"], 7: ["escudo-sagrado"],
-      8: ["aura-vingadora"], 10: ["aura-ardente", "investida-sagrada"], 11: ["conviccao-heroica", "arma-sacramentada"],
-      14: ["aura-antimagia"], 17: ["hoste-celestial"], 18: ["aura-de-invencibilidade"] },
-    notas: "Magia só pelo poder Orar (nível 2, ver rules-poderes.js), não por círculo. Golpe Divino e Cura pelas Mãos sobem a cada quatro níveis, sem os níveis fixados na fonte."
+    poderes: { 6: ["aura-de-cura", "aura-poderosa"], 10: ["aura-ardente"], 14: ["aura-antimagia"], 18: ["aura-de-invencibilidade"] },
+    notas: "PV e PM confirmados (p088). Carisma soma ao PM só no 1º nível (p082). Golpe Divino +1d8 no 1º, +2d8 no 5º, +3d8 no 9º, +4d8 no 13º e +5d8 no 17º (tabela p088). Cura pelas Mãos: 1d8+1 no 2º, 2d8+2 no 6º, 3d8+3 no 10º, 4d8+4 no 14º e 5d8+5 no 18º (tabela p088). Magia só pelo poder Orar (p090), não modelada."
   }
 };
 
@@ -224,13 +265,13 @@ const t20NiveisMontar = (id, s) => {
 };
 
 const T20_NIVEIS = {
-  versao: 1,
+  versao: 2,
   nivelMin: 6,
   nivelMax: 20,
   treino: {
-    regra: "metade do nível, arredondada para baixo",
-    fonte: "[R] Rotina de Mestre (1 fonte). [E] fala em 'bônus de treinamento' sem a fórmula: CONFLITO registrado em rules.js (T20_TREINO_FONTE)",
-    verificado: false
+    regra: "metade do nível, arredondada para baixo (bônus em todas as perícias); mais o bônus de treinamento nas treinadas (+2, +4, +6; ver rules.js)",
+    fonte: "Tormenta20 Jogo do Ano, p041 (Bônus em Perícias) e p120 (Valor de Perícia) (livro do usuário)",
+    verificado: true
   },
   classes: Object.fromEntries(Object.entries(T20_NIVEIS_ESPEC).map(([id, s]) => [id, t20NiveisMontar(id, s)]))
 };

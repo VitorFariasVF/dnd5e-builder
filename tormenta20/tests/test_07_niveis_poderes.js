@@ -40,7 +40,8 @@ for(const id of ctx.T20_CLASSE_IDS){
     t.check(`${id}: PV total cresce do nível 1 ao 20 (${base.pvInicial} + ${base.pvNivel} por nível)`, cresce);
   }
 }
-t.check("Bardo: PV por nível fica null com CONFLITO descrito nas notas", N.classes.bardo.niveis.every(l => l.pv === null) && /CONFLITO de PV/.test(N.classes.bardo.notas));
+/* Revisão 2026-11-17 (livro, p050): Bardo tem 3 PV + CON por nível. Antes: null por conflito com a fonte [E]. */
+t.check("Bardo: PV por nível 3 (p050), notas citam o livro", N.classes.bardo.niveis.every(l => l.pv === 3) && /p050/.test(N.classes.bardo.notas));
 
 /* ---- Treino: metade do nível, arredondada para baixo ---- */
 for(const id of ctx.T20_CLASSE_IDS){
@@ -102,20 +103,33 @@ for(const id of ctx.T20_CLASSE_IDS){
     if(!p.classes.includes(id)) inconsistentes.push(`${pid} listado em ${id} mas sem essa classe`);
   }
 }
-t.igual("nível de cada poder de classe bate com a linha da classe", inconsistentes, []);
+/* Revisão 2026-11-17: as linhas de classe seguem o livro. O catálogo ainda tem poderes de classe com nível que o livro
+   não traz nas listas de cada classe (p043 a p088). Esses ids saíram das linhas e ficam registrados aqui; quem
+   mantém rules-poderes.js decide se os remove. Qualquer novo desencontro no sentido linha -> catálogo falha. */
+const POD_SEM_NIVEL_NO_LIVRO = ["alquimista-iniciado","ameaca-brutal","amigo-do-passado","apoteose","arma-divina","arma-sacramentada","artista-versatil","assassino-em-serie","aura-de-arrependimento","aura-vingadora","avanco-do-predador","canalizar-abencoado","canalizar-concentrado","canalizar-poderoso","canalizar-profanado","celebridade-artoniana","companheiro-aberrante","confluencia-elemental","contramagica-superior","conviccao-heroica","determinacao-inabalavel","enigma-do-aco","escudo-sagrado","espiritualista","forca-da-devocao","forca-da-natureza-db","furia-elemental","genio-inovador","gingado-elusivo","golpe-de-genio","grao-mestre","hoste-celestial","inspiracao-espirituosa","instinto-furioso","instinto-indomavel","invencivel","investida-sagrada","invocar-os-ancestrais","lobo-do-mar","lorotas-da-terra-e-do-mar","manifestar-totem","mente-disciplinada","mestre-armadilheiro","mestre-assassino","mestre-das-posturas","mestre-envenenador","mestre-impostor","metamorfose-instantanea","missa-compartilhar-milagre","onda-de-choque","operacoes-combinadas","oraculo-da-natureza","ordens-de-engajamento","pegou-no-chapeu","performance-crescendo","presente-dos-deuses","rei-do-crime","remise","representante-divino","ressoar","revide","sede-de-sangue","senhor-do-submundo","sequencia-dilaceradora","sequencia-do-predador","sifao-de-mana","tempestade-de-laminas","traje-de-batalha","trama-celere","truque-magico-aprimorado","velho-de-guerra"];
+const comNivelSemLinha = [];
+for(const p of Object.values(P)){
+  if(p.nivel === null || p.nivel < 6 || p.nivel > 20) continue;
+  for(const cid of p.classes){
+    if(!N.classes[cid].niveis.find(l => l.nivel === p.nivel).poderes.includes(p.id)) comNivelSemLinha.push(p.id);
+  }
+}
+t.igual("poderes do catálogo com nível fora da linha: só os que o livro não traz (lista documentada)",
+  [...new Set(comNivelSemLinha)].sort(), POD_SEM_NIVEL_NO_LIVRO.slice().sort());
+t.igual("nível de cada poder listado na linha bate com o catálogo", inconsistentes.filter(x => /listado/.test(x)), []);
 
 /* ---- Catálogo sem id repetido (conta chamadas no código-fonte) ---- */
 const fonte = fs.readFileSync(path.join(RAIZ, "tormenta20/rules-poderes.js"), "utf8");
-const chamadas = (fonte.match(/t20PoderDe\("/g) || []).length;
+const chamadas = (fonte.match(/t20(PoderDe|PoderGeral|PoderConcedido)\("/g) || []).length;
 t.igual("catálogo: sem id repetido", Object.keys(P).length, chamadas);
 
 /* ---- Fontes e verificação ---- */
 const semFonte = Object.values(P).filter(p => typeof p.fonte !== "string" || p.fonte.length < 5).map(p => p.id);
 t.igual("todo poder tem fonte", semFonte, []);
-const verificadoSemDuasFontes = Object.values(P).filter(p => p.verificado && !(/\[E\]/.test(p.fonte) && /\[R\]/.test(p.fonte))).map(p => p.id);
-t.igual("poder verificado tem duas fontes ([E] e [R])", verificadoSemDuasFontes, []);
-const linhaVerificadaSemFonte = ctx.T20_NIVEIS && Object.entries(N.classes).filter(([id, c]) => !/\[E\]/.test(c.fonte)).map(([id]) => id);
-t.igual("toda classe de níveis cita [E]", linhaVerificadaSemFonte, []);
+const verificadoSemDuasFontes = Object.values(P).filter(p => p.verificado && !((/\[E\]/.test(p.fonte) && /\[R\]/.test(p.fonte)) || /Tormenta20 Jogo do Ano/.test(p.fonte))).map(p => p.id);
+t.igual("poder verificado tem duas fontes ([E] e [R]) ou o livro do usuário", verificadoSemDuasFontes, []);
+const linhaVerificadaSemFonte = ctx.T20_NIVEIS && Object.entries(N.classes).filter(([id, c]) => !/Tormenta20 Jogo do Ano, livro do usuário/.test(c.fonte)).map(([id]) => id);
+t.igual("toda classe de níveis cita o livro-base (Tormenta20 Jogo do Ano)", linhaVerificadaSemFonte, []);
 t.check("Manipular em Massa verificado (nível 10, duas fontes)", P["manipular-em-massa"].verificado && P["manipular-em-massa"].nivel === 10);
 t.check("Oportunismo verificado (nível 6, duas fontes)", P.oportunismo.verificado && P.oportunismo.nivel === 6);
 t.check("Ladino: PV e PM confirmados nas duas fontes", N.classes.ladino.verificado.pv && N.classes.ladino.verificado.pm);
@@ -126,7 +140,14 @@ t.check("Bardo: magias de 2º, 3º e 4º círculo em 6, 10 e 14 (duas fontes)",
   [6, 10, 14].every((n, i) => N.classes.bardo.niveis.find(l => l.nivel === n).circulo === [2, 3, 4][i] && N.classes.bardo.niveis.find(l => l.nivel === n).verificado.circulo));
 
 /* ---- Lacunas declaradas: nada de palpite sem marca ---- */
-t.check("sem frase inventada: habilidade sem efeito lido tem frase null", N.classes.guerreiro.niveis.find(l => l.nivel === 6).habilidades[0].frase === null);
-t.check("sem poder de classe com nível inferido sem nota (Druida 17 e Caçador)", /Nível 17 inferido/.test(P["forca-da-natureza-db"].nota) && /início/.test(N.classes.cacador.notas));
+/* Revisão 2026-11-17: Ataque Extra (6º) e Campeão (20º) agora têm efeito do livro (p072). Antes eram frase null. */
+t.check("Guerreiro 6º: Ataque Extra com efeito do livro (p072)", /agredir/.test(N.classes.guerreiro.niveis.find(l => l.nivel === 6).habilidades[0].frase || ""));
+t.check("sem frase null em nenhuma habilidade de 6 a 20 (todas lidas no livro)",
+  Object.values(N.classes).every(c => c.niveis.every(l => l.habilidades.every(h => typeof h.frase === "string"))));
+/* Força da Natureza é habilidade de classe no 20º (p069), não poder: fica fora das listas de poderes do Druida. */
+t.check("Druida 20º: Força da Natureza é habilidade e não poder de classe",
+  N.classes.druida.niveis.find(l => l.nivel === 20).habilidades.some(h => h.nome === "Força da Natureza") &&
+  !Object.values(N.classes.druida.niveis).some(l => l.poderes.includes("forca-da-natureza-db")));
+t.check("Caçador: poder de caçador a partir do 2º nível, citado no livro (p056)", /p056/.test(N.classes.cacador.fonte) && /2º/.test(N.classes.cacador.notas));
 
 t.fim();

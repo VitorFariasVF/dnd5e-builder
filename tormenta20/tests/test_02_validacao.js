@@ -36,7 +36,7 @@ t.igual("etapa 2: nível 21 recusado", contaErros(erros(2, "estrito", { nivel: 2
 
 /* Etapa 3: raça */
 t.igual("etapa 3: sem raça recusado", contaErros(erros(3, "estrito", { raca: null })), 1);
-t.igual("etapa 3: raça com ajuste não verificado gera aviso, não erro", [contaErros(erros(3, "estrito")), contaAvisos(erros(3, "estrito")) > 0], [0, true]);
+t.igual("etapa 3: raça com ajuste à escolha não verificado gera aviso, não erro", [contaErros(erros(3, "estrito", { raca: "humano" })), contaAvisos(erros(3, "estrito", { raca: "humano" })) > 0], [0, true]);
 
 /* Etapa 4: origem e benefícios */
 t.igual("etapa 4: origem inexistente recusada", contaErros(erros(4, "estrito", { origem: "Pirata" })), 1);

@@ -113,10 +113,10 @@ async function rodar(largura){
   await avancar(page);
   await semRolagemLateral(page, "etapa equipamento");
 
-  /* 11. Derivados: Clérigo nível 1, SAB 3, CON 2, DES 2, Anão (deslocamento 6 m da fonte; conflito com 9 m fica marcado), armadura 2.
-     PV = 16 + 2 = 18; PM = 5 + SAB 3 = 8; Defesa = 10 + DES 2 + armadura 2 = 14; treino +0. */
+  /* 11. Derivados: Clérigo nível 1, base SAB 3, CON 2, DES 2; Anão do livro (p024: CON +2, SAB +1, DES -1; deslocamento 6 m), armadura 2.
+     CON 4: PV = 16 + 4 = 20; SAB 4: PM = 5 + 4 = 9; DES 1: Defesa = 10 + 1 + 2 = 13; treino +0. */
   const valores = await page.$$eval("#app .score", els => els.map(e => e.textContent.trim()));
-  ok("derivados: PV 18, PM 8, Defesa 14, Deslocamento 6 m, treino +0", JSON.stringify(valores) === JSON.stringify(["18", "8", "14", "6 m", "+0"]), valores);
+  ok("derivados: PV 20, PM 9, Defesa 13, Deslocamento 6 m, treino +0", JSON.stringify(valores) === JSON.stringify(["20", "9", "13", "6 m", "+0"]), valores);
   await avancar(page);
 
   /* 12. Resumo: ficha válida e PDF */
