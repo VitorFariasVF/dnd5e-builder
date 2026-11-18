@@ -1468,3 +1468,20 @@ function calcularBonusOrigem2024(origemKey, escolha){
   if(!escolha.mais2 || !escolha.mais1 || escolha.mais2===escolha.mais1 || !ok(escolha.mais2) || !ok(escolha.mais1)) return null;
   return {[escolha.mais2]:2,[escolha.mais1]:1};
 }
+
+/* Criação orientada: prioridade sugerida de atributos por classe (ordem do maior para o menor).
+   Sugestão de jogo comum, não é regra oficial. Com Standard Array 15,14,13,12,10,8 o custo no Point Buy é exatamente 27. */
+const SUGESTAO_PRIORIDADE_ATRIBUTOS = {
+  barbaro:["forca","constituicao","destreza","sabedoria","carisma","inteligencia"],
+  bardo:["carisma","destreza","constituicao","sabedoria","inteligencia","forca"],
+  bruxo:["carisma","constituicao","destreza","sabedoria","inteligencia","forca"],
+  clerigo:["sabedoria","constituicao","forca","destreza","inteligencia","carisma"],
+  druida:["sabedoria","constituicao","destreza","inteligencia","carisma","forca"],
+  feiticeiro:["carisma","constituicao","destreza","sabedoria","inteligencia","forca"],
+  guerreiro:["forca","constituicao","destreza","sabedoria","inteligencia","carisma"],
+  ladino:["destreza","constituicao","sabedoria","inteligencia","carisma","forca"],
+  mago:["inteligencia","constituicao","destreza","sabedoria","carisma","forca"],
+  monge:["destreza","sabedoria","constituicao","forca","inteligencia","carisma"],
+  paladino:["forca","carisma","constituicao","sabedoria","destreza","inteligencia"],
+  patrulheiro:["destreza","sabedoria","constituicao","forca","inteligencia","carisma"]
+};
