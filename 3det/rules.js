@@ -178,6 +178,32 @@ window.TDT_RULES = {
     { id: "acessorio", nome: "Acessório", max: 2 }
   ],
 
+  // Qualidades de Artefatos (PDF p139-141). xp: custo em XP (+ aumenta, − desconta); 1 ponto = 10 XP.
+  // opcoes: qualidade com faixa escolhida (v = valor escolhido, xp = custo daquela faixa).
+  // tipos: tipos de artefato a que o livro se refere (null = o livro não restringe).
+  // escolha: "pericia" ou "texto" quando o livro pede uma escolha que não muda o custo.
+  // aplicavel: false = custo depende de outra regra e NÃO é calculado (ver docs/AUDITORIA_3DET.md).
+  qualidadesArtefato: [
+    { id: "abencoado", nome: "Abençoado", xp: 10, tipos: ["armadura", "acessorio"], desc: "Ganho em defesa contra efeitos maléficos de vantagens e poderes, e Ganho em Resistência para se livrar deles.", fonte: "3DeT Victory, PDF p139 (livro do usuário)" },
+    { id: "acurado", nome: "Acurado", xp: 20, tipos: ["arma", "acessorio"], incompativel: ["macico"], desc: "Acerto crítico com 5 ou 6 em testes de ataque.", fonte: "3DeT Victory, PDF p139 (livro do usuário)" },
+    { id: "amaldicoado", nome: "Amaldiçoado", opcoes: [{ v: 1, xp: -10, rotulo: "suave (–10 XP)" }, { v: 2, xp: -20, rotulo: "grave (–20 XP)" }], tipos: null, desc: "O portador sofre uma Maldição suave ou grave. O artefato não pode ser vendido ou abandonado e sempre volta ao portador.", fonte: "3DeT Victory, PDF p139 (livro do usuário)" },
+    { id: "aprimorado", nome: "Aprimorado", opcoes: [{ v: 1, xp: 10, rotulo: "+1 (10 XP)" }, { v: 2, xp: 20, rotulo: "+2 (20 XP)" }, { v: 3, xp: 30, rotulo: "+3 (30 XP)" }, { v: 4, xp: 40, rotulo: "+4 (40 XP)" }, { v: 5, xp: 50, rotulo: "+5 (50 XP)" }], tipos: ["acessorio"], desc: "Aumenta um atributo em certa situação. Não afeta testes de ataque ou defesa.", fonte: "3DeT Victory, PDF p140 (livro do usuário)" },
+    { id: "auspicioso", nome: "Auspicioso", xp: null, aplicavel: false, tipos: null, desc: "Concede vantagens ao portador enquanto é usado. O custo é igual ao da vantagem concedida, que o app não calcula.", fonte: "3DeT Victory, PDF p140 (livro do usuário)" },
+    { id: "condutor", nome: "Condutor", xp: 20, tipos: null, desc: "Ao usar o artefato, todas as suas vantagens gastam apenas metade dos PM.", fonte: "3DeT Victory, PDF p140 (livro do usuário)" },
+    { id: "encantado", nome: "Encantado", opcoes: [{ v: 1, xp: 10, rotulo: "+1 (10 XP)" }, { v: 2, xp: 30, rotulo: "+2 (30 XP)" }, { v: 3, xp: 50, rotulo: "+3 (50 XP)" }, { v: 4, xp: 70, rotulo: "+4 (70 XP)" }, { v: 5, xp: 90, rotulo: "+5 (90 XP)" }], tipos: null, desc: "Bônus mágico permanente: Poder em testes de ataque (arma, acessório) ou Resistência na defesa (armadura, acessório).", fonte: "3DeT Victory, PDF p140 (livro do usuário)" },
+    { id: "espiritual", nome: "Espiritual", xp: 20, tipos: ["arma"], desc: "A arma também ataca o espírito: causa dano em PM igual à metade do dano em PV.", fonte: "3DeT Victory, PDF p140 (livro do usuário)" },
+    { id: "flagelo", nome: "Flagelo", xp: 10, tipos: ["arma"], escolha: "texto", desc: "Escolhe um tipo de alvo, como na vantagem Inimigo. Contra esse tipo, acerto crítico com 5 ou 6.", fonte: "3DeT Victory, PDF p140 (livro do usuário)" },
+    { id: "fortificada", nome: "Fortificada", xp: 20, tipos: ["armadura"], incompativel: ["leve"], desc: "Oponente não consegue acerto crítico contra o portador, exceto com outra vantagem ou técnica que aumenta a chance de crítico.", fonte: "3DeT Victory, PDF p140 (livro do usuário)" },
+    { id: "honrado", nome: "Honrado", xp: -10, tipos: ["arma", "armadura"], desc: "O artefato tem consciência e segue um Código escolhido pelo mestre. Violá-lo suspende os poderes até o fim da próxima cena ou até a redenção.", fonte: "3DeT Victory, PDF p140-141 (livro do usuário)" },
+    { id: "inteligente", nome: "Inteligente", xp: 10, tipos: ["arma", "armadura"], escolha: "pericia", desc: "Tem vontade própria. Escolhe uma perícia (não precisa tê-la); gasta 3 PM para ter Ganho nela.", fonte: "3DeT Victory, PDF p141 (livro do usuário)" },
+    { id: "leve", nome: "Leve", xp: 20, tipos: ["armadura"], incompativel: ["fortificada"], desc: "Acerto crítico com 5 ou 6 em testes de defesa.", fonte: "3DeT Victory, PDF p141 (livro do usuário)" },
+    { id: "macico", nome: "Maciço", xp: 20, tipos: ["arma"], incompativel: ["acurado"], desc: "No primeiro acerto crítico de um teste de ataque, soma o Poder uma terceira vez.", fonte: "3DeT Victory, PDF p141 (livro do usuário)" },
+    { id: "obra_prima", nome: "Obra-Prima", xp: 10, tipos: ["acessorio"], escolha: "pericia", desc: "Em testes da perícia escolhida, gasta 3 PM para ter Ganho.", fonte: "3DeT Victory, PDF p141 (livro do usuário)" },
+    { id: "sagrado", nome: "Sagrado", xp: 10, tipos: null, desc: "Com coração nobre (Código dos Heróis), recebe dharma em um teste de ataque ou defesa, uma vez por combate ou cena, sem causar karma.", fonte: "3DeT Victory, PDF p141 (livro do usuário)" },
+    { id: "venenoso", nome: "Venenoso", xp: 20, tipos: ["arma"], desc: "Ao sofrer dano, o alvo faz Resistência contra 6 + dano; se falhar, sofre o mesmo dano no próximo turno.", fonte: "3DeT Victory, PDF p141 (livro do usuário)" },
+    { id: "vorpal", nome: "Vorpal", xp: 50, tipos: null, desc: "Em acerto crítico com dano, gasta 5 PM para forçar o alvo a um teste de morte imediato. Com mais de um crítico, o alvo tem Perda nesse teste.", fonte: "3DeT Victory, PDF p141 (livro do usuário)" }
+  ],
+
   // Arquétipos (raças): custo em pontos [PT]. As desvantagens do arquétipo não contam no limite de −2.
   arquetipos: [
     { id: "humano", nome: "Humano", custo: 0, poderes: [], fonte: "PT" },
@@ -210,7 +236,7 @@ window.TDT_RULES = {
   lacunas: [
     "Efeitos das vantagens e desvantagens: o app tem um resumo curto de cada uma (em rules-efeitos-*.js), com a página do livro em fonte. O resumo não substitui o texto completo do livro (PDF p45-75).",
     "Poderes de arquétipo (Deformidade, Teratismo, Desfavor, Xenobiologia, Talento e Abascanto): o texto confere com o livro (PDF p79-82), mas o app não aplica o efeito nas contas; não há vantagem equivalente.",
-    "Artefatos: o limite por tipo (1 arma, 1 armadura, 2 acessórios) está aplicado (PDF p139). Faltam as Qualidades de Artefatos (Abençoado, Acurado, Amaldiçoado etc., PDF p139), que mudam o custo em XP. Veículos (PDF p140-141) têm ficha própria e não são criados aqui. O Victory não traz kits.",
+    "Artefatos: o limite por tipo (1 arma, 1 armadura, 2 acessórios) está aplicado (PDF p139). As 18 Qualidades de Artefatos estão no catálogo (PDF p139-141) e mudam o custo em XP, com mínimo de 10 XP. Auspicioso não é calculada: o custo depende da vantagem concedida (ver auditoria). Veículos (PDF p140-141) têm ficha própria, com atributos, vantagens e escala; não são criados aqui (pendência). O Victory não traz kits.",
     "Fora do escopo: 3D&T Alpha (5 características) é outro sistema e não é implementado. Este app cria fichas só do 3D&T Victory (3 atributos)."
   ]
 };

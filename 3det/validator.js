@@ -43,6 +43,30 @@ function tdtChecarPericias(p, add){
   });
 }
 
+/* Qualidades de um Artefato (PDF p139-141). Formato (id fora da lista, qualidade não calculada) bloqueia nos dois modos.
+   Tipo não permitido pelo livro, escolha faltando e incompatibilidade são regra de jogo (reg). */
+function tdtChecarQualidades(v, tipo, i, reg, add){
+  const qs = Array.isArray(v.qualidades) ? v.qualidades : [];
+  const vistos = new Set();
+  qs.forEach((q, k) => {
+    const campo = "vant-qual-" + i + "-" + k;
+    const r = tdtAchar(TDT_RULES.qualidadesArtefato, q && q.id);
+    if(!r){ add("erro", "Qualidade de Artefato fora da lista: " + (q && q.id) + ".", campo); return; }
+    if(r.aplicavel === false){ add("erro", r.nome + " ainda não é calculada pelo app (custo depende de outra vantagem).", campo); return; }
+    if(vistos.has(r.id)) add("erro", r.nome + " só pode aparecer uma vez no mesmo Artefato.", campo);
+    vistos.add(r.id);
+    if(r.tipos && tipo && !r.tipos.includes(tipo.id)) add(reg, r.nome + " não se aplica a " + tipo.nome.toLowerCase() + " (livro, p.139-141).", campo);
+    if(Array.isArray(r.opcoes) && !r.opcoes.some(o => o.v === q.escolha)) add(reg, "Escolha a faixa de " + r.nome + ".", campo);
+    if(r.escolha === "pericia" && !tdtPericiaRegra(q.escolha)) add(reg, "Escolha uma perícia para " + r.nome + ".", campo);
+    if(r.escolha === "texto" && !(typeof q.escolha === "string" && q.escolha.trim())) add(reg, "Escreva o tipo de alvo de " + r.nome + ".", campo);
+    (r.incompativel || []).forEach(idOutra => {
+      const j = qs.findIndex(x => x && x.id === idOutra);
+      const outra = tdtAchar(TDT_RULES.qualidadesArtefato, idOutra);
+      if(j > k && outra) add(reg, r.nome + " e " + outra.nome + " não podem estar no mesmo Artefato.", campo);
+    });
+  });
+}
+
 function tdtChecarVantagens(p, reg, add){
   const vistos = new Set(), porTipo = {};
   (p.vantagens || []).forEach((v, i) => {
@@ -59,6 +83,7 @@ function tdtChecarVantagens(p, reg, add){
         porTipo[t.id] = (porTipo[t.id] || 0) + 1;
         if(porTipo[t.id] > t.max) add(reg, "No máximo " + t.max + " " + t.nome.toLowerCase() + (t.max > 1 ? "s" : "") + " de Artefato por personagem (livro, p.139).", campo);
       }
+      tdtChecarQualidades(v, t, i, reg, add);
     } else if(r.multiplo){
       if(!tdtInteiro(v.qtd) || v.qtd < 1) add("erro", "Quantidade de " + r.nome + " deve ser um inteiro de 1 ou mais.", campo);
     } else if(v.qtd !== undefined && v.qtd !== null && v.qtd !== 1){

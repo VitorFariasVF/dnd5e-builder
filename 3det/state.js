@@ -26,7 +26,7 @@ function estadoPadrao(){
       atributos: { P: null, H: null, R: null },
       arquetipo: "",             // id de rules.arquetipos ou "" (vazio)
       pericias: [],              // ids de rules.pericias
-      vantagens: [],             // [{ id, qtd, custo, nota, tipo }]; tipo só em Artefato (arma|armadura|acessorio)
+      vantagens: [],             // [{ id, qtd, custo, nota, tipo, qualidades }]; tipo e qualidades só em Artefato (arma|armadura|acessorio; qualidades = [{ id, escolha }])
       desvantagens: [],          // [{ id, valor, nota, subtipo }]; subtipo só em Transtorno (id de rules.transtornosOpcoes)
       historia: "",
       anotacoes: ""
@@ -53,6 +53,8 @@ function ensureStateShape(){
   if(!Array.isArray(p.desvantagens)) p.desvantagens = [];
   /* Ids renomeados: Cópia virou Clone e Insano virou Transtorno (livro 3DeT Victory). */
   p.vantagens.forEach(v => { if(v && v.id === "copia") v.id = "clone"; });
+  /* Artefato: lista de qualidades (PDF p139-141). Dado antigo não tinha o campo. */
+  p.vantagens.forEach(v => { if(v && v.id === "artefato" && !Array.isArray(v.qualidades)) v.qualidades = []; });
   p.desvantagens.forEach(d => { if(d && d.id === "insano") d.id = "transtorno"; });
   /* Subtipo de Transtorno: versões antigas guardavam com acento ("compulsão"); o id é sem acento. */
   const semAcento = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "");

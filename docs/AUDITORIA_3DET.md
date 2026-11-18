@@ -47,6 +47,7 @@ Os textos de efeito das vantagens e desvantagens só aparecem quando o Kit Intro
 - PA = P × 1, PM = H × 5, PV = R × 5. Atributo 0 vale 1 ponto de recurso.
 - Custo dos atributos: 1 por ponto. Perícias: 1 cada.
 - Vantagem: custo fixo, ou o custo escolhido na faixa ou nas opções. Multiplica por `qtd` quando a vantagem é "multiplo".
+- Artefato: custo base em pontos (1 pt = 10 XP) mais as qualidades em XP (`tdtCustoArtefato`). Mínimo de 10 XP, mesmo com desvantagens (PDF p139). Qualidade sem escolha de faixa deixa o custo "a definir".
 - Desvantagens dão pontos pelo total negativo, limitado a 2. O orçamento é `pontosTotal + min(2, −soma)`.
 - Arquétipo: custo do `rules.js`. Sem arquétipo, o custo é 0. Custo `null` deixa gastos e saldo como "a definir" e gera aviso.
 
@@ -68,6 +69,7 @@ Conferidas no PDF `3det_victory.pdf` (289 pp.) em 2026-11-18. Página = número 
 | Insano / Transtorno | `insano` trocado por **Transtorno**, −1 cada, pode repetir. Escolha de uma das oito opções (cleptomania, compulsão, distração, fantasia, fobia, megalomania, mitomania, paranoia). | p74-75 | O livro não tem Insano. Tem "Transtorno –1pt cada" com oito opções. |
 | Código | **Nove** itens: 1ª e 2ª Lei de Asimov, Caçador, Combate, Derrota, Gratidão, Heróis, Honestidade, Redenção. Lista em `TDT_EFEITOS_DESVANTAGENS.codigo.lista`. | p68 | O livro lista nove itens. As duas Leis de Asimov contam como dois. |
 | Artefato | Custo **1 pt ou mais, sem teto** (`custoAberto`, sem `custoMax`). Cada entrada é **um item** (`itens: true`): pode repetir, tem campo `tipo` (arma, armadura ou acessório) e não usa quantidade. Limite por personagem: **1 arma, 1 armadura e 2 acessórios**. | p48 (vantagem), p139 (limite e tipos) | O livro não dá teto de custo. O p139 diz "Um personagem pode usar no máximo uma arma, uma armadura e dois acessórios". Para o limite ter efeito, o app precisa de mais de uma entrada, por isso não é vantagem única. |
+| Qualidades de Artefato | 18 qualidades em `TDT_RULES.qualidadesArtefato`, cada uma com custo em XP, página e tipos de artefato. O usuário escolhe quais o artefato tem (campo `qualidades` em cada Artefato). O custo entra na conta: base + XP, mínimo 10 XP. Mostra na ficha e no PDF. Faixas (Aprimorado 1-5, Encantado 1-5, Amaldiçoado suave/grave) e perícias (Inteligente, Obra-Prima) são escolhidas no item. Auspicioso não é calculada (ver decisão 9). | p139-141 | O livro diz que a qualidade "afeta seu custo" e dá o custo de cada uma em XP. Os custos foram conferidos no texto. |
 | Grimório | Custo **1 pt ou mais, sem teto**. Sem limite de itens nem de tipo. | p54-55 | Conferido: o texto não traz limite. |
 | Ataque Especial e Defesa Especial | Lista completa das variações, com custo em PM. Antes listava só 4 ou 5. | p49 (Ataque), p51-52 (Defesa) | O livro tem 12 variações de ataque e 9 de defesa. Os custos foram conferidos no texto. |
 | Transtorno (escolha) | A escolha das oito opções fica em `subtipo` (campo novo na desvantagem). Sem escolha, erro nos dois modos. A ficha mostra o efeito da opção escolhida, com a página. | p74-75 | O livro diz "Escolha um entre os seguintes". Os efeitos das oito opções já estavam no catálogo (`rules-efeitos-desvantagens.js`) e foram conferidos. |
@@ -85,6 +87,9 @@ Conferidas no PDF `3det_victory.pdf` (289 pp.) em 2026-11-18. Página = número 
 5. **Stepper e toasts.** O `dnd5e/ui-theme.js` depende de globais do ui.js do D&D, então não foi carregado. O stepper segue as mesmas classes (`stepper`, `stepper-dots`, `stepper-track`) do `core/theme.css`. Confirmações usam `VFTool.toast`.
 6. **Nível de poder "Pontos livres".** Os pontos totais são editáveis apenas nesse caso. Nos outros, o campo fica somente leitura com o valor do nível.
 7. **Backup inclui o modo.** O campo `estado` guarda `modo` e `personagem`. A etapa não entra no backup, e a importação abre a ficha na etapa 1.
+8. **Qualidades de Artefato: custo e restrições.** Cada qualidade soma seu custo em XP ao custo base do artefato (1 pt = 10 XP). O total nunca fica abaixo de 10 XP (p139). Restrições do livro aplicadas: tipo (Acurado: arma ou acessório; Fortificada e Leve: armadura; Maciço, Espiritual, Venenoso, Flagelo: arma; Obra-Prima e Aprimorado: acessório; Abençoado: armadura ou acessório; Honrado e Inteligente: arma ou armadura; Encantado, Condutor, Auspicioso e Amaldiçoado não restringem); incompatíveis (Acurado com Maciço; Fortificada com Leve, p140-141). Interpretação do app, não do livro: uma mesma qualidade não se repete no mesmo artefato. Violação é erro no estrito e aviso no livre, como o limite por tipo. Vorpal e Sagrado não trazem restrição de tipo no texto, então não são restringidos. "Artefatos com qualidades iguais não se acumulam" (p139) é regra de efeito, não de custo, e o app não calcula efeitos: fica fora.
+9. **Auspicioso: dúvida, não aplicada.** O livro diz que o custo em XP "é igual ao custo para comprar a vantagem" concedida (p140). O app não sabe qual vantagem o artefato concede nem como somar mais de uma. Por isso a qualidade está no catálogo com `aplicavel: false`: não aparece no seletor, e se vier de um backup, a validação dá erro. Dúvida em aberto: quem define a vantagem concedida e o custo para o usuário (campo livre ou seleção de vantagens).
+10. **Escolha de faixa e perícia.** Aprimorado e Encantado usam a faixa do livro (1 a 5, com o custo da tabela). Amaldiçoado usa suave (–10 XP) ou grave (–20 XP). Inteligente e Obra-Prima pedem uma perícia (qualquer da lista, não só as do personagem, p141). Flagelo pede o tipo de alvo em texto. Nenhuma escolha é preenchida automaticamente: sem ela, o custo fica "a definir" e a validação pede.
 
 ## Lacunas
 
@@ -92,7 +97,8 @@ Lista de `TDT_RULES.lacunas`, revista em 2026-11-18 contra o livro:
 
 - **Efeitos das vantagens e desvantagens.** O app tem um resumo curto de cada uma (`rules-efeitos-*.js`), com página em `fonte`. Não é o texto completo do livro (p45-75).
 - **Poderes de arquétipo** (Deformidade, Teratismo, Desfavor, Xenobiologia, Talento, Abascanto). O texto confere com o livro (p79-82), mas o app não aplica o efeito nas contas. Não há vantagem equivalente.
-- **Artefatos.** O limite por tipo está aplicado (p139). Faltam as Qualidades de Artefatos (Abençoado, Acurado, Amaldiçoado etc., p139), que mudam o custo em XP. Veículos (p140-141) têm ficha própria e não são criados aqui. O Victory não traz kits.
+- **Artefatos.** O limite por tipo está aplicado (p139). As 18 Qualidades de Artefatos estão aplicadas (p139-141), exceto Auspicioso (decisão 9). Efeitos das qualidades (Acurado, Maciço, Vorpal etc.) não são calculados nas contas de combate: o app só calcula o custo. O Victory não traz kits.
+- **Veículos: pendência (p140-142).** O livro dá a cada veículo uma ficha própria, com atributos, vantagens e desvantagens, e um personagem usa essa ficha quando pilota. Também tem regras de Habilidade nula, pilotagem com Esporte ou Máquinas, escala acima do piloto e custo próprio (10 pontos = artefato de 20 XP, p142). Não é ficha simples, então não foi criado. Próximo passo: uma ficha de veículo separada, com a mesma validação.
 - **Fora do escopo: 3D&T Alpha** (5 características). É outro sistema e não é implementado. Este app cria fichas só do 3D&T Victory (3 atributos).
 - Sem exportação para VTT. Nenhum VTT foi verificado para este sistema.
 
@@ -111,10 +117,12 @@ Bug achado e corrigido: 21 desvantagens (ex.: Ambiente, Bateria, Amnésia) tinha
 ## Como rodar os testes
 
 ```
-node 3det/tests/run-all.js     # engine (15), validações (38), backup (13), release (10), sugestão (10), imagem (11), migração (3), livro 3DeT Victory (16)
+node 3det/tests/run-all.js     # engine (15), validações (38), backup (13), release (10), sugestão (10), imagem (11), migração (3), livro 3DeT Victory (31)
 node 3det/tests/e2e.js         # navegador: precisa de Chrome e de Playwright (global ou local)
 ```
 
 O `run-all.js` sai com código diferente de zero se algum teste falhar. O `e2e.js` percorre as sete etapas, baixa o backup, reimporta, abre o PDF e confere a ausência de rolagem lateral e de erros de console em 1100 px e 360 px.
 
 Resultado da rodada de 2026-11-18 (itens do livro: Artefato, Transtorno, fontes, lacunas): `run-all.js` passa em todos os testes, incluindo os 16 de `livro_3det.test.js`. O `e2e.js` (Chrome) também passou: fluxo completo, sem erro de console e sem rolagem lateral em 1100 px e 360 px.
+
+Resultado da rodada de 2026-11-18 (Qualidades de Artefato): `run-all.js` passou em todos os testes, com 31 no `livro_3det.test.js` (16 antes, 15 novos sobre catálogo, custo, restrições, incompatibilidades, ficha, PDF e dado antigo). O `e2e.js` (Chrome) também passou. Um roteiro extra fora do repositório (add artefato, adicionar Aprimorado +2 e Acurado, remover Acurado) confirmou custo 5 e depois 3 pontos, com a mesma linha no PDF e sem erro de console.

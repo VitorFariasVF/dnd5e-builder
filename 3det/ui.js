@@ -196,7 +196,48 @@ function tdtItemVantagem(v, i){
   return `<li class="card-nested" id="vant-item-${i}" tabindex="-1">
     <div><strong>${tdtEsc(r.nome)}</strong> <small class="muted">${tdtEsc(custo === null ? "custo a definir" : "custo " + custo + " pt")}</small><br><small class="muted">${tdtNotaEfeito(r)}</small></div>
     <div class="tdt-controles">${controles.join("")}</div>
+    ${r.itens ? tdtBlocoQualidades(v, i) : ""}
     <div class="actions"><button type="button" class="small danger" data-acao="vant-remover" data-i="${i}">Remover</button></div></li>`;
+}
+
+/* Qualidades de um Artefato (PDF p139-141): lista com custo em XP, escolha quando o livro pede, e um seletor para adicionar. */
+function tdtTextoXP(xp){
+  if(xp === null) return "custo a definir";
+  return (xp > 0 ? "+" : "–") + Math.abs(xp) + " XP";
+}
+
+function tdtControleEscolhaQualidade(qr, q, i, k){
+  if(Array.isArray(qr.opcoes)){
+    const ops = qr.opcoes.map(o => `<option value="${o.v}"${o.v === q.escolha ? " selected" : ""}>${tdtEsc(o.rotulo)}</option>`).join("");
+    return `<label for="arte-qual-escolha-${i}-${k}">Faixa de ${tdtEsc(qr.nome)}</label><select id="arte-qual-escolha-${i}-${k}" data-campo="arte-qual-escolha" data-i="${i}" data-k="${k}"><option value="">Escolha</option>${ops}</select>`;
+  }
+  if(qr.escolha === "pericia"){
+    const ops = TDT_RULES.pericias.map(x => `<option value="${x.id}"${x.id === q.escolha ? " selected" : ""}>${tdtEsc(x.nome)}</option>`).join("");
+    return `<label for="arte-qual-escolha-${i}-${k}">Perícia de ${tdtEsc(qr.nome)}</label><select id="arte-qual-escolha-${i}-${k}" data-campo="arte-qual-escolha" data-i="${i}" data-k="${k}"><option value="">Escolha uma perícia</option>${ops}</select>`;
+  }
+  if(qr.escolha === "texto"){
+    return `<label for="arte-qual-escolha-${i}-${k}">Tipo de alvo</label><input id="arte-qual-escolha-${i}-${k}" data-campo="arte-qual-escolha" data-i="${i}" data-k="${k}" value="${tdtEsc(q.escolha || "")}" autocomplete="off">`;
+  }
+  return "";
+}
+
+function tdtBlocoQualidades(v, i){
+  const qs = Array.isArray(v.qualidades) ? v.qualidades : [];
+  const lista = qs.map((q, k) => {
+    const qr = tdtAchar(TDT_RULES.qualidadesArtefato, q.id);
+    if(!qr) return `<li>${tdtEsc(q.id)} (fora da lista)</li>`;
+    const xp = tdtCustoQualidadeXP(q);
+    const sem = qr.aplicavel === false ? " (não calculada)" : "";
+    return `<li class="tdt-qualidade"><div><strong>${tdtEsc(qr.nome)}</strong> <small class="muted">${tdtEsc(tdtTextoXP(xp))}${tdtEsc(sem)}</small><br><small class="muted">${tdtEsc(qr.desc)} · ${tdtEsc(qr.fonte)}</small></div>
+      <div class="tdt-controles">${tdtControleEscolhaQualidade(qr, q, i, k)}</div>
+      <div class="actions"><button type="button" class="small danger" data-acao="arte-qual-remover" data-i="${i}" data-k="${k}">Remover qualidade</button></div></li>`;
+  }).join("");
+  const disponiveis = TDT_RULES.qualidadesArtefato.filter(q => q.aplicavel !== false && !qs.some(x => x.id === q.id) && (!q.tipos || !v.tipo || q.tipos.includes(v.tipo)));
+  const ops = disponiveis.map(q => `<option value="${q.id}">${tdtEsc(q.nome)} (${Array.isArray(q.opcoes) ? "escolhe a faixa" : tdtEsc(tdtTextoXP(q.xp))})</option>`).join("");
+  return `<div class="tdt-qualidades"><p class="muted">Qualidades de Artefato (livro, p.139-141). Cada uma muda o custo em XP; o mínimo do Artefato é 10 XP.</p>
+    <ul class="tdt-lista" id="qualidades-${i}">${lista || '<li class="muted">Nenhuma qualidade.</li>'}</ul>
+    <div class="tdt-controles"><label for="arte-qual-add-${i}">Adicionar qualidade</label><select id="arte-qual-add-${i}"><option value="">Escolha uma qualidade</option>${ops}</select>
+    <button type="button" class="small" data-acao="arte-qual-add" data-i="${i}">Adicionar</button></div></div>`;
 }
 
 function tdtItemDesvantagem(d, i){
@@ -353,6 +394,12 @@ function tdtAplicarCampo(campo, el){
     case "vant-custo": if(p.vantagens[i]) p.vantagens[i].custo = numero(); break;
     case "vant-tipo": if(p.vantagens[i]) p.vantagens[i].tipo = texto || null; break;
     case "vant-nota": if(p.vantagens[i]) p.vantagens[i].nota = texto; break;
+    case "arte-qual-escolha": {
+      const q = p.vantagens[i] && p.vantagens[i].qualidades && p.vantagens[i].qualidades[Number(el.dataset.k)];
+      const qr = q && tdtAchar(TDT_RULES.qualidadesArtefato, q.id);
+      if(qr) q.escolha = Array.isArray(qr.opcoes) ? (texto === "" ? null : Number(texto)) : (texto || null);
+      break;
+    }
     case "desv-valor": if(p.desvantagens[i]) p.desvantagens[i].valor = numero(); break;
     case "desv-nota": if(p.desvantagens[i]) p.desvantagens[i].nota = texto; break;
     case "desv-subtipo": if(p.desvantagens[i]) p.desvantagens[i].subtipo = texto || null; break;
@@ -418,7 +465,17 @@ function tdtAdicionarVantagem(id){
   const r = tdtVantagemRegra(id);
   if(!r) return;
   const custo = r.custo !== undefined ? r.custo : Array.isArray(r.custoOpcoes) ? r.custoOpcoes[0] : r.custoMin;
-  state.personagem.vantagens.push(r.itens ? { id, qtd: 1, custo, nota: "", tipo: null } : { id, qtd: 1, custo, nota: "" });
+  state.personagem.vantagens.push(r.itens ? { id, qtd: 1, custo, nota: "", tipo: null, qualidades: [] } : { id, qtd: 1, custo, nota: "" });
+}
+
+/* Adiciona a qualidade escolhida no seletor do Artefato i. Faixa e perícia começam vazias: o validador pede. */
+function tdtAdicionarQualidade(i){
+  const sel = document.getElementById("arte-qual-add-" + i);
+  const id = sel ? sel.value : "";
+  const v = state.personagem.vantagens[i];
+  if(!id || !v || v.id !== "artefato") return;
+  if(!Array.isArray(v.qualidades)) v.qualidades = [];
+  v.qualidades.push({ id, escolha: null });
 }
 
 function tdtAdicionarDesvantagem(id){
@@ -532,6 +589,8 @@ function tdtLigarEventos(){
     else if(acao === "pdf") tdtGerarPdf();
     else if(acao === "vant-add"){ tdtAdicionarVantagem(id); salvarEstado(); tdtRender(); }
     else if(acao === "vant-remover"){ state.personagem.vantagens.splice(i, 1); salvarEstado(); tdtRender(); }
+    else if(acao === "arte-qual-add"){ tdtAdicionarQualidade(i); salvarEstado(); tdtRender(); }
+    else if(acao === "arte-qual-remover"){ const q = state.personagem.vantagens[i]; if(q && q.qualidades) q.qualidades.splice(Number(b.dataset.k), 1); salvarEstado(); tdtRender(); }
     else if(acao === "desv-add"){ tdtAdicionarDesvantagem(id); salvarEstado(); tdtRender(); }
     else if(acao === "desv-remover"){ state.personagem.desvantagens.splice(i, 1); salvarEstado(); tdtRender(); }
     else if(acao === "limpar"){ if(window.confirm("Apagar a ficha atual e as fichas salvas deste navegador?")){ limparDadosSalvos(); substituirEstado(estadoPadrao()); tdtRender(); } }

@@ -119,4 +119,117 @@ teste("Fontes: Ataque Especial e Defesa Especial trazem as variações completas
   assert.strictEqual(avaliar(ctx, `/Titânica 3/.test(tdtVantagemRegra("defesa_especial").desc)`), true);
 });
 
+/* Qualidades de Artefatos (PDF p139-141): catálogo, custo em XP (1 pt = 10 XP, mínimo 10 XP) e validação. */
+const artQ = (tipo, custo, quals) => ({ id: "artefato", qtd: 1, custo, nota: "", tipo, qualidades: quals });
+const custoArt = v => avaliar(ctx, `tdtCustoVantagem(${JSON.stringify(v)})`);
+
+teste("Qualidades de Artefato: as 18 do livro estão no catálogo, com página (PDF p139-141)", () => {
+  const lista = avaliar(ctx, `TDT_RULES.qualidadesArtefato.map(q => [q.id, q.nome, q.fonte])`);
+  assert.strictEqual(lista.length, 18);
+  lista.forEach(([id, nome, fonte]) => {
+    assert.ok(/3DeT Victory, PDF p1(39|40|41)/.test(fonte), id + ": " + fonte);
+    assert.ok(nome && nome.length > 2, id + " sem nome");
+  });
+  const nomes = lista.map(x => x[1]);
+  ["Abençoado", "Acurado", "Amaldiçoado", "Aprimorado", "Auspicioso", "Condutor", "Encantado", "Espiritual", "Flagelo", "Fortificada", "Honrado", "Inteligente", "Leve", "Maciço", "Obra-Prima", "Sagrado", "Venenoso", "Vorpal"].forEach(n => {
+    assert.ok(nomes.includes(n), "falta " + n);
+  });
+});
+
+teste("Qualidades de Artefato: custos fixos conferidos com o livro (+10, +20, +50; Honrado –10)", () => {
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "abencoado" })`), 10);
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "acurado" })`), 20);
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "vorpal" })`), 50);
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "honrado" })`), -10);
+});
+
+teste("Qualidades de Artefato: faixa escolhida muda o custo (Encantado +3 = 50 XP; Aprimorado +2 = 20 XP)", () => {
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "encantado", escolha: 3 })`), 50);
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "aprimorado", escolha: 2 })`), 20);
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "amaldicoado", escolha: 2 })`), -20);
+  assert.strictEqual(avaliar(ctx, `tdtCustoQualidadeXP({ id: "encantado", escolha: null })`), null);
+});
+
+teste("Artefato com qualidades: o custo soma o base (1 pt = 10 XP) e as qualidades em XP", () => {
+  assert.strictEqual(custoArt(artQ("arma", 1, [{ id: "acurado", escolha: null }])), 3);
+  assert.strictEqual(custoArt(artQ("arma", 2, [{ id: "vorpal", escolha: null }, { id: "acurado", escolha: null }])), 9);
+  assert.strictEqual(custoArt(artQ("armadura", 1, [{ id: "encantado", escolha: 3 }])), 6);
+  assert.strictEqual(custoArt(artQ("acessorio", 1, [{ id: "aprimorado", escolha: 2 }])), 3);
+});
+
+teste("Artefato: desvantagens não baixam o custo abaixo de 10 XP (1 pt, p139)", () => {
+  assert.strictEqual(custoArt(artQ("armadura", 1, [{ id: "honrado", escolha: null }])), 1);
+  assert.strictEqual(custoArt(artQ("armadura", 1, [{ id: "amaldicoado", escolha: 2 }])), 1);
+  assert.strictEqual(custoArt(artQ("arma", 2, [{ id: "amaldicoado", escolha: 2 }])), 1);
+});
+
+teste("Artefato sem qualidade mantém o custo de antes (regra antiga preservada)", () => {
+  assert.strictEqual(custoArt(artQ("arma", 4, [])), 4);
+  assert.strictEqual(custoArt({ id: "artefato", qtd: 1, custo: 4, nota: "", tipo: "arma" }), 4);
+});
+
+teste("Artefato: faixa sem escolha deixa o custo 'a definir' (não chuta); perícia sem escolha não muda o custo", () => {
+  assert.strictEqual(custoArt(artQ("arma", 1, [{ id: "encantado", escolha: null }])), null);
+  assert.strictEqual(custoArt(artQ("acessorio", 1, [{ id: "obra_prima", escolha: null }])), 2);
+});
+
+teste("Auspicioso não é calculada (custo depende da vantagem concedida): custo a definir e erro na validação", () => {
+  assert.strictEqual(custoArt(artQ("acessorio", 1, [{ id: "auspicioso", escolha: null }])), null);
+  const p = base(); p.vantagens = [artQ("acessorio", 1, [{ id: "auspicioso", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, p, "livre")), "ainda não é calculada"));
+});
+
+teste("Qualidade fora da lista: erro nos dois modos", () => {
+  const p = base(); p.vantagens = [artQ("arma", 1, [{ id: "flamejante", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, p, "livre")), "fora da lista"));
+  assert.ok(temMsg(erros(valida(5, p, "estrito")), "fora da lista"));
+});
+
+teste("Qualidade que o livro não dá ao tipo: Fortificada em arma pede regra (estrito erro, livre aviso)", () => {
+  const p = base(); p.vantagens = [artQ("arma", 1, [{ id: "fortificada", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, p, "estrito")), "não se aplica a arma"));
+  assert.ok(temMsg(avisos(valida(5, p, "livre")), "não se aplica a arma"));
+  const ok = base(); ok.vantagens = [artQ("armadura", 1, [{ id: "fortificada", escolha: null }])];
+  assert.ok(!temMsg(valida(5, ok, "estrito"), "não se aplica"));
+});
+
+teste("Qualidades incompatíveis: Acurado com Maciço, Fortificada com Leve (regra de jogo)", () => {
+  const p = base(); p.vantagens = [artQ("arma", 1, [{ id: "acurado", escolha: null }, { id: "macico", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, p, "estrito")), "não podem estar no mesmo Artefato"));
+  assert.ok(temMsg(avisos(valida(5, p, "livre")), "não podem estar no mesmo Artefato"));
+  const q = base(); q.vantagens = [artQ("armadura", 1, [{ id: "leve", escolha: null }, { id: "fortificada", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, q, "estrito")), "não podem estar no mesmo Artefato"));
+});
+
+teste("Qualidades: faixa e perícia pedidas, e a mesma qualidade não se repete no item", () => {
+  const sem = base(); sem.vantagens = [artQ("acessorio", 1, [{ id: "aprimorado", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, sem, "estrito")), "Escolha a faixa de Aprimorado"));
+  const pericia = base(); pericia.vantagens = [artQ("acessorio", 1, [{ id: "obra_prima", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, pericia, "estrito")), "Escolha uma perícia para Obra-Prima"));
+  const dup = base(); dup.vantagens = [artQ("arma", 1, [{ id: "acurado", escolha: null }, { id: "acurado", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, dup, "livre")), "só pode aparecer uma vez"));
+});
+
+teste("Qualidades: o limite por tipo continua valendo com qualidades (2 armas com Acurado: erro)", () => {
+  const p = base(); p.vantagens = [artQ("arma", 1, [{ id: "acurado", escolha: null }]), artQ("arma", 1, [{ id: "venenoso", escolha: null }])];
+  assert.ok(temMsg(erros(valida(5, p, "estrito")), "No máximo 1 arma de Artefato"));
+});
+
+teste("Qualidades: a ficha mostra nome, XP e a fonte; o PDF lista as qualidades com escolha", () => {
+  const html = avaliar(ctx, `tdtItemVantagem(${JSON.stringify(artQ("acessorio", 1, [{ id: "aprimorado", escolha: 2 }, { id: "acurado", escolha: null }]))}, 0)`);
+  assert.ok(html.includes("Aprimorado"), "nome na ficha");
+  assert.ok(html.includes("+20 XP"), "custo em XP na ficha");
+  assert.ok(html.includes("PDF p140"), "página na ficha");
+  assert.ok(html.includes('data-acao="arte-qual-add"'), "seletor para adicionar");
+  const pdf = avaliar(ctx, `tdtPdfVantagens({ vantagens: ${JSON.stringify([artQ("acessorio", 2, [{ id: "aprimorado", escolha: 2 }, { id: "acurado", escolha: null }])])} })`);
+  assert.ok(pdf.includes("Aprimorado +2 (+20 XP)"), "PDF: " + pdf);
+  assert.ok(pdf.includes("Acurado (+20 XP)"), "PDF: " + pdf);
+  assert.ok(pdf.includes("(6 pt)"), "PDF: " + pdf);
+});
+
+teste("Qualidades: dado antigo (Artefato sem o campo) ganha lista vazia ao carregar", () => {
+  const q = avaliar(ctx, `(() => { substituirEstado({ etapa: 5, tela: "ficha", modo: "livre", personagem: { nome: "x", vantagens: [{ id: "artefato", qtd: 1, custo: 2, nota: "", tipo: "arma" }] } }); return state.personagem.vantagens[0].qualidades; })()`);
+  assert.deepStrictEqual(q, []);
+});
+
 sair("livro 3DeT Victory");

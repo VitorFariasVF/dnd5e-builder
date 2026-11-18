@@ -46,9 +46,36 @@ function tdtCustoPericias(p){
 
 /* Custo de uma vantagem comprada: custo fixo da regra, ou o custo escolhido (faixa ou opções),
    multiplicado pela quantidade quando a vantagem é "multiplo". Null se a escolha não existe. */
+/* Custo em XP de uma qualidade de Artefato (PDF p139-141). Faixa escolhida (opcoes) ou xp fixo.
+   Null se a qualidade não existe, não é calculada (aplicavel: false) ou falta a escolha da faixa. */
+function tdtCustoQualidadeXP(q){
+  const r = tdtAchar(TDT_RULES.qualidadesArtefato, q.id);
+  if(!r || r.aplicavel === false) return null;
+  if(Array.isArray(r.opcoes)){
+    const o = r.opcoes.find(x => x.v === q.escolha);
+    return o ? o.xp : null;
+  }
+  return tdtInteiro(r.xp) ? r.xp : null;
+}
+
+/* Custo de um Artefato em pontos: custo base (1 ponto = 10 XP) mais as qualidades em XP.
+   O mínimo é 10 XP, mesmo com desvantagens (p139). Qualidades são múltiplos de 10 XP, então o resultado é inteiro.
+   Null se o custo base ou alguma qualidade estiver pendente. */
+function tdtCustoArtefato(v){
+  if(!tdtInteiro(v.custo)) return null;
+  let xp = v.custo * 10;
+  for(const q of (v.qualidades || [])){
+    const c = tdtCustoQualidadeXP(q);
+    if(c === null) return null;
+    xp += c;
+  }
+  return Math.max(10, xp) / 10;
+}
+
 function tdtCustoVantagem(v){
   const r = tdtVantagemRegra(v.id);
   if(!r) return null;
+  if(r.itens) return tdtCustoArtefato(v);
   const qtd = r.multiplo ? (tdtInteiro(v.qtd) ? v.qtd : 1) : 1;
   const unitario = r.custo !== undefined ? r.custo : v.custo;
   if(!tdtInteiro(unitario)) return null;

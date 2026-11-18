@@ -45,6 +45,21 @@ function tdtPdfPericias(p){
   }), "Nenhuma perícia escolhida.");
 }
 
+/* Uma qualidade de Artefato na ficha impressa: nome, escolha (se houver) e custo em XP. Ex.: "Aprimorado +2 (20 XP)". */
+function tdtPdfQualidade(q){
+  const r = tdtAchar(TDT_RULES.qualidadesArtefato, q.id);
+  if(!r) return q.id + " (fora da lista)";
+  const xp = tdtCustoQualidadeXP(q);
+  const xpTxt = xp === null ? "custo a definir" : (xp > 0 ? "+" : "–") + Math.abs(xp) + " XP";
+  let escolha = "";
+  if(Array.isArray(r.opcoes)){
+    const o = r.opcoes.find(x => x.v === q.escolha);
+    escolha = " " + (o ? o.rotulo.replace(/ \(.*\)$/, "") : "faixa a definir");
+  } else if(r.escolha === "pericia") escolha = " (" + ((tdtPericiaRegra(q.escolha) || {}).nome || "perícia a definir") + ")";
+  else if(r.escolha === "texto") escolha = " (" + (q.escolha ? String(q.escolha).trim() : "alvo a definir") + ")";
+  return tdtEsc(r.nome + escolha + " (" + xpTxt + ")");
+}
+
 function tdtPdfVantagens(p){
   return tdtPdfLinhas((p.vantagens || []).map(v => {
     const r = tdtVantagemRegra(v.id);
@@ -54,7 +69,9 @@ function tdtPdfVantagens(p){
     const nota = r.id === "maestria" ? " · Maestria em " + ((tdtPericiaRegra(v.nota) || {}).nome || "perícia a definir") : (v.nota ? " · " + v.nota : "");
     const tipoItem = r.itens && v.tipo ? " · " + (((TDT_RULES.artefatoTipos || []).find(t => t.id === v.tipo) || {}).nome || v.tipo) : "";
     const efeito = r.desc ? r.desc : TDT_NOTA_EFEITO;
-    return `<strong>${tdtEsc(r.nome)}</strong> (${tdtEsc(custo === null ? "custo a definir" : custo + " pt")}${tdtEsc(qtd)})${tdtEsc(tipoItem)}${tdtEsc(nota)}. <span class="suave">${tdtEsc(efeito)}</span>`;
+    const quals = r.itens && Array.isArray(v.qualidades) && v.qualidades.length
+      ? ". Qualidades: " + v.qualidades.map(tdtPdfQualidade).join("; ") : "";
+    return `<strong>${tdtEsc(r.nome)}</strong> (${tdtEsc(custo === null ? "custo a definir" : custo + " pt")}${tdtEsc(qtd)})${tdtEsc(tipoItem)}${tdtEsc(nota)}${quals}. <span class="suave">${tdtEsc(efeito)}</span>`;
   }), "Nenhuma vantagem escolhida.");
 }
 
