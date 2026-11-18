@@ -79,7 +79,8 @@ const RULE_PROFICIENCY_CATEGORY_MAP = {
   "Veículos terrestres": { category: "tool", key: "land_vehicles" },
   "Veículos aquáticos": { category: "tool", key: "water_vehicles" },
   "Suprimentos de cervejeiro": { category: "tool", key: "brewers_supplies" },
-  "Suprimentos de caligrafia": { category: "tool", key: "calligraphers_supplies" }
+  "Suprimentos de caligrafia": { category: "tool", key: "calligraphers_supplies" },
+  "Ferramentas de pintor": { category: "tool", key: "painters_tools" }
 };
 
 const RULE_CLASS_SPELLCASTING = {
@@ -234,6 +235,7 @@ const RULE_SUBCLASS_SPELL_RULES = {
   "paladino:redemption": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.ALWAYS_PREPARED, unlockByClassLevel: ruleCloneSubclassSpellBucket("paladino:redemption") },
 
   // Arquétipos de patrulheiro de Xanathar: magias conhecidas extras, sem consumir limite normal.
+  "feiticeiro:shadow": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.BONUS_KNOWN, unlockByClassLevel: ruleCloneSubclassSpellBucket("feiticeiro:shadow") },
   "patrulheiro:gloom_stalker": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.BONUS_KNOWN, unlockByClassLevel: ruleCloneSubclassSpellBucket("patrulheiro:gloom_stalker") },
   "patrulheiro:horizon_walker": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.BONUS_KNOWN, unlockByClassLevel: ruleCloneSubclassSpellBucket("patrulheiro:horizon_walker") },
   "patrulheiro:monster_slayer": { type: RULE_SUBCLASS_SPELL_RULE_TYPES.BONUS_KNOWN, unlockByClassLevel: ruleCloneSubclassSpellBucket("patrulheiro:monster_slayer") },
@@ -258,11 +260,13 @@ const RULE_SUBCLASS_SPELL_RULES = {
 
 const RULE_SUBCLASS_PROFICIENCY_GRANTS = {
   "bardo:swords": { level: 3, proficiencies: { armor: ["Armaduras médias"], weapons: ["Cimitarras"], tools: [], skills: [], savingThrows: [], languages: [] } },
-  "clerigo:forge": { level: 1, proficiencies: { armor: ["Armaduras pesadas"], weapons: [], tools: [], skills: [], savingThrows: [], languages: [] } },
+  "clerigo:forge": { level: 1, proficiencies: { armor: ["Armaduras pesadas"], weapons: [], tools: ["Ferramentas de ferreiro"], skills: [], savingThrows: [], languages: [] } },
   "bruxo:hexblade": { level: 1, proficiencies: { armor: ["Armaduras médias", "Escudos"], weapons: ["Armas marciais"], tools: [], skills: [], savingThrows: [], languages: [] } },
   "ladino:scout": { level: 3, proficiencies: { armor: [], weapons: [], tools: [], skills: ["Natureza", "Sobrevivência"], savingThrows: [], languages: [] } },
   "monge:drunken_master": { level: 3, proficiencies: { armor: [], weapons: [], tools: ["Suprimentos de cervejeiro"], skills: ["Atuação"], savingThrows: [], languages: [] } },
-  "monge:kensei": { level: 3, proficiencies: { armor: [], weapons: [], tools: ["Suprimentos de caligrafia"], skills: [], savingThrows: [], languages: [] } },
+  "monge:kensei": { level: 3, proficiencies: { armor: [], weapons: [], tools: [], skills: [], savingThrows: [], languages: [] } },
+  "ladino:mastermind": { level: 3, proficiencies: { armor: [], weapons: [], tools: ["Kit de disfarce", "Kit de falsificação"], skills: [], savingThrows: [], languages: [] } },
+  "guerreiro:samurai": { level: 7, proficiencies: { armor: [], weapons: [], tools: [], skills: [], savingThrows: ["Sabedoria"], languages: [] } },
   "patrulheiro:gloom_stalker": { level: 7, proficiencies: { armor: [], weapons: [], tools: [], skills: [], savingThrows: ["Sabedoria"], languages: [] } }
 };
 
@@ -420,7 +424,91 @@ const RULE_XANATHAR_RACIAL_FEATS = {
     source: "Xanathar",
     allowedRaces: ["halfling"],
     prerequisites: [{ type: "race", allowedRaces: ["halfling"] }],
-    grants: { attributes: { chooseOne: ["destreza", "constituicao", "carisma"], amount: 1 }, proficiencies: {}, features: ["second_chance"] }
+    grants: { attributes: { chooseOne: ["constituicao", "carisma"], amount: 1 }, proficiencies: {}, features: ["second_chance"] }
+  },
+  agachamento_agil: {
+    name: "Agachamento Ágil",
+    source: "Xanathar",
+    allowedRaces: ["anao", "gnomo", "halfling"],
+    prerequisites: [{ type: "race", allowedRaces: ["anao", "gnomo", "halfling"] }],
+    grants: { attributes: { chooseOne: ["forca", "destreza"], amount: 1 }, proficiencies: { skill: { choose: 1, options: ["Acrobacia", "Atletismo"] } }, features: ["squat_nimbleness_speed", "squat_nimbleness_grapple"] }
+  },
+  fortitude_ana: {
+    name: "Fortitude Anã",
+    source: "Xanathar",
+    allowedRaces: ["anao"],
+    prerequisites: [{ type: "race", allowedRaces: ["anao"] }],
+    grants: { attributes: { constituicao: 1 }, proficiencies: {}, features: ["dwarven_fortitude_dodge_heal"] }
+  },
+  couro_de_dragao: {
+    name: "Couro de Dragão",
+    source: "Xanathar",
+    allowedRaces: ["draconato"],
+    prerequisites: [{ type: "race", allowedRaces: ["draconato"] }],
+    grants: { attributes: { chooseOne: ["forca", "constituicao", "carisma"], amount: 1 }, proficiencies: {}, features: ["dragon_hide_ac", "dragon_hide_claws"] }
+  },
+  temor_draconico: {
+    name: "Temor Dracônico",
+    source: "Xanathar",
+    allowedRaces: ["draconato"],
+    prerequisites: [{ type: "race", allowedRaces: ["draconato"] }],
+    grants: { attributes: { chooseOne: ["forca", "constituicao", "carisma"], amount: 1 }, proficiencies: {}, features: ["dragon_fear_roar"] }
+  },
+  alta_magia_drow: {
+    name: "Alta Magia Drow (exige elfo drow)",
+    source: "Xanathar",
+    allowedRaces: ["elfo"],
+    prerequisites: [{ type: "race", allowedRaces: ["elfo"] }],
+    grants: { attributes: {}, proficiencies: {}, features: ["drow_high_magic"] }
+  },
+  magia_elfo_floresta: {
+    name: "Magia do Elfo da Floresta (exige elfo da floresta)",
+    source: "Xanathar",
+    allowedRaces: ["elfo"],
+    prerequisites: [{ type: "race", allowedRaces: ["elfo"] }],
+    grants: { attributes: {}, proficiencies: {}, features: ["wood_elf_magic"] }
+  },
+  teleporte_das_fadas: {
+    name: "Teleporte das Fadas (exige alto elfo)",
+    source: "Xanathar",
+    allowedRaces: ["elfo"],
+    prerequisites: [{ type: "race", allowedRaces: ["elfo"] }],
+    grants: { attributes: { chooseOne: ["inteligencia", "carisma"], amount: 1 }, proficiencies: {}, features: ["fey_teleportation"] }
+  },
+  desvanecer: {
+    name: "Desvanecer",
+    source: "Xanathar",
+    allowedRaces: ["gnomo"],
+    prerequisites: [{ type: "race", allowedRaces: ["gnomo"] }],
+    grants: { attributes: { chooseOne: ["destreza", "inteligencia"], amount: 1 }, proficiencies: {}, features: ["fade_away_reaction"] }
+  },
+  boa_sorte: {
+    name: "Boa Sorte",
+    source: "Xanathar",
+    allowedRaces: ["halfling"],
+    prerequisites: [{ type: "race", allowedRaces: ["halfling"] }],
+    grants: { attributes: {}, proficiencies: {}, features: ["bountiful_luck_reroll"] }
+  },
+  chamas_de_phlegethos: {
+    name: "Chamas de Phlegethos",
+    source: "Xanathar",
+    allowedRaces: ["tiefling"],
+    prerequisites: [{ type: "race", allowedRaces: ["tiefling"] }],
+    grants: { attributes: { chooseOne: ["inteligencia", "carisma"], amount: 1 }, proficiencies: {}, features: ["flames_of_phlegethos_reroll", "flames_of_phlegethos_burn"] }
+  },
+  constituicao_infernal: {
+    name: "Constituição Infernal",
+    source: "Xanathar",
+    allowedRaces: ["tiefling"],
+    prerequisites: [{ type: "race", allowedRaces: ["tiefling"] }],
+    grants: { attributes: { constituicao: 1 }, proficiencies: {}, features: ["infernal_constitution_resistances"] }
+  },
+  furia_orc: {
+    name: "Fúria Orc",
+    source: "Xanathar",
+    allowedRaces: ["meio_orc"],
+    prerequisites: [{ type: "race", allowedRaces: ["meio_orc"] }],
+    grants: { attributes: { chooseOne: ["forca", "constituicao"], amount: 1 }, proficiencies: {}, features: ["orcish_fury_reroll"] }
   }
 };
 
@@ -578,6 +666,16 @@ function resolveSubclassGrants(context) {
 
   if (context.subclassCompositeKey === "guerreiro:samurai" && context.level >= 3) {
     const skill = (context.selectedOptions || {}).samurai_bonus_skill;
+    if (skill) out.skills.push(skill);
+  }
+
+  if (context.subclassCompositeKey === "monge:kensei" && context.level >= 3) {
+    const ferramenta = (context.selectedOptions || {}).kensei_brush_tool;
+    if (ferramenta) out.tools.push(ferramenta);
+  }
+
+  if (context.subclassCompositeKey === "guerreiro:cavalier" && context.level >= 3) {
+    const skill = (context.selectedOptions || {}).cavalier_bonus_skill;
     if (skill) out.skills.push(skill);
   }
 
@@ -1044,7 +1142,36 @@ function collectUnlockedSubclassSpells(rule, level) {
   return ruleUnique(out);
 }
 
+// Alma Favorecida (XGtE): a afinidade escolhida concede uma magia extra de feiticeiro que não conta nas conhecidas.
+// "Lei" é o nome antigo de "Ordem", mantido para personagens já salvos.
+const RULE_DIVINE_SOUL_AFFINITY_SPELLS = {
+  "Bem": "Curar Ferimentos",
+  "Mal": "Infligir Ferimentos",
+  "Ordem": "Bênção",
+  "Lei": "Bênção",
+  "Caos": "Perdição",
+  "Neutralidade": "Proteção contra o Bem e o Mal"
+};
+
+function resolveDivineSoulAffinitySpell(context) {
+  const empty = { alwaysPrepared: [], expandedList: [], bonusKnown: [], bonusCantrips: [] };
+  const afinidade = (context.selectedOptions || {}).divine_soul_affinity;
+  const magia = RULE_DIVINE_SOUL_AFFINITY_SPELLS[afinidade];
+  if (!magia || context.level < 1) return empty;
+  return { ...empty, bonusKnown: [magia] };
+}
+
+// Tradição do Arqueiro Arcano (nível 3): um truque de Prestidigitação ou Druidismo à escolha.
+function resolveArcaneArcherCantrip(context) {
+  const empty = { alwaysPrepared: [], expandedList: [], bonusKnown: [], bonusCantrips: [] };
+  const truque = (context.selectedOptions || {}).arcane_archer_cantrip;
+  if (!truque || context.level < 3) return empty;
+  return { ...empty, bonusCantrips: [truque] };
+}
+
 function resolveSubclassSpellBenefits(context) {
+  if (context.subclassCompositeKey === "feiticeiro:divine_soul") return resolveDivineSoulAffinitySpell(context);
+  if (context.subclassCompositeKey === "guerreiro:arcane_archer") return resolveArcaneArcherCantrip(context);
   const rule = RULE_SUBCLASS_SPELL_RULES[context.subclassCompositeKey];
   const empty = { alwaysPrepared: [], expandedList: [], bonusKnown: [], bonusCantrips: [] };
   if (!rule) return empty;

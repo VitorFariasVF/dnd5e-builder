@@ -24,7 +24,7 @@ Frente só de dados. Nada ligado à interface ainda; a ficha 2024 continua usand
 - Paladino, Juramento da Devoção: a lista completa de magias por nível (além de Proteção contra o Bem e o Mal e Escudo da Fé, no nível 3) não foi conferida.
 
 ## Fora desta frente
-- Subclasses do Livro do Jogador 2024 que não estão no SRD (ex.: Caminho do Zelote, Colégio da Dança).
+- Subclasses do Livro do Jogador 2024 que não estão no SRD (ex.: Caminho do Fanático, Colégio da Dança).
 - Listas de magias por classe, equipamento inicial, antecedentes, talentos, origens e sub-raças.
 - Texto completo de cada subclasse e de cada magia.
 - Integração na interface e na ficha. `index.html` já carrega `rules-2024-classes.js`, mas nada lê os novos globais ainda.

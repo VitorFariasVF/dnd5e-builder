@@ -6,7 +6,7 @@ Dois números por sistema, com métodos diferentes. **Ambos são aproximados** n
 
 | Sistema | Escopo pronto | Regras conferidas | Fontes |
 |---|---|---|---|
-| D&D 5e | ≈ 92% (2014) · ≈ 55% (2024) | ≈ 65% (≈ 66 de ≈ 101 itens) | SRD 5.1, SRD 5.2 (espelho) e wikis |
+| D&D 5e | ≈ 92% (2014) · ≈ 55% (2024) | ≈ 65% (≈ 66 de ≈ 101 itens); subclasses de Xanathar: amostra independente de 34 itens, 32 certos (ver `docs/VERIFICACAO_XANATHAR.md`) | SRD 5.1, SRD 5.2 (espelho), wikis e Guia de Xanathar (PDF do usuário) |
 | Call of Cthulhu 7ª | ≈ 80% | ≈ 55% | Quick-Start em japonês, wikis e Roll20 |
 | Tormenta20 | ≈ 80% | ≈ 85% (amostra independente de 60 itens: 59 certos) | Livro Básico, Jogo do Ano (PDF do usuário) |
 | Tormenta RPG (d20) | ≈ 35% | ≈ 30% | Compêndio do VTT fvtt-trpg, wiki tsrd e d20 SRD 3.5 |
