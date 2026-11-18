@@ -146,7 +146,7 @@ function t20PassoIdentidade(){
       <input id="jogador" data-campo="personagem.jogador" value="${t20Esc(p.jogador)}" autocomplete="off" maxlength="80"></div>
   </div>
   <div class="field"><label for="t20-imagem">Imagem do personagem (PNG ou JPEG, até 5 MB)</label>
-    <div class="imagem-campo">${t20ImagemPrevia(p.imagem)}<input id="t20-imagem" type="file" accept="image/png,image/jpeg">${t20ImagemValida(p.imagem) ? `<button type="button" class="secondary small" data-acao="imagem-remover">Remover imagem</button>` : ""}</div></div>
+    <div class="imagem-campo">${t20ImagemPrevia(p.imagem)}<input id="t20-imagem" type="file" accept="image/png,image/jpeg">${t20ImagemValida(p.imagem) ? `<button type="button" class="secondary small" data-acao="imagem-remover">Remover imagem</button>` : ""}</div>${t20AvisoImagem ? t20Aviso([{ msg: t20AvisoImagem }], "aviso") : ""}</div>
   <div class="field"><label for="nivel">Nível</label>
   <select id="nivel" data-campo="personagem.nivel" data-tipo="int" data-recarregar="1">
     ${t20Opcoes(Array.from({ length: T20_NIVEL_MAX }, (_, i) => ({ valor: i + 1, rotulo: `Nível ${i + 1}` })), p.nivel)}
@@ -561,12 +561,34 @@ function t20SelecionarEtapa(n){
 /* Imagem do personagem: redimensionada no navegador para JPEG 0,8 com lado maior de 300 px. Arquivo acima de 5 MB não é lido. */
 const T20_IMAGEM_MAX_ARQUIVO = 5 * 1024 * 1024;
 const T20_IMAGEM_LADO = 300;
+let t20AvisoImagem = "";
 function t20ImagemPrevia(src){
   return t20ImagemValida(src)
     ? `<img src="${src}" alt="Imagem do personagem" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--linha,#ccc)">`
     : `<span class="muted">Sem imagem</span>`;
 }
+/* PNG mantém a transparência (canal alfa) quando o resultado cabe no limite; senão cai para JPEG com fundo branco e avisa. */
+const T20_IMAGEM_AVISO_JPEG = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
+function t20EscolherFormatoImagem(tipoOriginal, gerarPng, gerarJpeg){
+  if(tipoOriginal === "image/png"){
+    const dadosPng = gerarPng();
+    if(t20ImagemValida(dadosPng)) return { dados: dadosPng, aviso: "" };
+    return { dados: gerarJpeg(), aviso: T20_IMAGEM_AVISO_JPEG };
+  }
+  return { dados: gerarJpeg(), aviso: "" };
+}
+function t20RedimensionarImagem(img, fundoBranco){
+  const escala = Math.min(1, T20_IMAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+  const ctx2d = canvas.getContext("2d");
+  if(fundoBranco){ ctx2d.fillStyle = "#ffffff"; ctx2d.fillRect(0, 0, canvas.width, canvas.height); }
+  ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
 function t20CarregarImagem(arquivo){
+  t20AvisoImagem = "";
   if(!["image/png", "image/jpeg"].includes(arquivo.type)) return t20Mensagem("Use um arquivo PNG ou JPEG.", true);
   if(arquivo.size > T20_IMAGEM_MAX_ARQUIVO) return t20Mensagem("Arquivo acima de 5 MB. A imagem não foi carregada.", true);
   const url = URL.createObjectURL(arquivo);
@@ -574,18 +596,17 @@ function t20CarregarImagem(arquivo){
   img.onload = () => {
     URL.revokeObjectURL(url);
     if(!img.naturalWidth || !img.naturalHeight) return t20Mensagem("Não foi possível ler esta imagem.", true);
-    const escala = Math.min(1, T20_IMAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
-    canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
-    const ctx2d = canvas.getContext("2d");
-    ctx2d.fillStyle = "#ffffff";
-    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
-    ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const dados = canvas.toDataURL("image/jpeg", 0.8);
+    const escolha = t20EscolherFormatoImagem(
+      arquivo.type,
+      () => t20RedimensionarImagem(img, false).toDataURL("image/png"),
+      () => t20RedimensionarImagem(img, true).toDataURL("image/jpeg", 0.8)
+    );
+    const dados = escolha.dados;
     if(!t20ImagemValida(dados)) return t20Mensagem("Não foi possível guardar esta imagem.", true);
     state.personagem.imagem = dados;
+    t20AvisoImagem = escolha.aviso;
     t20Salvar(); render();
+    if(escolha.aviso) t20Mensagem(escolha.aviso, false);
   };
   img.onerror = () => { URL.revokeObjectURL(url); t20Mensagem("Não foi possível ler esta imagem.", true); };
   img.src = url;
@@ -632,7 +653,7 @@ function t20Acao(el){
       state.personagem.origemBeneficios[i] = { tipo: el.value, valor: "" };
       t20Salvar(); render(); break;
     }
-    case "imagem-remover": state.personagem.imagem = ""; t20Salvar(); render(); break;
+    case "imagem-remover": state.personagem.imagem = ""; t20AvisoImagem = ""; t20Salvar(); render(); break;
     case "importar-abrir": { const f = document.getElementById("t20-importar"); if(f) f.click(); break; }
     case "exp-backup": t20ExportarBackup(); break;
     case "exp-pdf": t20ExportarPDF(); break;

@@ -33,6 +33,33 @@ t.check("rejeita svg, html, gif, javascript, aspas e vazio", [
 ].every(v => !ctx.t20ImagemValida(v)));
 t.check("rejeita imagem acima de 400 mil caracteres", !ctx.t20ImagemValida("data:image/jpeg;base64," + "A".repeat(400001)));
 
+/* Formato ao redimensionar: PNG com transparência fica PNG; PNG grande cai para JPEG com aviso; JPEG segue JPEG */
+const PNG_ALFA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR4nGP4zwAH/6HsBgAlcAN+++VAswAAAABJRU5ErkJggg==";
+const PNG_GRANDE = "data:image/png;base64," + "A".repeat(400001);
+const JPEG_REDUZIDO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMC";
+const geraJpeg = () => JPEG_REDUZIDO;
+/* ui.js não é carregado pelo ambiente de teste (depende do DOM): só o trecho puro do formato é executado aqui. */
+{
+  const fonteUi = require("fs").readFileSync(require("path").join(__dirname, "..", "ui.js"), "utf8");
+  const ini = fonteUi.indexOf("const T20_IMAGEM_AVISO_JPEG");
+  const fim = fonteUi.indexOf("function t20RedimensionarImagem");
+  require("vm").runInContext(fonteUi.slice(ini, fim), ctx);
+}
+t.check("formato: PNG com transparência é mantido como PNG (canal alfa, tipo de cor 6)", (() => {
+  const e = ctx.t20EscolherFormatoImagem("image/png", () => PNG_ALFA, geraJpeg);
+  const bytes = Buffer.from(e.dados.split(",")[1], "base64");
+  return e.dados === PNG_ALFA && e.aviso === "" && bytes[25] === 6;
+})());
+t.check("formato: PNG grande que estoura 400 mil caracteres cai para JPEG com aviso", (() => {
+  const e = ctx.t20EscolherFormatoImagem("image/png", () => PNG_GRANDE, geraJpeg);
+  return e.dados === JPEG_REDUZIDO && /JPEG/.test(e.aviso) && ctx.t20ImagemValida(e.dados);
+})());
+t.check("formato: JPEG continua JPEG, sem aviso e sem tentar PNG", (() => {
+  let tentou = false;
+  const e = ctx.t20EscolherFormatoImagem("image/jpeg", () => { tentou = true; return PNG_ALFA; }, geraJpeg);
+  return e.dados === JPEG_REDUZIDO && e.aviso === "" && !tentou;
+})());
+
 /* Persistência local */
 ctx.state.personagem.imagem = JPEG_OK;
 ctx.salvarEstado();
