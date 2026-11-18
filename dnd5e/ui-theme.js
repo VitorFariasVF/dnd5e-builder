@@ -108,7 +108,7 @@
     decorar();
     const card = app.querySelector(".card");
     if(card && ant && ant !== state.etapa) card.classList.add(state.etapa < ant ? "passo-voltar" : "passo-avanca");
-    if(card && ant) window.scrollTo({ top: Math.min(window.scrollY, 120), behavior: reduz() ? "auto" : "smooth" });
+    if(card && ant && ant !== state.etapa) window.scrollTo({ top: Math.min(window.scrollY, 120), behavior: reduz() ? "auto" : "smooth" });
     return r;
   };
   /* ---- d20 no título (gira uma vez) ---- */
