@@ -37,6 +37,8 @@ function cocCssDossie(){
   h1{font:700 22pt/1.05 var(--serifa);margin:1mm 0 1mm}
   .sub{color:var(--suave);font-size:8.6pt}
   .olho{width:34mm;height:auto;color:var(--sangue)}
+  .cab.comRetrato{grid-template-columns:1fr 34mm 22mm}
+  .retrato{display:block;width:22mm;height:28mm;object-fit:cover;border:1px solid var(--ouro);border-radius:1.5mm;justify-self:end;background:var(--sup)}
   h2{font:700 9.5pt var(--serifa);text-transform:uppercase;letter-spacing:.08em;color:var(--sangue);margin:0 0 1.6mm;padding-bottom:.8mm;border-bottom:.6px solid var(--linha)}
   section{margin-bottom:3.5mm}
   .duas{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
@@ -127,6 +129,7 @@ function cocBlocoIdade(inv){
 
 function gerarHtmlDossie(estado){
   const inv = garantirEstado(estado).investigador;
+  const temRetrato = cocImagemValida(inv.imagem);
   const fin = caracteristicasFinais(inv) || Object.fromEntries(COC_CARACTERISTICAS.map(c => [c.id, 0]));
   const der = calcDerivados(inv) || { pv: 0, sanInicial: 0, sanMax: 99, pm: 0, sorte: null, mov: 8, danoConhecido: false, dano: null, corpo: null };
   const o = cocOcupacao(inv.ocupacaoId);
@@ -138,8 +141,8 @@ function gerarHtmlDossie(estado){
   <style>${cocCssDossie()}</style></head><body>
   <div class="barra"><span>Dossiê do investigador (A4, 2 páginas)</span><button type="button" onclick="window.print()">Imprimir / Salvar PDF</button></div>
   <article class="pagina"><div class="moldura" aria-hidden="true"></div>
-    <header class="cab"><div><div class="kicker">Call of Cthulhu · 7ª edição · Dossiê do investigador</div>
-      <h1>${nome}</h1><div class="sub">${cocEscapar(sub)}</div></div>${cocEmblemaOlho()}</header>
+    <header class="cab${temRetrato ? " comRetrato" : ""}"><div><div class="kicker">Call of Cthulhu · 7ª edição · Dossiê do investigador</div>
+      <h1>${nome}</h1><div class="sub">${cocEscapar(sub)}</div></div>${cocEmblemaOlho()}${temRetrato ? `<img class="retrato" src="${inv.imagem}" alt="Imagem do investigador">` : ""}</header>
     <div class="duas"><div>${cocBlocoCaracteristicas(inv, fin)}</div>
       <div><section><h2>Vitais e derivados</h2>${cocBlocoVitais(estado, der)}
         <p class="aviso">Sanidade inicial = POD. Pontos de magia = POD ÷ 5. Movimento = 7, 8 ou 9 conforme FOR e DES em relação a TAM (regra completa), com −1 a cada faixa de 40 anos em diante. Processo: regra completa, com o Quick-Start só onde coincide.</p></section></div></div>

@@ -23,5 +23,8 @@ function importarBackupJson(texto){
     return { ok: false, erro: `Versão de backup não suportada (${String(pacote.versaoEsquema)}). Esta ferramenta lê a versão ${COC_VERSAO_ESQUEMA}.` };
   if(!pacote.estado || typeof pacote.estado !== "object")
     return { ok: false, erro: "O backup não traz os dados do investigador." };
+  const imagem = pacote.estado.investigador && pacote.estado.investigador.imagem;
+  if(imagem && !cocImagemValida(imagem))
+    return { ok: false, erro: "Imagem do investigador inválida: use JPEG ou PNG em data URL, até 400 KB." };
   return { ok: true, estado: garantirEstado(pacote.estado) };
 }

@@ -130,6 +130,9 @@ function etapaModo(){
     </fieldset>
     ${campoTexto("nome", "Nome do investigador", "investigador.nome", inv.nome, ' maxlength="60" autocomplete="off"')}
     ${campoTexto("jogador", "Jogador (opcional)", "investigador.jogador", inv.jogador, ' maxlength="60"')}
+    <label for="imagem-investigador">Imagem do investigador (PNG ou JPEG, até 5 MB)</label>
+    <div class="actions" style="align-items:center">${cocImagemPrevia(inv.imagem)}<input id="imagem-investigador" type="file" accept="image/png,image/jpeg" data-acao="imagem-arquivo">${cocImagemValida(inv.imagem) ? `<button type="button" class="secondary small" data-acao="imagem-remover">Remover imagem</button>` : ""}</div>
+    <p class="hint" id="imagem-aviso" role="status"></p>
     <div class="actions"><label class="small" for="importar">Importar backup JSON</label>
       <input id="importar" type="file" accept="application/json,.json" data-acao="importar-arquivo"></div>
     ${lista}`;
@@ -543,6 +546,7 @@ function acao(nome, el){
       if(!exportarPDF(estado) && typeof VFTool !== "undefined") VFTool.toast("Não foi possível abrir o dossiê.");
       return;
     }
+    case "imagem-remover": estado.investigador.imagem = ""; salvar(); return render();
     case "importar-botao": {
       /* O seletor de arquivo fica na etapa 1: leva para lá e abre o diálogo. */
       irPara(1);
@@ -596,6 +600,47 @@ function baixarJson(){
   a.click();
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
   if(typeof VFTool !== "undefined") VFTool.toast("Backup JSON exportado.");
+}
+
+/* Imagem do investigador: JPEG de até 300 px no maior lado (canvas), qualidade 0,8. Arquivo acima de 5 MB não é lido. */
+const COC_IMAGEM_MAX_ARQUIVO = 5 * 1024 * 1024;
+const COC_IMAGEM_LADO = 300;
+function cocImagemPrevia(src){
+  return cocImagemValida(src)
+    ? `<img src="${src}" alt="Imagem do investigador" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--linha,#ccc)">`
+    : `<span class="hint">Sem imagem</span>`;
+}
+function cocAvisoImagem(texto){
+  const aviso = document.getElementById("imagem-aviso");
+  if(aviso) aviso.textContent = texto;
+}
+function imagemArquivo(input){
+  const arquivo = input.files && input.files[0];
+  input.value = "";
+  if(!arquivo) return;
+  if(!["image/png", "image/jpeg"].includes(arquivo.type)) return cocAvisoImagem("Use um arquivo PNG ou JPEG.");
+  if(arquivo.size > COC_IMAGEM_MAX_ARQUIVO) return cocAvisoImagem("Arquivo acima de 5 MB. A imagem não foi carregada.");
+  const url = URL.createObjectURL(arquivo);
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    if(!img.naturalWidth || !img.naturalHeight) return cocAvisoImagem("Não foi possível ler esta imagem.");
+    const escala = Math.min(1, COC_IMAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+    const ctx2d = canvas.getContext("2d");
+    ctx2d.fillStyle = "#ffffff";
+    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+    ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const dados = canvas.toDataURL("image/jpeg", 0.8);
+    if(!cocImagemValida(dados)) return cocAvisoImagem("Não foi possível guardar esta imagem.");
+    estado.investigador.imagem = dados;
+    salvar();
+    render();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); cocAvisoImagem("Não foi possível ler esta imagem."); };
+  img.src = url;
 }
 
 function importarArquivo(input){
@@ -696,6 +741,7 @@ function montarEventos(){
   raiz.addEventListener("change", ev => {
     const t = ev.target;
     if(t.dataset.acao === "importar-arquivo") return importarArquivo(t);
+    if(t.dataset.acao === "imagem-arquivo") return imagemArquivo(t);
     if(t.dataset.set || t.dataset.grupo !== undefined || t.dataset.livre !== undefined) mudou(t);
   });
   raiz.addEventListener("input", ev => {

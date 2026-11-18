@@ -10,6 +10,7 @@ function criarInvestigadorInicial(){
   return {
     nome: "",
     jogador: "",
+    imagem: "",
     ocupacaoId: "",
     ocupacaoAlt: null,
     idade: null,
@@ -41,6 +42,11 @@ function criarEstadoInicial(){
   };
 }
 
+/* Imagem do investigador: data URL JPEG ou PNG em base64, até 400 mil caracteres (salvamento e JSON). */
+function cocImagemValida(valor){
+  return typeof valor === "string" && valor.length <= 400000 && /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/]+=*$/.test(valor);
+}
+
 /* Preenche chaves que faltam (estado antigo ou importado) sem apagar o que já existe. */
 function garantirEstado(estado){
   const base = criarEstadoInicial();
@@ -48,6 +54,7 @@ function garantirEstado(estado){
   out.investigador = Object.assign(criarInvestigadorInicial(), out.investigador || {});
   out.investigador.caracteristicas = Object.assign(criarInvestigadorInicial().caracteristicas, out.investigador.caracteristicas || {});
   out.investigador.antecedentes = Object.assign(criarInvestigadorInicial().antecedentes, out.investigador.antecedentes || {});
+  out.investigador.imagem = cocImagemValida(out.investigador.imagem) ? out.investigador.imagem : "";
   out.sistema = COC_SISTEMA;
   out.versaoEsquema = COC_VERSAO_ESQUEMA;
   if(!["estrito", "livre"].includes(out.modo)) out.modo = "estrito";
