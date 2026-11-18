@@ -785,7 +785,7 @@ const TRPG_CLASSES = {
     ],
     "conjuracao": {
       "progressao": "metade",
-      "atributo": "carisma",
+      "atributo": "sabedoria",
       "circulos": {
         "1": 5,
         "2": 9,

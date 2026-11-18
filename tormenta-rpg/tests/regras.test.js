@@ -18,19 +18,18 @@ teste("modificador de campo vazio ou ausente é null, não zero", () => {
   assert.strictEqual(avaliar(ctx, "trpgModificador(undefined)"), null);
 });
 
-/* Personagem 1: Destreza 14 (mod +2), armadura +5, escudo +2, tamanho 0. CA = 10+5+2+2+0 = 19. Iniciativa +2. */
-/* Personagem 2: Destreza 8 (mod -1), sem armadura nem escudo, tamanho +1. CA = 10+0+0-1+1 = 10. Iniciativa -1. */
-/* Personagem 3: Destreza 20 (mod +5), armadura +8, sem escudo, tamanho -1. CA = 10+8+0+5-1 = 22. Iniciativa +5. */
+/* Nível 5 (metade = 2). CA = 10 + 2 + mod Des + armadura + escudo; tamanho não entra. Iniciativa = mod Des.
+   Personagem 1: Des 14 (+2), armadura 5, escudo 2 -> CA 21. Personagem 2: Des 8 (-1) -> CA 11. Personagem 3: Des 20 (+5), armadura 8 -> CA 25. */
 const personagens = [
-  { nome: "Personagem 1", des: 14, arm: 5, esc: 2, tam: 0, ca: 19, ini: 2 },
-  { nome: "Personagem 2", des: 8, arm: 0, esc: 0, tam: 1, ca: 10, ini: -1 },
-  { nome: "Personagem 3", des: 20, arm: 8, esc: 0, tam: -1, ca: 22, ini: 5 }
+  { nome: "Personagem 1", des: 14, arm: 5, esc: 2, ca: 21, ini: 2 },
+  { nome: "Personagem 2", des: 8, arm: 0, esc: 0, ca: 11, ini: -1 },
+  { nome: "Personagem 3", des: 20, arm: 8, esc: 0, ca: 25, ini: 5 }
 ];
 
 personagens.forEach(c => {
   teste(c.nome + ": CA e iniciativa batem com a conta feita à mão", () => {
-    const expr = `(() => { const p = estadoPadrao().personagem; p.atributos.destreza = ${c.des};
-      p.derivados.armadura = ${c.arm}; p.derivados.escudo = ${c.esc}; p.derivados.tamanho = ${c.tam};
+    const expr = `(() => { const p = estadoPadrao().personagem; p.nivel = 5; p.atributos.destreza = ${c.des};
+      p.derivados.armadura = ${c.arm}; p.derivados.escudo = ${c.esc};
       return trpgDerivados(p); })()`;
     const d = avaliar(ctx, expr);
     assert.strictEqual(d.ca, c.ca, "CA");
@@ -56,10 +55,10 @@ teste("pontos de perícia de classes conferidas: Guerreiro (2 + Int 14) = 4; Lad
   assert.strictEqual(pts("mago", 8), 1);
 });
 
-teste("sem classe escolhida, BBA, resistências e PV sugerido ficam null", () => {
+teste("sem classe escolhida, BBA e PV sugerido ficam null; resistências não dependem da classe", () => {
   const d = avaliar(ctx, "trpgDerivados(estadoPadrao().personagem)");
   assert.strictEqual(d.bba, null);
-  assert.strictEqual(d.resistencias, null);
+  assert.notStrictEqual(d.resistencias.fortitude, null);
   assert.strictEqual(d.pontosPorNivel, null);
   assert.strictEqual(d.pvSugerido, null);
   assert.strictEqual(d.circulos, null);
@@ -109,10 +108,19 @@ teste("resistência = base + 2 por talento de resistência (aritmética com base
   assert.strictEqual(avaliar(ctx, "trpgResistencia({ base: 3 })"), 3);
 });
 
-teste("resistência fica null enquanto a base de Fortitude, Reflexos ou Vontade não for verificada", () => {
+teste("resistências: metade do nível + mod. de Con/Des/Sab (PDF p225); sem habilidade ou nível ficam null", () => {
   assert.strictEqual(avaliar(ctx, "trpgResistencia({ base: null, talentos: 2 })"), null);
-  const d = avaliar(ctx, 'trpgDerivados(Object.assign(estadoPadrao().personagem, { classe: "guerreiro" }))');
-  assert.deepStrictEqual(d.resistencias, { fortitude: null, reflexos: null, vontade: null });
+  const d = avaliar(ctx, 'trpgDerivados(Object.assign(estadoPadrao().personagem, { classe: "guerreiro", nivel: 5, atributos: { forca: 10, destreza: 14, constituicao: 14, inteligencia: 10, sabedoria: 10, carisma: 10 } }))');
+  // nível 5 -> metade 2; Con 14 (+2) -> Fort 4; Des 14 (+2) -> Ref 4; Sab 10 (0) -> Von 2
+  assert.deepStrictEqual(d.resistencias, { fortitude: 4, reflexos: 4, vontade: 2 });
+  const semNivel = avaliar(ctx, 'trpgDerivados(Object.assign(estadoPadrao().personagem, { classe: "guerreiro", nivel: null, atributos: { forca: 10, destreza: 14, constituicao: 14, inteligencia: 10, sabedoria: 10, carisma: 10 } }))');
+  assert.deepStrictEqual(semNivel.resistencias, { fortitude: null, reflexos: null, vontade: null });
+});
+
+teste("PV por nível: ganha pelo menos 1 PV ao subir de nível, mesmo com Constituição negativa (PDF p28)", () => {
+  // mago: ganho por nível = PV/nível + mod. Con (-5 com Con 1) é negativo, então sobe 1 por nível.
+  const esperado = "TRPG_CLASSES.mago.dadoDeVida.inicial - 5 + 2 * 1";
+  assert.strictEqual(avaliar(ctx, "trpgPVTotal({ classe: TRPG_CLASSES.mago, nivel: 3, constituicao: 1 })"), avaliar(ctx, esperado));
 });
 
 teste("classes conferidas: talentos de resistência do Guerreiro (Fortitude Maior) e do Ladino (Reflexos Rápidos)", () => {

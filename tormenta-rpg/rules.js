@@ -33,7 +33,7 @@ const TRPG_REGRAS = {
   },
   classeDeArmadura: {
     nome: "Classe de Armadura",
-    formula: "10 + bônus de armadura + bônus de escudo + modificador de Destreza + modificador de tamanho",
+    formula: "10 + metade do nível + modificador de Destreza + bônus de armadura + bônus de escudo",
     fonte: "d20 SRD 3.5, Combate (cayzle.com/3Esrd/combat.html); aplicação à Tormenta: a confirmar no livro"
   },
   graduacoes: {

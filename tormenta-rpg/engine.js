@@ -15,11 +15,12 @@ function trpgFormatarBonus(n){
   return (v >= 0 ? "+" : "") + v;
 }
 
-/* CA = 10 + armadura + escudo + modificador de Destreza + modificador de tamanho (d20 SRD 3.5). */
-function trpgClasseArmadura({ armadura = 0, escudo = 0, destreza = 10, tamanho = 0 }){
+/* CA = 10 + metade do nível (arredondada para baixo) + modificador de Destreza + armadura + escudo.
+   Confirmado no manual Tormenta RPG, PDF p224 (exemplo: nível 5, Des 14 = CA 13 sem armadura). Tamanho não entra na CA. */
+function trpgClasseArmadura({ armadura = 0, escudo = 0, destreza = 10, nivel }){
   const md = trpgModificador(destreza);
-  if(md === null) return null;
-  return 10 + Number(armadura || 0) + Number(escudo || 0) + md + Number(tamanho || 0);
+  if(md === null || !trpgNivelValido(nivel)) return null;
+  return 10 + Math.floor(Number(nivel) / 2) + md + Number(armadura || 0) + Number(escudo || 0);
 }
 
 /* Iniciativa: hipótese d20 (modificador de Destreza). NÃO VERIFICADO na Tormenta. */
@@ -56,7 +57,8 @@ function trpgPVTotal({ classe, nivel, constituicao }){
   const mc = trpgModificador(constituicao);
   if(mc === null) return null;
   const { inicial, porNivel } = classe.dadoDeVida;
-  return inicial + mc + (nivel - 1) * (porNivel + mc);
+  // Manual Tormenta RPG, PDF p28: mesmo com modificador negativo, ganha pelo menos 1 PV ao subir de nível.
+  return inicial + mc + (nivel - 1) * Math.max(1, porNivel + mc);
 }
 
 /* BBA da classe no nível n (valor da tabela da classe). Null sem classe ou nível fora de 1 a 20. */
@@ -65,8 +67,8 @@ function trpgBBA(classe, nivel){
   return classe.bba[nivel - 1];
 }
 
-/* Teste de resistência = bônus base (da classe, NÃO VERIFICADO) + 2 por talento de resistência escolhido.
-   Com base null (não verificada) devolve null, nunca um palpite. */
+/* Teste de resistência = metade do nível (arredondada para baixo) + modificador de habilidade + 2 por talento de resistência.
+   Confirmado no manual Tormenta RPG, PDF p225. Sem base (nível ou habilidade vazios) devolve null. */
 function trpgResistencia({ base, talentos = 0 }){
   if(base === null || base === undefined || !Number.isFinite(Number(base))) return null;
   return Number(base) + 2 * Number(talentos || 0);
@@ -81,6 +83,19 @@ function trpgCirculosDisponiveis(classe, nivel){
     .sort((a, b) => a - b);
 }
 
+/* Resistências: Fortitude = Constituição, Reflexos = Destreza, Vontade = Sabedoria, cada uma com metade do nível.
+   Os talentos de resistência ainda não são somados aqui (bônus de talento: 0). */
+function trpgResistenciasDerivadas(personagem){
+  const at = personagem.atributos || {};
+  const meio = trpgNivelValido(personagem.nivel) ? Math.floor(Number(personagem.nivel) / 2) : null;
+  const base = (attr) => { const m = trpgModificador(at[attr]); return meio === null || m === null ? null : meio + m; };
+  return {
+    fortitude: trpgResistencia({ base: base("constituicao") }),
+    reflexos: trpgResistencia({ base: base("destreza") }),
+    vontade: trpgResistencia({ base: base("sabedoria") })
+  };
+}
+
 /* Derivados de uma ficha. Itens sem dado verificado voltam null. */
 function trpgDerivados(personagem){
   const at = personagem.atributos || {};
@@ -91,13 +106,13 @@ function trpgDerivados(personagem){
   const base = classe ? classe.pericias.treinadasBase : null;
   return {
     modificadores: mods,
-    ca: trpgClasseArmadura({ armadura: d.armadura, escudo: d.escudo, destreza: at.destreza, tamanho: d.tamanho }),
+    ca: trpgClasseArmadura({ armadura: d.armadura, escudo: d.escudo, destreza: at.destreza, nivel: personagem.nivel }),
     iniciativa: trpgIniciativa(at.destreza),
     pontosPorNivel: trpgPontosPorNivel({ base, inteligencia: at.inteligencia }),
     pvMaximo: d.pvMaximo === null || d.pvMaximo === undefined || d.pvMaximo === "" ? null : Number(d.pvMaximo),
     pvSugerido: trpgPVTotal({ classe, nivel: personagem.nivel, constituicao: at.constituicao }),
     bba: trpgBBA(classe, personagem.nivel),
-    resistencias: classe ? { fortitude: trpgResistencia({ base: null }), reflexos: trpgResistencia({ base: null }), vontade: trpgResistencia({ base: null }) } : null,
+    resistencias: trpgResistenciasDerivadas(personagem),
     circulos: trpgCirculosDisponiveis(classe, personagem.nivel)
   };
 }
