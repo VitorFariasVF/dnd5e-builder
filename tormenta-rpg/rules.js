@@ -58,7 +58,7 @@ const TRPG_REGRAS = {
 
 /* Lista do que ainda não foi verificado. A interface e o PDF mostram isto nas etapas correspondentes. */
 const TRPG_PENDENTES = {
-  racas: "Fonte de comunidade (wiki de fãs). Os oito nomes de raça saem da wiki; o ajuste de atributo só é lido para o anão (fonte única). Ajustes das demais raças, tamanho, deslocamento e traços: NÃO VERIFICADO.",
+  racas: "Fonte de comunidade (wiki de fãs). Os oito nomes de raça saem da wiki; Ajustes de humano e lefou (escolha de atributo) não modelados; traços das raças conferidos no livro (PDF p.31 a p.41), com uso só de texto, exceto o bônus de tamanho.",
   classes: "PV, perícias treinadas e listas de perícia de classe das 13 classes conferidos no livro (PDF p.48 a p.76). BBA, talentos adicionais, círculos de magia e base de Fortitude, Reflexos e Vontade por classe: fonte de comunidade (compêndio do VTT) ou NÃO VERIFICADO.",
   atributos: "Métodos Padrão, Clássica, Heroica, Audaciosa e Elite, e a compra por pontos (custos de cada valor), conferidos no livro (PDF p.27 e p.28). Sugestão de Elite e Pontos usa ordem neutra: a prioridade de atributos por classe não consta no livro. Regra de fracasso (PDF p.28) não é aplicada automaticamente.",
   pericias: "Perícias treinadas no 1º nível: base da classe + Inteligência (+2 humanos), conferido no livro (PDF p.79). Método alternativo de pontos (PDF p.80) só mostra o cálculo, não controla as graduações. Perícias não marcadas como treinadas e a graduação de Iniciativa: NÃO VERIFICADO no app. Subtipos de Conhecimento e Ofício e perícias fora do livro básico: NÃO VERIFICADO.",

@@ -15,12 +15,14 @@ function trpgFormatarBonus(n){
   return (v >= 0 ? "+" : "") + v;
 }
 
-/* CA = 10 + metade do nível (arredondada para baixo) + modificador de Destreza + armadura + escudo.
-   Confirmado no manual Tormenta RPG, PDF p224 (exemplo: nível 5, Des 14 = CA 13 sem armadura). Tamanho não entra na CA. */
-function trpgClasseArmadura({ armadura = 0, escudo = 0, destreza = 10, nivel }){
+/* CA = 10 + metade do nível (arredondada para baixo) + modificador de Destreza + armadura + escudo + bônus de tamanho.
+   Confirmado no manual Tormenta RPG, PDF p224 (exemplo: nível 5, Des 14 = CA 13 sem armadura).
+   O bônus de tamanho (default 0) vem só da raça Pequena: +1 de CA (goblin, halfling; PDF p.32). O campo derivados.tamanho
+   (modificador digitado) não entra na conta. */
+function trpgClasseArmadura({ armadura = 0, escudo = 0, destreza = 10, nivel, bonusTamanho = 0 }){
   const md = trpgModificador(destreza);
   if(md === null || !trpgNivelValido(nivel)) return null;
-  return 10 + Math.floor(Number(nivel) / 2) + md + Number(armadura || 0) + Number(escudo || 0);
+  return 10 + Math.floor(Number(nivel) / 2) + md + Number(armadura || 0) + Number(escudo || 0) + Number(bonusTamanho || 0);
 }
 
 /* Iniciativa exibida = só o modificador de Destreza. O livro (PDF p.82) lista Iniciativa na tabela de perícias, com
@@ -46,6 +48,21 @@ function trpgBonusRacialPericias(raca){
   if(raca === null || raca === undefined || String(raca).trim() === "") return null;
   const s = String(raca).trim().toLowerCase();
   return s === "humano" || s === "humana" ? 2 : 0;
+}
+
+/* Raça da lista (chave ou nome, sem diferenciar maiúsculas) a partir do valor do campo. Null se vazio ou fora da lista. */
+function trpgRacaPorValor(valor){
+  if(valor === null || valor === undefined || String(valor).trim() === "") return null;
+  if(TRPG_RACAS[valor]) return TRPG_RACAS[valor];
+  const alvo = String(valor).trim().toLowerCase();
+  const chave = Object.keys(TRPG_RACAS).find(k => TRPG_RACAS[k].nome.toLowerCase() === alvo);
+  return chave ? TRPG_RACAS[chave] : null;
+}
+
+/* Bônus de CA da raça por tamanho (PDF p.32: Pequeno, +1 na CA). Raça Média, vazia ou fora da lista: 0. */
+function trpgBonusTamanhoCA(raca){
+  const r = trpgRacaPorValor(raca);
+  return r && r.bonusTamanho ? Number(r.bonusTamanho.ca || 0) : 0;
 }
 
 /* Método alternativo de pontos de perícia (PDF p.80): 4 vezes o número de perícias treinadas no 1º nível e, depois,
@@ -180,7 +197,7 @@ function trpgDerivados(personagem){
   const treinadas = trpgPericiasTreinadas({ base, inteligencia: at.inteligencia, bonusRacial: trpgBonusRacialPericias(personagem.raca) });
   return {
     modificadores: mods,
-    ca: trpgClasseArmadura({ armadura: d.armadura, escudo: d.escudo, destreza: at.destreza, nivel: personagem.nivel }),
+    ca: trpgClasseArmadura({ armadura: d.armadura, escudo: d.escudo, destreza: at.destreza, nivel: personagem.nivel, bonusTamanho: trpgBonusTamanhoCA(personagem.raca) }),
     iniciativa: trpgIniciativa(at.destreza),
     periciasTreinadas: treinadas,
     pontosPericiaAlternativo: trpgPontosPericiaAlternativo(treinadas),

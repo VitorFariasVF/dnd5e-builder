@@ -160,7 +160,8 @@ function trpgRacaDados(valor){
 }
 
 function trpgTextoAjustes(r){
-  if(!r || !r.ajustes) return "NÃO VERIFICADO";
+  if(!r) return "NÃO VERIFICADO";
+  if(!r.ajustes) return "escolha de atributo (não modelada no app)";
   return Object.keys(r.ajustes).map(k => `${trpgAbrevAtr(k)} ${r.ajustes[k] > 0 ? "+" : ""}${r.ajustes[k]}`).join(", ");
 }
 
@@ -168,7 +169,7 @@ function trpgDetalheRaca(valor){
   if(!valor) return "Escolha uma raça para ver os ajustes e a fonte.";
   const r = trpgRacaDados(valor);
   if(!r) return "Raça fora da lista verificada: ajustes, tamanho e traços NÃO VERIFICADOS.";
-  return `${r.nome}. Ajustes: ${trpgTextoAjustes(r)} (${r.ajustesFonte}). Tamanho, deslocamento e traços: NÃO VERIFICADO. Fonte: ${r.fonte}.`;
+  return `${r.nome}. Ajustes: ${trpgTextoAjustes(r)} (${r.ajustesFonte}). Tamanho: ${r.tamanho}. Deslocamento: ${r.deslocamento}. Fonte: ${r.fonte}.`;
 }
 
 function trpgDetalheClasse(valor){
