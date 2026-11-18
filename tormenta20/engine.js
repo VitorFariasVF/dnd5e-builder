@@ -89,8 +89,9 @@ function t20BonusEscolhas(p){
 function t20AtributosFinais(p){
   const racial = t20AjusteRacial(p.raca);
   const escolhas = t20BonusEscolhas(p);
+  const linhagem = t20LinhagemBonusAtributos(p);
   return Object.fromEntries(T20_ATRIBUTO_IDS.map(id => [
-    id, (Number(p.atributosBase[id]) || 0) + racial[id] + escolhas[id] + (Number(p.ajusteManual[id]) || 0)
+    id, (Number(p.atributosBase[id]) || 0) + racial[id] + escolhas[id] + linhagem[id] + (Number(p.ajusteManual[id]) || 0)
   ]));
 }
 
@@ -284,6 +285,50 @@ function t20MagiasConhecidasLimite(classeId, nivel, caminho){
   if(classeId === "clerigo") return 3 + (n - 1);
   return c.magiasNivel1;
 }
+/* Magias conhecidas com os extras do caminho: Feiticeiro de linhagem Feérica ganha uma magia de 1º círculo (p045). */
+function t20MagiasConhecidasTotal(p){
+  const base = t20MagiasConhecidasLimite(p.classe, p.nivel, p.caminho);
+  return base + (t20LinhagemAtiva(p) === "feerica" ? 1 : 0);
+}
+/* Custo em PM de uma magia do círculo (Tabela 4-1, p176). Null se o círculo não existe. */
+function t20CustoPMCirculo(circulo){
+  const c = Number(circulo);
+  return Object.prototype.hasOwnProperty.call(T20_MAGIAS_PROGRESSAO.custoPorCirculo, c) ? T20_MAGIAS_PROGRESSAO.custoPorCirculo[c] : null;
+}
+/* Linhagem do Feiticeiro (p044-p045): só vale com o caminho de Feiticeiro. Retorna o id ou null. */
+function t20LinhagemAtiva(p){
+  if(!p || p.classe !== "arcanista" || p.caminho !== "feiticeiro") return null;
+  return T20_LINHAGENS[p.linhagem] ? p.linhagem : null;
+}
+/* Herança Superior é o poder de mesmo nome (11º nível, p044). */
+function t20LinhagemSuperior(p){
+  return !!t20LinhagemAtiva(p) && (p.poderes || []).some(pd => pd && pd.id === "heranca-superior");
+}
+/* PV iniciais extras da Dracônica (p045): +Carisma no básico; +2 x Carisma no superior. */
+function t20LinhagemPVInicial(p, carisma){
+  if(t20LinhagemAtiva(p) !== "draconica") return 0;
+  const car = Number(carisma) || 0;
+  return t20LinhagemSuperior(p) ? 2 * car : car;
+}
+/* Bônus de atributo da linhagem (p045, Feérica superior: +2 em Carisma). */
+function t20LinhagemBonusAtributos(p){
+  const soma = Object.fromEntries(T20_ATRIBUTO_IDS.map(id => [id, 0]));
+  if(t20LinhagemAtiva(p) === "feerica" && t20LinhagemSuperior(p)) soma.carisma = 2;
+  return soma;
+}
+/* Foco do Bruxo (p043): RD 10 e PV iguais à metade dos PV do personagem. Metade arredondada para baixo (convenção
+   do app; o livro não diz). Null se o personagem não é Bruxo ou se os PV não foram calculados. */
+function t20FocoBruxo(p, pv){
+  if(!p || p.classe !== "arcanista" || p.caminho !== "bruxo") return null;
+  return { rd: 10, pv: pv === null || pv === undefined ? null : Math.floor(Number(pv) / 2) };
+}
+/* Grimório do Mago (p043): memoriza metade das magias conhecidas por dia (exemplo do livro: 7 conhecidas, 3 memorizadas).
+   Metade arredondada para baixo, pelo mesmo exemplo. Null se não é Mago. */
+function t20MagiasMemorizadas(p, conhecidas){
+  if(!p || p.classe !== "arcanista" || p.caminho !== "mago") return null;
+  return Math.floor((Number(conhecidas) || 0) / 2);
+}
+
 /* Atributo de magia efetivo: no Arcanista, o caminho define (Feiticeiro: Carisma; Bruxo e Mago: Inteligência; p043). */
 function t20AtributoMagiaEfetivo(p){
   const c = T20_CLASSES[p.classe];
@@ -375,7 +420,10 @@ function t20Derivados(p){
   const pvManual = t20NumeroOuNulo(p.pvManual);
   const pmManual = t20NumeroOuNulo(p.pmManual);
   const treinoManual = t20NumeroOuNulo(p.treinoManual);
-  const pvCalc = c ? t20PVTotal(p.classe, nivel, atr.constituicao) : null;
+  const pvBase = c ? t20PVTotal(p.classe, nivel, atr.constituicao) : null;
+  const pvCalc = pvBase === null ? null : pvBase + t20LinhagemPVInicial(p, atr.carisma);
+  const magiasLimite = c && c.conjurador ? t20MagiasConhecidasTotal(Object.assign({}, p, { nivel })) : 0;
+  const pvFinal = pvManual !== null ? pvManual : pvCalc;
   const extraPMNivel1 = c && c.pmAtributoNivel1 ? atr[c.pmAtributoNivel1] : 0;
   const pmCalc = c ? t20PMTotal(p.classe, nivel, valorMagia, extraPMNivel1) : null;
   const treinoCalc = t20TreinoNivel(p.classe, nivel);
@@ -412,7 +460,10 @@ function t20Derivados(p){
     atributoMagia: attrMagia,
     circuloMaximo: c && c.conjurador ? t20CirculoMaximoClasse(p.classe, nivel) : 0,
     circuloVerificado: c && c.conjurador ? t20CirculoVerificado(p.classe, nivel) : false,
-    magiasLimite: t20MagiasConhecidasLimite(p.classe, nivel, p.caminho),
+    magiasLimite,
+    linhagem: t20LinhagemAtiva(p),
+    foco: t20FocoBruxo(p, pvFinal),
+    magiasMemorizadas: t20MagiasMemorizadas(p, magiasLimite),
     pericias,
     treinadas: Array.from(treinadas),
     niveis: c ? t20NiveisTabela(p.classe, nivel) : [],

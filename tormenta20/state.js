@@ -22,6 +22,8 @@ function t20EstadoInicial(){
       classe: null,        // id em T20_CLASSES
       atributoMagia: null, // para Arcanista: "inteligencia" ou "carisma"
       caminho: null,       // Arcanista: "bruxo", "feiticeiro" ou "mago" (livro p043)
+      linhagem: null,      // Feiticeiro: "draconica", "feerica" ou "rubra" (livro p044-p045)
+      linhagemDano: null,  // Linhagem Dracônica: "acido", "eletricidade", "fogo" ou "frio" (p045)
       racaTrocaPericia: false, // Humano (p025): troca uma das duas perícias treinadas por um poder geral
       atributosBase: zerarAtributos(),
       ajusteManual: zerarAtributos(),

@@ -217,7 +217,20 @@ function t20PassoClasse(){
   if(p.classe === "arcanista"){
     extra += `<div class="field"><label for="caminho">Caminho do Arcanista</label>
       <select id="caminho" data-campo="personagem.caminho" data-recarregar="1">${t20Opcoes([{ valor: "bruxo", rotulo: "Bruxo (Inteligência)" }, { valor: "feiticeiro", rotulo: "Feiticeiro (Carisma)" }, { valor: "mago", rotulo: "Mago (Inteligência)" }], p.caminho, "Escolha o caminho")}</select></div>
-      <p class="hint">Livro p043. Feiticeiro aprende magia só nos níveis ímpares; Mago começa com 4 magias e ganha uma a cada novo círculo. Os efeitos de linhagem, foco e grimório não são aplicados pelo app.</p>`;
+      <p class="hint">Livro p043. Feiticeiro aprende magia só nos níveis ímpares; Mago começa com 4 magias e ganha uma a cada novo círculo (uma extra por círculo novo, além da do nível).</p>`;
+    if(p.caminho === "feiticeiro"){
+      const lin = T20_LINHAGENS[p.linhagem] || null;
+      extra += `<div class="field"><label for="linhagem">Linhagem sobrenatural</label>
+      <select id="linhagem" data-campo="personagem.linhagem" data-recarregar="1">${t20Opcoes(Object.keys(T20_LINHAGENS).map(k => ({ valor: k, rotulo: T20_LINHAGENS[k].nome })), p.linhagem, "Escolha a linhagem")}</select></div>`;
+      if(lin && lin.precisaTipo){
+        extra += `<div class="field"><label for="linhagem-dano">Tipo de dano da linhagem</label>
+      <select id="linhagem-dano" data-campo="personagem.linhagemDano" data-recarregar="1">${t20Opcoes(Object.keys(T20_LINHAGEM_DANOS).map(k => ({ valor: k, rotulo: T20_LINHAGEM_DANOS[k] })), p.linhagemDano, "Escolha o tipo")}</select></div>`;
+      }
+      if(lin){
+        extra += `<div class="info-box"><p><b>Herança básica (${t20Esc(lin.nome)}, ${t20Esc(lin.pagina)}):</b> ${t20Esc(lin.basica)}</p>
+        <p class="hint">Herança superior: ${t20Esc(lin.superior)} Os níveis da herança aprimorada (6º) e superior (11º) são os poderes de mesmo nome.</p></div>`;
+      }
+    }
   }
   let resumo = `<p class="muted">Escolha uma classe para ver os dados.</p>`;
   if(c){
@@ -228,7 +241,7 @@ function t20PassoClasse(){
       <p><b>PM por nível:</b> ${t20Esc(c.pmNivel)}${c.conjurador ? " (conjurador: soma o atributo de magia)" : ""}</p>
       <p><b>Perícias fixas:</b> ${t20Esc([...c.fixas, ...(c.grupoFixo ? [c.grupoFixo.opcoes.join(" ou ") + " (uma)"] : [])].join(", ") || "NÃO VERIFICADO")}</p>
       <p><b>Perícias livres por nível:</b> ${t20Esc(c.periciasPorNivel)}</p>
-      <p><b>Conjuração:</b> ${c.conjurador ? `sim, ${t20Esc(t20MagiasConhecidasLimite(p.classe, 1, p.caminho))} magias no 1º nível` : "não neste app"}</p>
+      <p><b>Conjuração:</b> ${c.conjurador ? `sim, ${t20Esc(t20MagiasConhecidasTotal(Object.assign({}, p, { nivel: 1 })))} magias no 1º nível` : "não neste app"}</p>
       <p><b>Resistência forte:</b> ${t20Esc(c.forte || "NÃO VERIFICADO")}</p>
       <p class="hint">PV: ${t20Esc(c.fontePv)}. Perícias: ${t20Esc(c.fontePericias)}.</p></div>`;
   }
@@ -370,11 +383,12 @@ function t20PassoPoderes(){
 
 /* ---- etapa 9: magias (catálogo por círculo) ---- */
 function t20HtmlDetalheMagia(cat){
+  const custo = `<p class="hint">Custo base: ${t20Esc(t20CustoPMCirculo(cat.circulo))} PM (Tabela 4-1, p176).</p>`;
   if(cat.pendente){
-    return `<p class="hint">${t20Esc(cat.escola)} · ${t20Esc(cat.circulo)}º círculo · <span class="muted">execução, alcance e duração NÃO VERIFICADOS</span> ${t20Selo(false)}</p>
+    return custo + `<p class="hint">${t20Esc(cat.escola)} · ${t20Esc(cat.circulo)}º círculo · <span class="muted">execução, alcance e duração NÃO VERIFICADOS</span> ${t20Selo(false)}</p>
       <p class="hint">${t20Esc(cat.fonte)}.</p>`;
   }
-  return `<p class="hint">${t20Esc(cat.escola)} · ${t20Esc(cat.circulo)}º · ${t20Esc(cat.tipo)} · execução ${t20Esc(cat.execucao)} · alcance ${t20Esc(cat.alcance)} · alvo ${t20Esc(cat.alvo)} · duração ${t20Esc(cat.duracao === null ? "NÃO VERIFICADO" : cat.duracao)}${cat.resistencia ? ` · resistência ${t20Esc(cat.resistencia)}` : ""}</p>
+  return custo + `<p class="hint">${t20Esc(cat.escola)} · ${t20Esc(cat.circulo)}º · ${t20Esc(cat.tipo)} · execução ${t20Esc(cat.execucao)} · alcance ${t20Esc(cat.alcance)} · alvo ${t20Esc(cat.alvo)} · duração ${t20Esc(cat.duracao === null ? "NÃO VERIFICADO" : cat.duracao)}${cat.resistencia ? ` · resistência ${t20Esc(cat.resistencia)}` : ""}</p>
     <p>${t20Esc(cat.efeito)}</p><p class="hint">${t20Esc(cat.fonte)}. ${t20Selo(cat.verificado)}</p>`;
 }
 function t20PassoMagias(){
@@ -384,7 +398,11 @@ function t20PassoMagias(){
   if(!c.conjurador) return `<p class="muted">${t20Esc(c.nome)} não conjura neste app. Pule esta etapa.</p>`;
   const max = t20CirculoMaximoClasse(p.classe, p.nivel);
   const teto = max === null ? T20_CIRCULO_TELA : max;
-  const limite = t20MagiasConhecidasLimite(p.classe, p.nivel, p.caminho);
+  const limite = t20MagiasConhecidasTotal(p);
+  const d = t20Derivados(p);
+  let extras = "";
+  if(d.foco) extras += `<p><b>Foco (Bruxo, p043):</b> RD ${d.foco.rd}; PV ${d.foco.pv === null ? "NÃO CALCULADO" : t20Esc(d.foco.pv)} (metade dos PV, arredondada para baixo). A destruição deixa o personagem atordoado por uma rodada; o app não aplica isso nem o teste de Misticismo.</p>`;
+  if(d.magiasMemorizadas !== null) extras += `<p><b>Grimório (Mago, p043):</b> memoriza ${t20Esc(d.magiasMemorizadas)} de ${t20Esc(limite)} magias por dia (metade, arredondada para baixo). A troca exige uma hora de estudo; o app não controla o uso.</p>`;
   const linhas = p.magias.map((m, i) => {
     const circulos = Array.from({ length: Math.max(1, teto, m.circulo || 1) }, (_, k) => ({ valor: k + 1, rotulo: `${k + 1}º` }));
     const cat = !m.livre && m.nome ? t20MagiaCatalogo(m.nome) : null;
@@ -402,6 +420,7 @@ function t20PassoMagias(){
       <button type="button" class="small danger" data-acao="magia-del" data-i="${i}">Remover</button></div>`;
   }).join("");
   return `<p><b>Círculo máximo no nível ${t20Esc(p.nivel)}:</b> ${max === null ? "NÃO VERIFICADO" : t20Esc(max)}. Magias conhecidas neste nível: <b>${t20Esc(limite)}</b>.</p>
+    ${extras}
     <p class="hint">Escolha o círculo e depois a magia. As de 1º círculo têm o detalhe completo; as de 2º a 5º aparecem só com o nome, até a página de cada uma ser conferida.</p>
     ${linhas || `<p class="muted">Nenhuma magia registrada.</p>`}
     <button type="button" class="secondary" data-acao="magia-add">Adicionar magia</button>`;

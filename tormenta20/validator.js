@@ -65,6 +65,16 @@ function t20ValidarEtapa(etapa, p, modo){
         const esperado = t20AtributoMagiaEfetivo(p);
         reportar(!p.atributoMagia || p.atributoMagia === esperado, `Caminho ${p.caminho}: o atributo de magia é ${T20_ATRIBUTO_NOME[esperado]} (livro p043).`, "atributo-magia");
       }
+      if(p.caminho === "feiticeiro"){
+        reportar(!!T20_LINHAGENS[p.linhagem], "Escolha a linhagem sobrenatural do Feiticeiro (Dracônica, Feérica ou Rubra; livro p044-p045).", "linhagem");
+        if(p.linhagem === "draconica"){
+          reportar(!!T20_LINHAGEM_DANOS[p.linhagemDano], "Escolha o tipo de dano da linhagem Dracônica (ácido, eletricidade, fogo ou frio; livro p045).", "linhagem-dano");
+        }
+        if(p.linhagem === "rubra") aviso("Linhagem Rubra: o poder da Tormenta da herança básica e os seus efeitos não são escolhidos nem aplicados neste app.");
+        if(p.linhagem === "feerica") aviso("Linhagem Feérica: a magia de 1º círculo de encantamento ou ilusão entra na contagem de magias conhecidas; a escola não é conferida pelo app.");
+      } else if(p.linhagem || p.linhagemDano){
+        aviso("Linhagem sobrenatural só existe no caminho de Feiticeiro (livro p044). O app não a aplica neste caminho.");
+      }
     }
     if(c && !c.verificadoPv) aviso(`PV e PM de ${c.nome}: ${c.fontePv}.`);
   }
@@ -168,7 +178,7 @@ function t20ValidarEtapa(etapa, p, modo){
     const nomes = (p.magias || []).map(m => String(m.nome || "").trim()).filter(Boolean);
     [...new Set(nomes.filter((n, k) => nomes.indexOf(n) !== k))].forEach(n => aviso(`${n} aparece mais de uma vez: repetição NÃO VERIFICADA.`));
     if(c && c.conjurador){
-      const limite = t20MagiasConhecidasLimite(p.classe, p.nivel, p.caminho);
+      const limite = t20MagiasConhecidasTotal(p);
       reportar(p.magias.length === limite, `Escolha ${limite} magias conhecidas no nível ${p.nivel} (escolheu ${p.magias.length}).`, "magias");
     } else if(p.magias.length){
       aviso(`${c ? c.nome : "Esta classe"} não tem magias listadas neste app: as magias ficam só como anotação.`);

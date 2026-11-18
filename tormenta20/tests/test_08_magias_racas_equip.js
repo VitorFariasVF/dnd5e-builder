@@ -50,8 +50,8 @@ t.igual("catálogo e pendentes cobrem os círculos de 1 a 5", [...circulosPresen
 t.igual("pendentes não têm execução nem alcance (não verificados)", pendentes.filter(p => "execucao" in p || "alcance" in p).map(p => p.nome), []);
 
 const prog = ctx.T20_MAGIAS_PROGRESSAO;
-t.check("progressão de magias marcada como NÃO VERIFICADO sem tabela",
-  prog && prog.verificado === false && prog.tabela === null && /NÃO VERIFICADO/.test(prog.fonte), prog);
+t.check("progressão de magias: custo por círculo verificado (p176, Tabela 4-1)",
+  prog && prog.verificado === true && prog.custoPorCirculo[1] === 1 && prog.custoPorCirculo[5] === 15 && /p176/.test(prog.paginaCusto), prog);
 
 /* ---- Raças completas ---- */
 const racas = ctx.T20_RACAS_COMPLETAS;

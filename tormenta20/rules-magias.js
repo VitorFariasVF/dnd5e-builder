@@ -7,7 +7,8 @@
      resistencia (texto ou null), efeito (frase curta em palavras próprias), fonte, verificado (true só com duas fontes).
    T20_MAGIAS_PENDENTES: magias que apareceram só no índice de uma fonte. Têm nome, circulo, escola, tipo (null se não informado) e fonte.
      Execução, alcance e duração NÃO VERIFICADOS: não entram em T20_MAGIAS até a página individual ser conferida.
-   T20_MAGIAS_PROGRESSAO: magias conhecidas e PM por círculo e por nível. NÃO VERIFICADO (tabela não acessível).
+   T20_MAGIAS_PROGRESSAO: custo em PM por círculo (Tabela 4-1, p176). Verificado no livro.
+   T20_LINHAGENS e T20_LINHAGEM_DANOS: linhagens do Feiticeiro (p044-p045).
 
    Fontes:
      [X] exegetadearton.com.br, páginas individuais de magia (1 fonte). O próprio site declara que o conteúdo vem da
@@ -84,12 +85,41 @@ const T20_MAGIAS_PENDENTES = [
   { nome: "Toque da Morte", circulo: 5, escola: "Necromancia", tipo: null, fonte: "[X] índice de magias (1 fonte); página individual não conferida" }
 ];
 
-/* Magias conhecidas e PM por círculo, por nível de conjurador. Não foi possível abrir uma tabela de progressão em
-   nenhuma fonte acessível nesta frente. A quantidade de magias de 1º círculo no 1º nível já está em rules.js
-   (magiasNivel1), com a sua própria fonte. */
+/* Progressão de magias.
+   custoPorCirculo: Tabela 4-1 (Custo de Magias), livro p176. Verificado no livro.
+   circulosPorNivel: a tabela de cada conjurador traz o círculo disponível por nível. Ficam em rules-niveis.js
+   (T20_NIVEIS), com página: Arcanista p043, Bardo p050, Clérigo p063, Druida p067.
+   Contagem de magias conhecidas: regra por classe e caminho, em engine.js (t20MagiasConhecidasLimite). */
 const T20_MAGIAS_PROGRESSAO = {
-  verificado: false,
-  tabela: null,
+  verificado: true,
+  custoPorCirculo: { 1: 1, 2: 3, 3: 6, 4: 10, 5: 15 },
+  paginaCusto: "p176, Tabela 4-1: Custo de Magias",
+  circulosPorNivel: "rules-niveis.js (T20_NIVEIS): Arcanista p043, Bardo p050, Clérigo p063, Druida p067",
   regraMagiasConhecidas: "Tormenta20 Jogo do Ano, p043 (Arcanista e caminhos), p050 (Bardo), p063 (Clérigo), p067 (Druida): contagem por classe, aplicada em engine.js (t20MagiasConhecidasLimite).",
-  fonte: "NÃO VERIFICADO: PM por círculo e tabela de magias por nível não foram conferidos. A contagem de magias conhecidas segue a regra por classe do livro (ver regraMagiasConhecidas)."
+  fonte: "Tormenta20 Jogo do Ano, p176 (Tabela 4-1) para o custo em PM por círculo; p043, p050, p063 e p067 para círculos e magias conhecidas."
 };
+
+/* Feiticeiro (Arcanista, caminho do Feiticeiro): linhagem sobrenatural, livro p044-p045.
+   Só a herança básica vem com o caminho; a aprimorada e a superior são os poderes Herança Aprimorada (6º nível)
+   e Herança Superior (11º nível), em rules-poderes.js. O app aplica os números; efeitos de combate ficam de fora. */
+const T20_LINHAGENS = {
+  draconica: {
+    nome: "Dracônica", pagina: "p045",
+    basica: "Soma o Carisma nos PV iniciais; redução de dano 5 ao tipo escolhido.",
+    superior: "Soma o dobro do Carisma nos PV iniciais (no lugar do básico); imune ao tipo escolhido.",
+    precisaTipo: true
+  },
+  feerica: {
+    nome: "Feérica", pagina: "p045",
+    basica: "Treinado em Enganação e uma magia de 1º círculo de encantamento ou ilusão (magia extra conhecida).",
+    superior: "+2 em Carisma (aplicado ao valor final do atributo).",
+    precisaTipo: false
+  },
+  rubra: {
+    nome: "Rubra", pagina: "p045",
+    basica: "Um poder da Tormenta (não escolhido neste app).",
+    superior: "+4 PM por poder da Tormenta (não aplicado neste app).",
+    precisaTipo: false
+  }
+};
+const T20_LINHAGEM_DANOS = { acido: "Ácido", eletricidade: "Eletricidade", fogo: "Fogo", frio: "Frio" };

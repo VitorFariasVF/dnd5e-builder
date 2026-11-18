@@ -157,8 +157,8 @@ Esta seção vale sobre as seções 3 e 4 acima, que descrevem a primeira entreg
 ### 8.5 Magias conhecidas acima do 1º nível (tarefa 2)
 - Regra do livro, por classe: Bardo (p050) e Druida (p067): 2 magias no 1º nível e +1 nos níveis pares. Clérigo (p063): 3 no 1º e +1 a cada nível. Arcanista (p043): 3 no 1º e +1 a cada nível para Bruxo; Feiticeiro +1 só nos níveis ímpares (3º, 5º...); Mago começa com 4 e ganha +1 por nível e +1 a cada novo círculo (5º, 9º, 13º, 17º).
 - Implementado: `t20MagiasConhecidasLimite(classe, nivel, caminho)` em `engine.js`; validação na etapa 9 em todos os níveis (`validator.js`); texto da tela e do PDF com o número do nível. Testes: `tests/test_15_livro_poderes_magias.js` (fórmula de 1º a 20º para cada classe e caminho) e `tests/test_01_calculos.js`.
-- Ambiguidade do livro: para o Mago, o texto diz que ele aprende "uma magia adicional daquele círculo" ao ganhar um novo círculo, além da magia por nível. O app soma as duas. Se o livro quiser dizer que o novo círculo substitui a magia do nível, a fórmula muda (conferir p043).
-- Não coberto: PM por círculo e tabela de magias por nível (`T20_MAGIAS_PROGRESSAO` segue NÃO VERIFICADO). Magias do Paladino (só pelo poder Orar, p089) não são contadas como magia de classe.
+- Mago (p043, resolvido na rodada de PM e linhagem): o livro diz que ele "aprende uma magia adicional daquele círculo" ao ganhar um novo círculo. "Adicional" soma à magia do nível (a regra geral do p043 é "a cada nível, aprende uma magia"). A fórmula do app está correta e não foi alterada.
+- Não coberto: magias do Paladino (só pelo poder Orar, p089) não são contadas como magia de classe. (PM por círculo e círculo por nível foram conferidos depois, ver 8.9.)
 
 ### 8.6 Humano: troca de perícia por poder geral (tarefa 3, p025)
 - Regra do livro: Versátil, treinado em duas perícias à escolha; "você pode trocar uma dessas perícias por um poder geral a sua escolha".
@@ -168,12 +168,34 @@ Esta seção vale sobre as seções 3 e 4 acima, que descrevem a primeira entreg
 ### 8.7 Caminhos do Arcanista (tarefa 4, p043)
 - Implementado: escolha do caminho (Bruxo, Feiticeiro ou Mago) na etapa 5, campo `caminho` (state.js). O caminho define o atributo de magia (Feiticeiro: Carisma; Bruxo e Mago: Inteligência; p043) e a quantidade de magias conhecidas (8.5). O validador exige o caminho e acusa atributo de magia que não bate com ele.
 - Pendências (mecânica nova, não implementada), todas em p043 e p044-p045:
-  - Bruxo: foco (RD 10, PV iguais à metade dos seus, lançar com a mão ou teste de Misticismo CD 20; recuperar com uma semana e T$ 100). Sem modelagem do foco.
-  - Feiticeiro: linhagem sobrenatural (Dracônica, Feérica, Rubra; herança básica, aprimorada e superior, p044-p045) e poderes de Feiticeiro. O app não aplica a herança nem os efeitos da linhagem; os poderes "Herança Aprimorada" e "Herança Superior" conferem só o nível e o pré-requisito de poder ou de texto; a herança em si não é aplicada.
-  - Mago: grimório (memorização diária, troca só com estudo de uma hora, p043). O app não controla magias memorizadas.
-  - Mago: custo de aprender magia por escrita (Escriba Arcano, p044) não modelado.
+  - Pendências desta parte que continuam fora (ver 8.9): efeitos de combate e de teste (RD do foco, atordoamento, CD de Misticismo, CD das magias da linhagem Feérica e Dracônica), herança Rubra (poder da Tormenta) e a troca de magias do grimório. Custo de aprender magia por escrita (Escriba Arcano, p044) não modelado.
 
 ### 8.8 Resultado dos testes (rodada de 2026-11-18)
 - `node tormenta20/tests/run_all.js`: 15 arquivos, todos passaram (14 anteriores, com 5 expectativas em 3 arquivos atualizadas para a regra do livro, e 1 arquivo novo).
 - `node tormenta20/tests/e2e_chrome.js`: todas as checagens de navegador passaram.
 - Fontes: as páginas citadas são do PDF `T20_-_Livro_Básico_-_Jogo_do_Ano.pdf`; o índice do livro bate com `t.split('\f')` + 1.
+
+### 8.9 Caminhos do Arcanista, PM por círculo e linhagens (rodada de 2026-11-18, tarefa 2)
+Fontes: p043 (tabela do Arcanista, caminhos Bruxo, Feiticeiro e Mago), p044-p045 (poderes de Arcanista e linhagens sobrenaturais), p176 (Tabela 4-1).
+
+- **PM por círculo (Tabela 4-1, p176)**: 1º = 1 PM; 2º = 3; 3º = 6; 4º = 10; 5º = 15. Verificado no livro. Em `rules-magias.js`, `T20_MAGIAS_PROGRESSAO.custoPorCirculo` (era NÃO VERIFICADO). Engine: `t20CustoPMCirculo`. A etapa 9 mostra o custo base de cada magia escolhida. Teste: todas as magias do catálogo com custo base batem com a tabela.
+- **Tabela de magias por nível**: os círculos disponíveis por nível já estavam em `rules-niveis.js` com página (Arcanista p043, Bardo p050, Clérigo p063, Druida p067); o selo passou a apontar para esses dados. Teste: círculo máximo do Arcanista no 4º, 5º, 9º, 13º e 17º nível, e do Clérigo no 4º, 5º e 9º.
+- **Cálculo de PM**: o PM total continua vindo do PM por nível de cada classe (verificado em p043 e p063, `rules-niveis.js`). O custo por círculo não entra no PM total: é gasto a cada lançamento. Por isso o app usa a tabela só para mostrar o custo, não para somar PM na ficha.
+- **Magia extra do Mago (p043)**: "aprende uma magia adicional daquele círculo" ao ganhar um novo círculo. A fórmula do app (4 no 1º nível; +1 por nível; +1 em cada novo círculo, nos níveis 5, 9, 13 e 17) está correta. Teste: no 5º nível o Mago ganha 2 magias a mais que no 4º; no 6º, ganha 1.
+- **Feiticeiro, linhagem (p044-p045)**: escolha da linhagem na etapa 5 (Dracônica, Feérica ou Rubra). A Dracônica pede o tipo de dano (ácido, eletricidade, fogo ou frio). Efeitos aplicados:
+  - Dracônica básica: +CAR nos PV iniciais. Superior (poder Herança Superior, 11º nível): +2 x CAR, no lugar do básico. Teste: com CAR 2, a superior soma 4 PV além do PV base (2 x CAR) e a básica soma 2 (CAR).
+  - Feérica básica: +1 magia conhecida (a magia de 1º círculo de encantamento ou ilusão). A escola não é conferida pelo app (aviso).
+  - Feérica superior: +2 em Carisma no valor final.
+  - Rubra: sem efeito numérico no app (depende do poder da Tormenta, que não está no catálogo). Aviso.
+  - Fora do caminho de Feiticeiro, a linhagem não é aplicada e gera aviso.
+  - Testes: `tests/test_16_feiticeiro_bruxo_mago.js`.
+- **Bruxo, foco (p043)**: RD 10 e PV = metade dos PV do personagem. O livro não diz o arredondamento; o app arredonda para baixo (exemplo: 9 PV, foco 4). Mostrado na etapa 9. Fora do app: atordoamento quando o foco é destruído, teste de Misticismo (CD 20 + custo) e recuperação do foco.
+- **Mago, grimório (p043)**: memoriza metade das magias conhecidas por dia. O livro dá o exemplo "7 conhecidas, escolhe 3"; o app arredonda para baixo, pelo mesmo exemplo. Mostrado na etapa 9. Fora do app: a troca exige uma hora de estudo e não é controlada.
+- **Pendências que o livro não permite fechar no app**: efeitos de combate e de teste (CD das magias das linhagens, Raio Arcano, Foco Vital), herança Rubra (poder da Tormenta), Escriba Arcano (custo de T$ por PM, p044).
+
+Arquivos: `tormenta20/rules-magias.js` (T20_MAGIAS_PROGRESSAO, T20_LINHAGENS), `tormenta20/engine.js` (linhagem, foco, grimório, t20MagiasConhecidasTotal, t20CustoPMCirculo), `tormenta20/validator.js` (etapa 5 e 9), `tormenta20/ui.js` (etapa 5 e 9), `tormenta20/state.js` (linhagem, linhagemDano), `tormenta20/tests/test_08_magias_racas_equip.js` (selo da progressão) e `tormenta20/tests/test_16_feiticeiro_bruxo_mago.js` (novo).
+
+### 8.10 Resultado dos testes (rodada de 2026-11-18, tarefa 4)
+- `node tormenta20/tests/run_all.js`: 16 arquivos, todos passaram (15 anteriores e `test_16`, com 33 checagens novas). A expectativa "progressão NÃO VERIFICADO" de `test_08` foi trocada pela verificação do custo por círculo.
+- `node tormenta20/tests/e2e_chrome.js`: todas as checagens passaram (sem erro de console em 360 px).
+- Renderização das etapas 5 e 9 com cada caminho do Arcanista: sem erro (teste manual via `vm`).
