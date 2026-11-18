@@ -21,13 +21,13 @@ O `index.html` da raiz é um **hub** que leva a cada sistema. Cada sistema é um
 |---|---|---|---|---|
 | **D&D 5e** (2014 + Xanathar, ou 2024) | [`dnd5e/`](dnd5e/) | Pronto | ≈ 92% (2014) · ≈ 55% (2024) | ≈ 65% |
 | **Call of Cthulhu 7ª edição** | [`coc7/`](coc7/) | Trabalho em andamento | ≈ 80% | ≈ 55% |
-| **Tormenta20** | [`tormenta20/`](tormenta20/) | Trabalho em andamento | ≈ 55% | ≈ 15% |
+| **Tormenta20** | [`tormenta20/`](tormenta20/) | Trabalho em andamento | ≈ 80% | ≈ 85% (amostra: 59 de 60 certos) |
 | **Tormenta RPG** (d20 original) | [`tormenta-rpg/`](tormenta-rpg/) | Trabalho em andamento | ≈ 35% | ≈ 30% |
 | **3DeT Victory** | [`3det/`](3det/) | Trabalho em andamento | ≈ 60% | ≈ 50% |
 
 \* Valores aproximados. O método e o que falta em cada sistema estão em [`docs/COBERTURA.md`](docs/COBERTURA.md).
 
-> **Sobre as regras.** Tormenta20, Tormenta RPG, Call of Cthulhu e 3DeT Victory foram montados a partir de **guias de fãs, wikis e material gratuito** (o 3DeT Victory, do Playtest e do Kit Introdutório oficiais da Jambô), não do livro oficial. Cada dado leva a sua fonte e o que não foi confirmado em duas fontes aparece como **NÃO VERIFICADO** na tela. Cada página desses três sistemas e o rodapé do PDF avisam isso. Confira no seu exemplar do livro antes de usar em mesa. Os sistemas guardam só mecânica (números, fórmulas, nomes) e descrições curtas em palavras próprias, nunca texto de livro nem arte.
+> **Sobre as regras.** Tormenta RPG, Call of Cthulhu e 3DeT Victory foram montados a partir de **guias de fãs, wikis e material gratuito** (o 3DeT Victory, do Playtest e do Kit Introdutório oficiais da Jambô), não do livro oficial. Cada dado leva a sua fonte e o que não foi confirmado em duas fontes aparece como **NÃO VERIFICADO** na tela. Cada página desses três sistemas e o rodapé do PDF avisam isso. Confira no seu exemplar do livro antes de usar em mesa. Os sistemas guardam só mecânica (números, fórmulas, nomes) e descrições curtas em palavras próprias, nunca texto de livro nem arte.
 
 ---
 
@@ -64,7 +64,7 @@ Investigador completo: características (rolar ou distribuir), ajustes de idade,
 
 ## 🛡️ Tormenta20
 
-Fluxo em 12 etapas do nível 1 ao 20, com 14 classes, 17 raças, 194 poderes e magias por círculo. Onde o dado é incerto, a ficha mostra "não verificado" e aceita o valor digitado à mão. Equipamento e magias de 2º a 5º círculo ainda estão incompletos. Exporta backup JSON (esquema 2), PDF e um rascunho de ator para Foundry (não testado).
+Fluxo em 12 etapas do nível 1 ao 20, com 14 classes, 18 raças, 162 poderes e 199 magias do 1º ao 5º círculo. Os dados vêm do Livro Básico (Jogo do Ano) e foram conferidos por página; uma amostra independente de 60 itens teve 59 certos. Onde o dado é incerto, a ficha mostra "não verificado" e aceita o valor digitado à mão. As listas de equipamento (39 armas, 12 armaduras e 125 itens) estão nos dados, mas a ficha ainda não as usa, e itens com preço ou espaço fracionário ficaram vazios. Exporta backup JSON (esquema 2), PDF e um rascunho de ator para Foundry (não testado).
 
 ## ⚡ 3DeT Victory
 

@@ -1,5 +1,7 @@
 # Auditoria: Tormenta20 (Jambô, Edição Jogo do Ano)
 
+> **Atualização 2026-11-17:** este documento descreve a primeira entrega, feita sem o livro. Os dados foram depois refeitos a partir do Livro Básico (PDF do usuário); veja `docs/TRABALHO_T20_*.md`. Uma amostra independente de 60 itens contra as páginas do livro teve 59 certos e 1 erro (espaço da Peçonha comum, limitação do formato).
+
 Primeira entrega: criação de ficha do nível 1 ao 5, em `tormenta20/`.
 
 ## 1. Fontes consultadas
