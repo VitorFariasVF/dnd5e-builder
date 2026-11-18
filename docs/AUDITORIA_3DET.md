@@ -68,7 +68,7 @@ Os textos de efeito das vantagens e desvantagens só aparecem quando o Kit Intro
 Lista de `TDT_RULES.lacunas`, mais um item sobre exportação:
 
 - Efeito da maioria das vantagens e desvantagens. Só as do Kit Introdutório estão descritas.
-- Arquétipos Abissal e Alien: efeitos não lidos. Aberrante custa 1 pt (PDF p64); Anão custa 1 pt (PDF p67), conferido no livro 3DeT Victory em 2026-11-18.
+- Arquétipos Abissal e Alien: efeitos não lidos. Aberrante custa 1 pt (PDF p79); Anão custa 1 pt (PDF p82), conferido no livro 3DeT Victory em 2026-11-18.
 - Kits e regras completas de veículos e artefatos.
 - 3D&T Alpha (5 características) não implementado. Só o Victory, com 3 atributos.
 - Sem exportação para VTT. Nenhum VTT foi verificado para este sistema.
