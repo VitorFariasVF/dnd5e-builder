@@ -297,6 +297,26 @@ function atualizarImagemPersonagem(aviso=""){
   const box = document.getElementById("imagemPersonagemBox");
   if(box) box.innerHTML = htmlImagemPersonagem(aviso);
 }
+/* PNG mantém a transparência (canal alfa) quando o resultado cabe no limite; senão cai para JPEG com fundo branco e avisa. */
+const IMAGEM_PERSONAGEM_AVISO_JPEG = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
+function escolherFormatoImagemPersonagem(tipoOriginal, gerarPng, gerarJpeg){
+  if(tipoOriginal === "image/png"){
+    const dataPng = gerarPng();
+    if(imagemPersonagemValida(dataPng)) return { dataUrl: dataPng, aviso: "" };
+    return { dataUrl: gerarJpeg(), aviso: IMAGEM_PERSONAGEM_AVISO_JPEG };
+  }
+  return { dataUrl: gerarJpeg(), aviso: "" };
+}
+function redimensionarImagemPersonagem(img, fundoBranco){
+  const escala = Math.min(1, IMAGEM_PERSONAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+  const ctx2d = canvas.getContext("2d");
+  if(fundoBranco){ ctx2d.fillStyle = "#ffffff"; ctx2d.fillRect(0, 0, canvas.width, canvas.height); }
+  ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
 function carregarImagemPersonagem(input){
   const arquivo = input.files && input.files[0];
   input.value = "";
@@ -308,19 +328,16 @@ function carregarImagemPersonagem(input){
   img.onload = () => {
     URL.revokeObjectURL(url);
     if(!img.naturalWidth || !img.naturalHeight) return atualizarImagemPersonagem("Não foi possível ler esta imagem.");
-    const escala = Math.min(1, IMAGEM_PERSONAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
-    canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
-    const ctx2d = canvas.getContext("2d");
-    ctx2d.fillStyle = "#ffffff";
-    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
-    ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+    const escolha = escolherFormatoImagemPersonagem(
+      arquivo.type,
+      () => redimensionarImagemPersonagem(img, false).toDataURL("image/png"),
+      () => redimensionarImagemPersonagem(img, true).toDataURL("image/jpeg", 0.8)
+    );
+    const dataUrl = escolha.dataUrl;
     if(!imagemPersonagemValida(dataUrl)) return atualizarImagemPersonagem("Não foi possível guardar esta imagem.");
     state.personagem.imagem = dataUrl;
     salvarEstado();
-    atualizarImagemPersonagem();
+    atualizarImagemPersonagem(escolha.aviso);
   };
   img.onerror = () => { URL.revokeObjectURL(url); atualizarImagemPersonagem("Não foi possível ler esta imagem."); };
   img.src = url;

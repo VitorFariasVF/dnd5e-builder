@@ -41,6 +41,26 @@ check('Validação: rejeita gif, svg, html, javascript, texto puro, aspas e vazi
 ].every(v => !imagemPersonagemValida(v)));
 check('Validação: rejeita imagem acima do limite de 400 mil caracteres', () => !imagemPersonagemValida('data:image/jpeg;base64,' + 'A'.repeat(400001)));
 
+const PNG_ALFA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR4nGP4zwAH/6HsBgAlcAN+++VAswAAAABJRU5ErkJggg==';
+const PNG_GRANDE = 'data:image/png;base64,' + 'A'.repeat(400001);
+const JPEG_FALLBACK = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMC';
+const geraPng = dados => () => dados;
+const geraJpeg = () => JPEG_FALLBACK;
+check('Formato: PNG com transparência é preservado como PNG (canal alfa, tipo de cor 6)', () => {
+  const e = escolherFormatoImagemPersonagem('image/png', geraPng(PNG_ALFA), geraJpeg);
+  const bytes = require('buffer').Buffer.from(e.dataUrl.split(',')[1], 'base64');
+  return e.dataUrl === PNG_ALFA && e.aviso === '' && bytes[25] === 6;
+});
+check('Formato: PNG grande que estoura o limite cai para JPEG com aviso', () => {
+  const e = escolherFormatoImagemPersonagem('image/png', geraPng(PNG_GRANDE), geraJpeg);
+  return e.dataUrl === JPEG_FALLBACK && e.aviso === IMAGEM_PERSONAGEM_AVISO_JPEG && imagemPersonagemValida(e.dataUrl);
+});
+check('Formato: JPEG continua JPEG, sem aviso, sem tentar PNG', () => {
+  let tentouPng = false;
+  const e = escolherFormatoImagemPersonagem('image/jpeg', () => { tentouPng = true; return PNG_ALFA; }, geraJpeg);
+  return e.dataUrl === JPEG_FALLBACK && e.aviso === '' && !tentouPng;
+});
+
 check('Ficha antiga sem campo imagem abre com imagem vazia', () => {
   resetStateToInitial(); delete state.personagem.imagem; ensureStateShape();
   return state.personagem.imagem === '';
