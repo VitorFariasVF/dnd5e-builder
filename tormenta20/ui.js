@@ -260,7 +260,22 @@ function t20PassoAtributos(){
   <p class="hint">Todos os atributos começam em 0. Valores entre ${T20_PONTOS_COMPRA.minimo} e ${T20_PONTOS_COMPRA.maximo} antes da raça. O modificador é o próprio valor. ${t20Esc(T20_PONTOS_COMPRA.fonte)}.</p>
   ${(() => { const sug = t20SugestaoAtributos(p.classe); return sug ? `<p><button type="button" class="secondary" data-acao="t20-sugerir-atributos">Sugerir distribuição</button> <span class="muted">${t20Esc(sug.texto)}</span></p>` : `<p class="muted">Escolha a classe antes para receber a sugestão.</p>`; })()}
   <div class="table-wrap"><table class="table-like t20-atributos" aria-describedby="pontos"><thead><tr><th scope="col">Atributo</th><th scope="col">Compra</th><th scope="col">Custo</th><th scope="col">Raça</th><th scope="col">Ajuste manual</th><th scope="col">Final</th></tr></thead><tbody>${linhas}</tbody></table></div>
-  <p class="hint">Ajuste manual: use se a raça não tiver o ajuste verificado ou se a sua mesa usa outra regra. Fica em 0 por padrão.</p>`;
+  <p class="hint">Ajuste manual: use se a sua mesa usa outra regra que a da raça. Fica em 0 por padrão. Os aumentos de Poder (Aumento de Atributo, no passo Poderes) entram no Final.</p>
+  ${t20HtmlEscolhaRacial(p)}`;
+}
+/* Escolha de atributos da raça (+1 em cada um, p024-p036): só aparece para Humano, Sereia/Tritão, Lefou e Osteon. */
+function t20HtmlEscolhaRacial(p){
+  const info = t20EscolhaRacialInfo(p.raca);
+  if(!info) return "";
+  const r = t20RacaInfo(p.raca);
+  const escolhas = Array.from({ length: info.qtd }, (_, k) => {
+    const atual = (p.escolhaRacial || [])[k] || "";
+    return `<div class="field" style="flex:1 1 10rem"><label for="escolha-racial-${k}">Atributo ${k + 1} (+1)</label>
+      <select id="escolha-racial-${k}" data-campo="personagem.escolhaRacial.${k}" data-recarregar="1">${t20Opcoes(info.permitidos.map(id => ({ valor: id, rotulo: T20_ATRIBUTO_NOME[id] })), atual, "Escolha")}</select></div>`;
+  }).join("");
+  return `<div class="info-box"><p><b>${t20Esc(r.nome)}: ${t20Esc(r.ajusteEscolha)}</b></p>
+    <div class="inline-row">${escolhas}</div>
+    <p class="hint">Três atributos diferentes${info.permitidos.length < T20_ATRIBUTO_IDS.length ? `, entre os permitidos (${info.permitidos.map(id => T20_ATRIBUTO_NOME[id]).join(", ")})` : ""}. Fonte: ${t20Esc(r.fonte)}.</p></div>`;
 }
 
 /* ---- etapa 7: perícias ---- */
@@ -331,6 +346,9 @@ function t20PassoPoderes(){
       <div class="inline-row">
         <div class="field" style="flex:1 1 9rem"><label for="poder-nivel-${i}">Escolhido no nível</label><select id="poder-nivel-${i}" data-campo="personagem.poderes.${i}.nivel" data-tipo="int" data-recarregar="1">${t20Opcoes(Array.from({ length: Math.max(p.nivel, pd.nivel || 1) }, (_, k) => ({ valor: k + 1, rotulo: String(k + 1) })), pd.nivel)}</select></div>
       </div>
+      ${cat && cat.id === T20_AUMENTO_ID ? `<div class="field"><label for="poder-atr-${i}">Atributo que recebe +1</label>
+        <select id="poder-atr-${i}" data-campo="personagem.poderes.${i}.atributo" data-recarregar="1">${t20Opcoes(T20_ATRIBUTOS.map(a => ({ valor: a.id, rotulo: `${a.nome} (${t20Esc(finais[a.id])})` })), pd.atributo, "Escolha o atributo")}</select>
+        <span class="hint">Uma vez por patamar para cada atributo: Iniciante 1º-4º, Veterano 5º-10º, Campeão 11º-16º, Lenda 17º-20º.</span></div>` : ""}
       <div class="field"><label for="poder-nota-${i}">Anotação (opcional)</label><input id="poder-nota-${i}" data-campo="personagem.poderes.${i}.nota" value="${t20Esc(pd.nota || "")}" maxlength="160"></div>
       ${checagens.length ? `<ul class="clean">${checagens.map(x => `<li${x.mecanico ? ' class="chip-no"' : ""}>${t20Esc(x.msg)}</li>`).join("")}</ul>` : ""}
       <button type="button" class="small danger" data-acao="poder-del" data-i="${i}">Remover poder</button></div>`;
@@ -610,6 +628,11 @@ function t20EscolherPoder(i, valor){
   if(!valor){ lista[i] = { id: null, nome: "", tipo: "classe", nivel: atual.nivel, nota: atual.nota || "", livre: false }; return; }
   const cat = T20_PODERES[valor];
   if(!cat) return;
+  if(cat.id === T20_AUMENTO_ID){
+    /* Aumento de Atributo: guarda o nível escolhido (mínimo 2) e o atributo, se já houver. */
+    lista[i] = { id: cat.id, nome: cat.nome, tipo: cat.tipo, nivel: Math.max(cat.nivel, Number(atual.nivel) || 0), nota: atual.nota || "", livre: false, atributo: atual.atributo || null };
+    return;
+  }
   lista[i] = { id: cat.id, nome: cat.nome, tipo: cat.tipo, nivel: cat.nivel !== null ? cat.nivel : atual.nivel, nota: atual.nota || "", livre: false };
 }
 /* Escolha de magia do catálogo: mesmo critério de t20EscolherPoder. */

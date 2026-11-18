@@ -100,11 +100,11 @@ t.igual("Anão: deslocamento 6 m do livro (p026)", [ctx.t20Derivados(ctx.state.p
 montarPersonagem(ctx, { nome: "Sir", nivel: 1, raca: "silfide", classe: "guerreiro", atributosBase: ZERO });
 t.igual("Sílfide: 9 m e Força –2 do livro aplicada", [ctx.t20Derivados(ctx.state.personagem).deslocamento, ctx.t20AtributosFinais(ctx.state.personagem).forca], [9, -2]);
 montarPersonagem(ctx, { nome: "Ser", nivel: 1, raca: "sereia_triton", classe: "guerreiro", atributosBase: ZERO });
-t.igual("Sereia/Tritão: deslocamento 9 m e 3 habilidades do livro; ajuste à escolha não aplicado", [ctx.t20Derivados(ctx.state.personagem).deslocamento, ctx.t20RacaInfo("sereia_triton").habilidades.length], [9, 3]);
+t.igual("Sereia/Tritão: deslocamento 9 m e 3 habilidades do livro; ajuste à escolha no passo Atributos", [ctx.t20Derivados(ctx.state.personagem).deslocamento, ctx.t20RacaInfo("sereia_triton").habilidades.length], [9, 3]);
 montarPersonagem(ctx, { nome: "Hum", nivel: 1, raca: "humano", classe: "guerreiro", atributosBase: ZERO });
 t.igual("Humano: 2 perícias extras (Versátil) e deslocamento padrão 9 m", [ctx.t20PericiasDisponiveis(ctx.state.personagem, ctx.t20AtributosFinais(ctx.state.personagem)).extraRacial, ctx.t20Derivados(ctx.state.personagem).deslocamento], [2, 9]);
 const avHum = avisos(3, "estrito", ctx.state.personagem);
-t.check("etapa raça: Humano gera aviso do ajuste à escolha (não aplicado pelo app), nunca erro", avHum.some(a => /ajustes/.test(a.msg)) && !avHum.some(a => /deslocamento/.test(a.msg)) && erros(3, "estrito", ctx.state.personagem).length === 0);
+t.check("etapa raça: Humano não gera aviso do ajuste à escolha (o app aplica no passo Atributos)", !avHum.some(a => /ajustes/.test(a.msg)) && !avHum.some(a => /deslocamento/.test(a.msg)) && erros(3, "estrito", ctx.state.personagem).length === 0);
 
 /* ---- 3. Catálogo de poderes: pré-requisitos mecânicos (estrito = erro, livre = aviso) ---- */
 function poderes(classe, nivel, lista, extra){

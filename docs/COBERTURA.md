@@ -8,7 +8,7 @@ Dois números por sistema, com métodos diferentes. **Ambos são aproximados** n
 |---|---|---|---|
 | D&D 5e | ≈ 92% (2014) · ≈ 55% (2024) | ≈ 65% (≈ 66 de ≈ 101 itens); subclasses de Xanathar: amostra independente de 34 itens, 32 certos (ver `docs/VERIFICACAO_XANATHAR.md`) | SRD 5.1, SRD 5.2 (espelho), wikis e Guia de Xanathar (PDF do usuário) |
 | Call of Cthulhu 7ª | ≈ 80% | ≈ 55% | Quick-Start em japonês, wikis e Roll20 |
-| Tormenta20 | ≈ 80% | ≈ 85% (amostra independente de 60 itens: 59 certos) | Livro Básico, Jogo do Ano (PDF do usuário) |
+| Tormenta20 | ≈ 85% | ≈ 85% (amostra independente de 60 itens: 59 certos; aumentos de atributo e escolha racial conferidos no livro em 2026-11-18) | Livro Básico, Jogo do Ano (PDF do usuário) |
 | Tormenta RPG (d20) | ≈ 35% | ≈ 30% | Compêndio do VTT fvtt-trpg, wiki tsrd e d20 SRD 3.5 |
 | 3DeT Victory | ≈ 60% | ≈ 50% | Playtest 2023 e Kit Introdutório da Jambô (oficiais, gratuitos) |
 
@@ -19,7 +19,7 @@ O percentual de regras conferidas do D&D caiu em relação à rodada anterior (9
 
 **Call of Cthulhu:** ocupações fora das 19 (faltam as que dependem de Contabilidade e Operar Maquinário Pesado, e nove sem fórmula em fonte); Sanidade máxima só de fórum; Dano e Corpo acima de 204; ordem do MOV e idade a partir dos 40; exportação para VTT.
 
-**Tormenta20:** equipamento fora da ficha (os dados existem; 48 itens e 5 armas sem preço ou espaço fracionário); magia Oração sem o corpo lido; habilidades do 1º ao 5º nível fora da estrutura; 71 poderes com nível de acesso não confirmado; ajuste "+1 em três atributos à escolha" não aplicado; perda de Carisma dos poderes da Tormenta; aumentos de atributo por nível; Foundry real.
+**Tormenta20:** aplicados nesta rodada: Aumento de Atributo (poder de classe, uma vez por patamar) e escolha de três atributos da raça. Faltam: cerca de 90 poderes de classe que o Livro Básico não traz (vindos de [E]) e 99 a conferir em nível e pré-requisito; tipo de 26 poderes; magias conhecidas acima do 1º nível; troca de perícia de Humano por poder geral; caminhos do Arcanista; equipamento fora da ficha (48 itens com espaço fracionário); perda de Carisma dos poderes da Tormenta; Foundry real.
 
 **Tormenta RPG:** bases de resistência por classe, magias por dia e listas, equipamento, traços das raças (exceto o Anão), custo da compra de pontos, licença e ano da edição.
 

@@ -28,10 +28,11 @@ function t20EstadoInicial(){
       pvManual: null,      // PV digitado à mão (null = calculado pela tabela)
       pmManual: null,      // PM digitado à mão
       treinoManual: null,  // bônus de treino digitado à mão
-      poderes: [],         // { id (T20_PODERES ou null), nome, tipo, nivel, nota, livre }
+      escolhaRacial: [],   // atributos escolhidos pela raça (Humano, Sereia/Tritão, Lefou, Osteon): +1 cada
+      poderes: [],         // { id (T20_PODERES ou null), nome, tipo, nivel, nota, livre, atributo (Aumento de Atributo) }
       magias: [],          // { nome, circulo, livre } (nome do catálogo ou digitado)
       equipamento: [],     // { nome, quantidade, peso }
-      dinheiro: 0,         // T$ (valor inicial NÃO VERIFICADO: é entrada livre)
+      dinheiro: 0,         // T$ (entrada livre; o livro dá 4d6 de T$ inicial, p146, mas o app não rola)
       defesa: { armadura: 0, escudo: 0, outros: 0, nomeArmadura: "", nomeEscudo: "" },
       personalidade: { aparencia: "", historia: "", tracos: "" }
     }
@@ -52,7 +53,8 @@ function t20NormalizarPoder(x){
     tipo: cat ? cat.tipo : (o.tipo === undefined ? "classe" : o.tipo),
     nivel: Math.trunc(Number(o.nivel)) || 1,
     nota: String(o.nota == null ? "" : o.nota),
-    livre: cat ? false : (typeof o.livre === "boolean" ? o.livre : nome.trim() !== "")
+    livre: cat ? false : (typeof o.livre === "boolean" ? o.livre : nome.trim() !== ""),
+    atributo: T20_ATRIBUTO_IDS.includes(o.atributo) ? o.atributo : null
   };
 }
 function t20NormalizarMagia(x){
@@ -83,6 +85,9 @@ function ensureStateShape(){
     p.origemBeneficios = fresh.personagem.origemBeneficios.map((b, i) => Object.assign({}, b, (p.origemBeneficios || [])[i] || {}));
   if(!Array.isArray(p.periciasEscolhidas)) p.periciasEscolhidas = [];
   p.poderes = Array.isArray(p.poderes) ? p.poderes.map(t20NormalizarPoder) : [];
+  /* Três posições (uma por escolha); a posição vazia guarda "" para não deslocar as demais. */
+  const escolhaBruta = Array.isArray(p.escolhaRacial) ? p.escolhaRacial : [];
+  p.escolhaRacial = [0, 1, 2].map(k => T20_ATRIBUTO_IDS.includes(escolhaBruta[k]) ? escolhaBruta[k] : "");
   p.magias = Array.isArray(p.magias) ? p.magias.map(t20NormalizarMagia) : [];
   if(!Array.isArray(p.equipamento)) p.equipamento = [];
   p.pvManual = t20NumeroOuNulo(p.pvManual);

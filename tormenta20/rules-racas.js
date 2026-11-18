@@ -3,8 +3,9 @@
    T20_RACAS_COMPLETAS: objeto por id. São 17 raças do livro básico; Suraggel aparece em duas entradas
    (aggelus e sulfure), que o livro apresenta como alternativas ("ou"). Cada entrada:
      nome, tamanho (texto ou null), deslocamento (metros ou null), ajustes (objeto {atributo: valor} ou null),
-     ajusteEscolha (opcional, texto): ajuste que o app não aplica sozinho, como "+1 em três atributos à escolha".
-                    O jogador lança no passo Atributos (ajuste manual).
+     ajusteEscolha (opcional, texto): ajuste "+1 em três atributos à escolha" (p024-p036).
+     escolhaAtributos (opcional): { qtd: 3, exceto: [ids] }. O jogador escolhe 3 atributos diferentes no passo
+                    Atributos; cada um soma +1 no valor final (engine: t20EscolhaRacialValida).
      habilidades: [{ nome, efeito }] (efeito em palavras próprias), periciasExtras (Humano: 2 perícias).
      verificado: { ajustes, tamanho, deslocamento (booleans), habilidades: [nomes conferidos no livro] }.
                  ajustes = false quando o ajuste é parcial ou depende de escolha (o app não aplica tudo).
@@ -20,13 +21,14 @@ const T20_RACAS_COMPLETAS = {
   humano: {
     nome: "Humano", tamanho: "Médio", deslocamento: 9, ajustes: null,
     ajusteEscolha: "+1 em três atributos diferentes à escolha",
+    escolhaAtributos: { qtd: 3, exceto: [] },
     periciasExtras: 2,
     habilidades: [
       { nome: "Versátil", efeito: "Treinado em duas perícias à sua escolha, mesmo fora da sua classe; pode trocar uma delas por um poder geral." }
     ],
-    verificado: { ajustes: false, tamanho: true, deslocamento: true, habilidades: ["Versátil"] },
-    fonte: T20_RAC("p025 (habilidades); ajuste à escolha em p025; tabela 1-2 p024; padrão p112"),
-    observacoes: "Ajuste +1 em três atributos à escolha: o app não aplica; lançar no passo Atributos. Versátil dá duas perícias treinadas (periciasExtras)."
+    verificado: { ajustes: true, tamanho: true, deslocamento: true, habilidades: ["Versátil"] },
+    fonte: T20_RAC("p025 (habilidades e ajuste à escolha); tabela 1-2 p024; padrão p112"),
+    observacoes: "Escolha três atributos diferentes para +1 cada (passo Atributos). Versátil dá duas perícias treinadas (periciasExtras). A troca de uma perícia por poder geral não é conferida pelo app."
   },
   anao: {
     nome: "Anão", tamanho: "Médio", deslocamento: 6, ajustes: { constituicao: 2, sabedoria: 1, destreza: -1 },
@@ -101,13 +103,14 @@ const T20_RACAS_COMPLETAS = {
   lefou: {
     nome: "Lefou", tamanho: "Médio", deslocamento: 9, ajustes: { carisma: -1 },
     ajusteEscolha: "+1 em três atributos diferentes, exceto Carisma",
+    escolhaAtributos: { qtd: 3, exceto: ["carisma"] },
     habilidades: [
       { nome: "Cria da Tormenta", efeito: "Tipo monstro e +5 em resistências contra efeitos de lefeu e da Tormenta." },
       { nome: "Deformidade", efeito: "+2 em duas perícias à sua escolha; cada bônus conta como poder da Tormenta (não para perda de Carisma); pode trocar um desses bônus por um poder da Tormenta." }
     ],
-    verificado: { ajustes: false, tamanho: true, deslocamento: true, habilidades: ["Cria da Tormenta", "Deformidade"] },
+    verificado: { ajustes: true, tamanho: true, deslocamento: true, habilidades: ["Cria da Tormenta", "Deformidade"] },
     fonte: T20_RAC("p030 (habilidades; Carisma –1 e ajuste à escolha em p030); padrão p112"),
-    observacoes: "Ajuste +1 em três atributos (exceto Carisma): o app não aplica; lançar no passo Atributos. Carisma –1 aplicado."
+    observacoes: "Escolha três atributos diferentes, exceto Carisma, para +1 cada (passo Atributos). Carisma –1 aplicado. Os +2 em perícias da Deformidade não são lançados pelo app."
   },
   medusa: {
     nome: "Medusa", tamanho: "Médio", deslocamento: 9, ajustes: { destreza: 2, carisma: 1 },
@@ -135,15 +138,16 @@ const T20_RACAS_COMPLETAS = {
   osteon: {
     nome: "Osteon", tamanho: "Médio", deslocamento: 9, ajustes: { constituicao: -1 },
     ajusteEscolha: "+1 em três atributos diferentes, exceto Constituição",
+    escolhaAtributos: { qtd: 3, exceto: ["constituicao"] },
     habilidades: [
       { nome: "Armadura Óssea", efeito: "Redução 5 a corte, frio e perfuração." },
       { nome: "Memória Póstuma", efeito: "Treinado em uma perícia à escolha ou ganha um poder geral. Pode ser osteon de outra raça humanoide que não humano: ganha uma habilidade dessa raça e, se ela não for Média, o tamanho dela." },
       { nome: "Natureza Esquelética", efeito: "Morto-vivo com visão no escuro; imune a cansaço, efeitos metabólicos, trevas e veneno; não respira, come nem dorme; cura de luz causa dano a você; dano de trevas recupera seus PV." },
       { nome: "Preço da Não Vida", efeito: "Passa 8 h sob a luz das estrelas ou no subterrâneo para recuperar PV e PM no descanso; senão, sofre os efeitos de fome." }
     ],
-    verificado: { ajustes: false, tamanho: true, deslocamento: true, habilidades: ["Armadura Óssea", "Memória Póstuma", "Natureza Esquelética", "Preço da Não Vida"] },
-    fonte: T20_RAC("p035 (habilidades); ajuste Constituição –1 em p024; ajuste à escolha em p035"),
-    observacoes: "Ajuste +1 em três atributos (exceto Constituição): o app não aplica; lançar no passo Atributos. Constituição –1 aplicado."
+    verificado: { ajustes: true, tamanho: true, deslocamento: true, habilidades: ["Armadura Óssea", "Memória Póstuma", "Natureza Esquelética", "Preço da Não Vida"] },
+    fonte: T20_RAC("p035 (habilidades e ajuste à escolha); ajuste Constituição –1 em p024"),
+    observacoes: "Escolha três atributos diferentes, exceto Constituição, para +1 cada (passo Atributos). Constituição –1 aplicado."
   },
   qareen: {
     nome: "Qareen", tamanho: "Médio", deslocamento: 9, ajustes: { carisma: 2, inteligencia: 1, sabedoria: -1 },
@@ -170,14 +174,15 @@ const T20_RACAS_COMPLETAS = {
   sereia_triton: {
     nome: "Sereia/Tritão", tamanho: "Médio", deslocamento: 9, ajustes: null,
     ajusteEscolha: "+1 em três atributos diferentes à escolha",
+    escolhaAtributos: { qtd: 3, exceto: [] },
     habilidades: [
       { nome: "Canção dos Mares", efeito: "Lança duas magias entre Amedrontar, Comando, Despedaçar, Enfeitiçar, Hipnotismo e Sono (Carisma); se aprender de novo uma delas, o custo cai 1 PM." },
       { nome: "Mestre do Tridente", efeito: "Tridente é arma simples para você; +2 em dano com azagaias, lanças e tridentes." },
       { nome: "Transformação Anfíbia", efeito: "Respira na água e tem natação de 12 m com a cauda; fora d'água, tem pernas com deslocamento de 9 m; sem água por mais de um dia, não recupera PM no descanso até voltar à água." }
     ],
-    verificado: { ajustes: false, tamanho: true, deslocamento: true, habilidades: ["Canção dos Mares", "Mestre do Tridente", "Transformação Anfíbia"] },
-    fonte: T20_RAC("p035-p036 (habilidades; ajuste à escolha em p036); padrão p112"),
-    observacoes: "Ajuste +1 em três atributos à escolha: o app não aplica; lançar no passo Atributos. Deslocamento 9 m em terra (natação 12 m)."
+    verificado: { ajustes: true, tamanho: true, deslocamento: true, habilidades: ["Canção dos Mares", "Mestre do Tridente", "Transformação Anfíbia"] },
+    fonte: T20_RAC("p035-p036 (habilidades e ajuste à escolha em p036); padrão p112"),
+    observacoes: "Escolha três atributos diferentes para +1 cada (passo Atributos). Deslocamento 9 m em terra (natação 12 m)."
   },
   silfide: {
     nome: "Sílfide", tamanho: "Minúsculo", deslocamento: 9, ajustes: { carisma: 2, destreza: 1, forca: -2 },

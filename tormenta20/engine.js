@@ -34,11 +34,63 @@ function t20AjusteRacial(racaId){
   const aj = r && r.ajustes ? r.ajustes : {};
   return Object.fromEntries(T20_ATRIBUTO_IDS.map(id => [id, Number(aj[id]) || 0]));
 }
-/* Valor final = compra + raça + ajuste manual (o usuário lança o ajuste quando a raça não foi verificada). */
+/* Escolha de atributos da raça (Humano, Sereia/Tritão, Lefou, Osteon): +1 em cada um dos atributos escolhidos.
+   Devolve { qtd, permitidos } ou null se a raça não tem essa escolha. */
+function t20EscolhaRacialInfo(racaId){
+  const r = t20RacaInfo(racaId);
+  if(!r || !r.escolhaAtributos) return null;
+  const exceto = r.escolhaAtributos.exceto || [];
+  return { qtd: r.escolhaAtributos.qtd, permitidos: T20_ATRIBUTO_IDS.filter(id => !exceto.includes(id)) };
+}
+/* Escolhas válidas da raça: as primeiras `qtd` entradas que são atributos permitidos e não repetidos. */
+function t20EscolhaRacialAplicada(p){
+  const info = t20EscolhaRacialInfo(p.raca);
+  if(!info) return [];
+  const usados = [];
+  for(const a of (p.escolhaRacial || [])){
+    if(usados.length >= info.qtd) break;
+    if(info.permitidos.includes(a) && !usados.includes(a)) usados.push(a);
+  }
+  return usados;
+}
+
+/* Aumento de Atributo (poder de classe, livro p044 e p047-p088; patamares p041): +1 por escolha, do 2º nível em diante,
+   uma vez por patamar para cada atributo. Conta só o que a regra permite (a primeira escolha de cada atributo em
+   cada patamar); as excedentes ficam na ficha e são recusadas pelo validador (etapa 8). */
+function t20PatamarDoNivel(nivel){
+  const n = Number(nivel) || 1;
+  return T20_PATAMARES.find(pt => n >= pt.min && n <= pt.max) || null;
+}
+function t20AumentosAplicados(p){
+  const out = [];
+  const vistos = new Set();
+  for(const [i, pd] of (p.poderes || []).entries()){
+    if(!pd || pd.id !== T20_AUMENTO_ID) continue;
+    const nivel = Number(pd.nivel) || 0;
+    const pat = t20PatamarDoNivel(nivel);
+    if(nivel < 2 || !pat || !T20_ATRIBUTO_IDS.includes(pd.atributo)) continue;
+    const chave = pd.atributo + "|" + pat.id;
+    if(vistos.has(chave)) continue;
+    vistos.add(chave);
+    out.push({ i, atributo: pd.atributo, patamar: pat.id, nivel });
+  }
+  return out;
+}
+/* Soma de aumentos de poder e de escolha racial, por atributo (zero quando não há). */
+function t20BonusEscolhas(p){
+  const soma = Object.fromEntries(T20_ATRIBUTO_IDS.map(id => [id, 0]));
+  t20AumentosAplicados(p).forEach(a => { soma[a.atributo] += T20_AUMENTO_VALOR; });
+  t20EscolhaRacialAplicada(p).forEach(id => { soma[id] += 1; });
+  return soma;
+}
+
+/* Valor final = compra + raça + escolha racial + aumentos de poder + ajuste manual
+   (o ajuste manual cobre o que a raça não traz no app ou a regra da mesa). */
 function t20AtributosFinais(p){
   const racial = t20AjusteRacial(p.raca);
+  const escolhas = t20BonusEscolhas(p);
   return Object.fromEntries(T20_ATRIBUTO_IDS.map(id => [
-    id, (Number(p.atributosBase[id]) || 0) + racial[id] + (Number(p.ajusteManual[id]) || 0)
+    id, (Number(p.atributosBase[id]) || 0) + racial[id] + escolhas[id] + (Number(p.ajusteManual[id]) || 0)
   ]));
 }
 

@@ -53,6 +53,17 @@ const t20PoderConcedido = (id, nome, devoto, frase, o = {}) => t20PoderDe(id, no
 }, o));
 
 const T20_PODERES_LISTA = [
+  /* ---- Comum a todas as classes (livro do usuário): Aumento de Atributo ----
+     É uma opção do Poder de cada classe (p044 no Arcanista; demais classes em p047-p088), a partir do 2º nível.
+     Não há aumento automático em níveis fixos: o jogador escolhe o poder no nível em que quiser o aumento.
+     Regra: +1 em um atributo; pode ser escolhido várias vezes, mas só uma vez por patamar para o mesmo atributo
+     (patamares de p041: 1º-4º, 5º-10º, 11º-16º e 17º-20º). Limite de 4 aumentos por atributo, somando os quatro patamares. */
+  t20PoderDe("aumento-atributo", "Aumento de Atributo", {
+    classes: T20_CLASSE_IDS, nivel: 2, tipo: "classe", verificado: true,
+    frase: "Você recebe +1 em um atributo à sua escolha. Pode escolher este poder várias vezes, mas apenas uma vez por patamar para um mesmo atributo.",
+    fonte: T20_LIVRO("p044 (Arcanista) e p047-p088 (demais classes), item Aumento de Atributo; patamares em p041"),
+    nota: "Atributo escolhido no próprio poder. Soma no valor final do atributo (também muda PV se for Constituição)."
+  }),
   /* ---- Arcanista ---- */
   t20PoderDe("agrilhoar-os-mortos", "Agrilhoar os Mortos", { classes: ["arcanista"], nivel: 3 }),
   t20PoderDe("fortalecimento-arcano", "Fortalecimento Arcano", { classes: ["arcanista"], nivel: 5 }),

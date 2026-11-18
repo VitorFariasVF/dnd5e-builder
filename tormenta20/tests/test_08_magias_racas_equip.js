@@ -72,8 +72,8 @@ t.igual("habilidades: cada uma com nome e efeito",
   racasEntradas.filter(([k, r]) => !Array.isArray(r.habilidades) || r.habilidades.some(h => !TEXTO(h.nome) || !TEXTO(h.efeito))).map(([k]) => k), []);
 t.igual("verificado.habilidades só cita habilidades existentes",
   racasEntradas.filter(([k, r]) => r.verificado.habilidades.some(n => !r.habilidades.some(h => h.nome === n))).map(([k]) => k), []);
-t.igual("ajuste marcado como verificado só quando o app aplica tudo (sem ajuste à escolha)",
-  racasEntradas.filter(([k, r]) => r.verificado.ajustes === true && r.ajusteEscolha).map(([k]) => k), []);
+t.igual("ajuste à escolha verificado só com a escolha no app (escolhaAtributos)",
+  racasEntradas.filter(([k, r]) => r.verificado.ajustes === true && r.ajusteEscolha && !r.escolhaAtributos).map(([k]) => k), []);
 
 const hynne = racas.hynne;
 t.check("Hynne: Pequeno, 6 m, confirmados no livro", hynne.tamanho === "Pequeno" && hynne.deslocamento === 6 &&

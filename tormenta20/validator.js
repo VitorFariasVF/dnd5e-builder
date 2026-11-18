@@ -73,6 +73,15 @@ function t20ValidarEtapa(etapa, p, modo){
     }
     const ajustesOk = Object.values(p.ajusteManual).every(v => Number.isInteger(v) && v >= -5 && v <= 5);
     reportar(ajustesOk, "Ajuste manual deve ser um número inteiro entre -5 e +5.", "ajuste-forca");
+    const escolhaInfo = t20EscolhaRacialInfo(p.raca);
+    if(escolhaInfo){
+      const escolhidos = (p.escolhaRacial || []).slice(0, escolhaInfo.qtd);
+      const nomesAtr = escolhaInfo.permitidos.map(id => T20_ATRIBUTO_NOME[id]).join(", ");
+      const campoEsc = "escolha-racial-0";
+      reportar(escolhidos.length === escolhaInfo.qtd && escolhidos.every(a => escolhaInfo.permitidos.includes(a)),
+        `Escolha ${escolhaInfo.qtd} atributos para +1 cada (${nomesAtr}).`, campoEsc);
+      reportar(new Set(escolhidos).size === escolhidos.length, "Os atributos da escolha da raça devem ser diferentes.", campoEsc);
+    }
   }
 
   if(etapa === 7){
@@ -94,6 +103,7 @@ function t20ValidarEtapa(etapa, p, modo){
   if(etapa === 8){
     const treinadas = t20TreinadasLista(p);
     const ids = [];
+    const aumentosContados = new Set(t20AumentosAplicados(p).map(a => a.i));
     (p.poderes || []).forEach((pd, i) => {
       const campo = `poder-${i}`;
       const cat = pd.id && T20_PODERES[pd.id] ? T20_PODERES[pd.id] : null;
@@ -106,8 +116,17 @@ function t20ValidarEtapa(etapa, p, modo){
           else aviso(`Poder ${i + 1}: ${item.msg}`, campo);
         });
       }
+      if(cat && cat.id === T20_AUMENTO_ID){
+        const campoAtr = `poder-atr-${i}`;
+        const pat = t20PatamarDoNivel(pd.nivel);
+        reportar(T20_ATRIBUTO_IDS.includes(pd.atributo), `Poder ${i + 1}: Aumento de Atributo exige escolher o atributo.`, campoAtr);
+        if(T20_ATRIBUTO_IDS.includes(pd.atributo) && pat){
+          reportar(aumentosContados.has(i) || (Number(pd.nivel) || 0) < 2,
+            `Poder ${i + 1}: Aumento de Atributo em ${T20_ATRIBUTO_NOME[pd.atributo]} já foi usado no patamar ${pat.nome} (${pat.min}º a ${pat.max}º). Só uma vez por patamar para cada atributo.`, campoAtr);
+        }
+      }
     });
-    const repetidos = [...new Set(ids.filter((id, k) => ids.indexOf(id) !== k))];
+    const repetidos = [...new Set(ids.filter((id, k) => ids.indexOf(id) !== k && id !== T20_AUMENTO_ID))];
     repetidos.forEach(id => aviso(`${T20_PODERES[id].nome} aparece mais de uma vez: repetição NÃO VERIFICADA.`));
     const naoVerificados = [...new Set(ids)].filter(id => !T20_PODERES[id].verificado).length;
     if(naoVerificados) aviso(`${naoVerificados} poder(es) escolhido(s) com dado de uma só fonte: NÃO VERIFICADO.`);

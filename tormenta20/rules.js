@@ -82,6 +82,19 @@ const T20_BONUS_TREINAMENTO = [
 ];
 const T20_BONUS_TREINAMENTO_FONTE = "Tormenta20 Jogo do Ano, p120 (livro do usuário): +2 do 1º ao 6º nível, +4 do 7º ao 14º, +6 do 15º em diante";
 
+/* Patamares de jogo (Tormenta20 Jogo do Ano, p041): o Aumento de Atributo vale uma vez por patamar para cada atributo.
+   Os nomes são os do livro; a faixa é de níveis. */
+const T20_PATAMARES = [
+  { id: 1, nome: "Iniciante", min: 1, max: 4 },
+  { id: 2, nome: "Veterano", min: 5, max: 10 },
+  { id: 3, nome: "Campeão", min: 11, max: 16 },
+  { id: 4, nome: "Lenda", min: 17, max: 20 }
+];
+const T20_PATAMARES_FONTE = "Tormenta20 Jogo do Ano, p041 (livro do usuário): Iniciante 1º-4º, Veterano 5º-10º, Campeão 11º-16º, Lenda 17º-20º";
+/* Id do poder de classe que soma +1 em um atributo (rules-poderes.js). Valor do aumento: +1 por escolha. */
+const T20_AUMENTO_ID = "aumento-atributo";
+const T20_AUMENTO_VALOR = 1;
+
 /* ---- Raças ----
    A lista de raças (17, do livro básico) está em rules-racas.js (T20_RACAS_COMPLETAS). Esta tabela
    foi substituída por ela: não há mais um T20_RACAS aqui, para não haver dois cadastros divergentes. */
@@ -286,7 +299,7 @@ const T20_NIVEL_MAX = 20;
 const T20_NIVEL_BASE = 5;
 
 /* Valores padrão e bônus de dinheiro: NÃO VERIFICADO (o livro define; não foi confirmado). */
-const T20_DINHEIRO_FONTE = "Dinheiro inicial (T$): NÃO VERIFICADO nesta revisão (não foi conferido no capítulo de origens e equipamento). O app não sugere valor.";
+const T20_DINHEIRO_FONTE = "Dinheiro inicial: T$ 4d6 para comprar itens ou guardar (Tormenta20 Jogo do Ano, p146, livro do usuário). O app não rola: o valor é digitado.";
 const T20_DEFESA_FONTE = "Tormenta20 Jogo do Ano, p112 (livro do usuário): Defesa = 10 + Destreza + bônus de armadura e escudo";
 const T20_PV_FONTE = "Tormenta20 Jogo do Ano, p041 e p112 (livro do usuário): PV do 1º nível = PV inicial + CON; cada nível soma PV por nível + CON, com mínimo de 1 PV por nível";
 const T20_PM_FONTE = "Tormenta20 Jogo do Ano, p038 e p112 (livro do usuário): PM = PM por nível × nível; conjuradores somam o atributo-chave uma vez; Paladino soma CAR no 1º nível";

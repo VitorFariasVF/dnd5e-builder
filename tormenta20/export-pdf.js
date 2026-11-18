@@ -24,7 +24,7 @@ function t20PdfLista(itens, vazio){
   const l = (itens || []).filter(Boolean);
   return l.length ? `<ul>${l.join("")}</ul>` : `<p class="suave">${t20Esc(vazio)}</p>`;
 }
-function t20PdfMoedas(dinheiro){ return `${t20Esc(dinheiro)} T$ <span class="pequeno">(valor inicial NÃO VERIFICADO)</span>`; }
+function t20PdfMoedas(dinheiro){ return `${t20Esc(dinheiro)} T$ <span class="pequeno">(valor digitado; inicial 4d6 T$, p146)</span>`; }
 
 /* Texto do PV, PM e treino: origem (calculado, à mão ou não verificado) e se os dados têm 2 fontes. */
 function t20PdfSubPV(d){
@@ -63,8 +63,8 @@ function t20GerarHtmlFicha(st){
   if(cls.nome && d.pm === null) notas.push(`PM de ${cls.nome}: não calculado; preencher à mão.`);
   if(p.nivel > T20_NIVEL_BASE) notas.push(`Níveis 6 a ${p.nivel}: dados do Livro Básico, em conferência; confira no seu exemplar.`);
   if(raca) notas.push(`Raça ${raca.nome}: dados de 1 fonte, exceto os marcados como confirmados.`);
-  notas.push("Bônus de perícia não treinada e resistências: NÃO VERIFICADO.");
-  notas.push("Dinheiro inicial, poderes por nível e armas e armaduras: NÃO VERIFICADO.");
+  notas.push("Resistências fortes por classe: NÃO VERIFICADO. Perícia não treinada = metade do nível + atributo (p120).");
+  notas.push("Dinheiro inicial: 4d6 T$ (p146), não rolado pelo app; poderes gerais por nível e armas e armaduras: NÃO VERIFICADO.");
 
   const atributos = T20_ATRIBUTOS.map(a => t20PdfEscudo(a.sigla, d.atributos[a.id], d.modificadores[a.id])).join("");
   const deslSub = d.deslocamento === null ? "não verificado" : (raca && raca.verificado.deslocamento ? "pela raça" : "pela raça (1 fonte)");
@@ -92,7 +92,8 @@ function t20GerarHtmlFicha(st){
         const tipo = cat ? (cat.tipo ? t20TipoRotulo(cat.tipo) : "não verificado") : (t20TipoRotulo(pd.tipo) || (pd.tipo ? pd.tipo : "—"));
         const marca = cat && !cat.verificado ? `<br><span class="pequeno">1 fonte (NÃO VERIFICADO)</span>` : "";
         const nota = pd.nota ? `<br><span class="pequeno">${t20Esc(pd.nota)}</span>` : "";
-        return `<tr><td>${t20Esc(pd.nome)}${marca}${nota}</td><td>${t20Esc(tipo)}</td><td class="num">${t20Esc(pd.nivel)}</td></tr>`;
+        const atr = cat && cat.id === T20_AUMENTO_ID && pd.atributo ? ` <span class="pequeno">(+1 em ${t20Esc(T20_ATRIBUTO_NOME[pd.atributo])})</span>` : "";
+        return `<tr><td>${t20Esc(pd.nome)}${atr}${marca}${nota}</td><td>${t20Esc(tipo)}</td><td class="num">${t20Esc(pd.nivel)}</td></tr>`;
       }).join("")}</tbody></table>`
     : `<p class="suave">Nenhum poder registrado.</p>`;
 

@@ -122,3 +122,39 @@ Resultado da última execução: todos os testes de Node passam (36 + 42 + 14 + 
 - Acessibilidade com leitor de tela (só checagens de `role`, `label` e foco).
 
 > **Atualização:** o sistema agora cobre os níveis 1 a 20 e as 17 raças (`TRABALHO_T20_INTEGRACAO.md`). Esta auditoria descreve a primeira entrega (níveis 1 a 5).
+
+## 8. Estado final (rodada de 2026-11-18, com o Livro Básico)
+
+Esta seção vale sobre as seções 3 e 4 acima, que descrevem a primeira entrega.
+
+### 8.1 Aumentos de atributo (item 1 da pendência)
+- O livro não tem aumento fixo nos níveis 4, 8, 12, 16 e 20. O Aumento de Atributo é uma opção do Poder de cada classe (p044 no Arcanista; p047-p088 nas demais), a partir do 2º nível, escolhida no nível em que o jogador quiser.
+- Regra do livro (p044 e demais classes): +1 em um atributo; pode ser escolhido várias vezes, mas só uma vez por patamar para um mesmo atributo. Patamares (p041): Iniciante 1º-4º, Veterano 5º-10º, Campeão 11º-16º, Lenda 17º-20º. Logo, no máximo +4 por atributo por este poder.
+- O livro não traz o limite de 5 citado no pedido: o limite é de um por patamar.
+- Implementado: poder "Aumento de Atributo" em `rules-poderes.js` (14 classes, nível 2); campo "Atributo que recebe +1" na etapa Poderes; soma no valor final (`engine.js`: `t20AumentosAplicados`, `t20BonusEscolhas`); validação no validador (etapa 8): atributo obrigatório, nível mínimo 2, uma vez por patamar. Constituição altera os PV retroativamente.
+- Testes: `tests/test_14_aumentos.js`.
+
+### 8.2 Escolha de três atributos da raça (pendência NÃO VERIFICADO de ajuste)
+- Humano (p025), Sereia/Tritão (p036), Lefou (p030, exceto Carisma) e Osteon (p035, exceto Constituição): +1 em três atributos diferentes à escolha. Agora o app aplica: campo "Atributo 1, 2 e 3" na etapa Atributos, com validação (três distintos, permitidos).
+- As bases fixas (Lefou Car -1; Osteon Con -1) já estavam no app.
+
+### 8.3 Itens NÃO VERIFICADO que o Livro Básico resolve (corrigidos)
+- Compra de atributos: custos, mínimo -1 e máximo 4 (Tabela 1-1, p023): confirmados (já estavam).
+- Bônus de perícia: metade do nível + atributo, +2/+4/+6 se treinada (p120); não treinada não soma bônus de treino. Texto do PDF corrigido.
+- Dinheiro inicial: T$ 4d6 (p146). Valor continua digitado; o app não rola. Texto corrigido em `rules.js`, `state.js` e no PDF.
+- Raças (ajustes, tamanho, deslocamento, habilidades): já conferidas contra p024-p036 e p112-p113 na rodada anterior.
+
+### 8.4 Itens que o livro NÃO resolve ou que ficaram pendentes
+- Poderes de classe (catálogo com 189 entradas sem verificação): ao procurar os nomes nas páginas de classe (p043-p090) e de poderes gerais (p120-p145), vários não aparecem no Livro Básico (ex.: Agrilhoar os Mortos, Familiar Elemental, Revide, Remise, Lorotas da Terra e do Mar; cerca de 90 nomes não encontrados). Esses nomes vêm de [E] e não devem ser tratados como regra do livro. Não foi feita a conferência de nível e pré-requisito dos 99 que aparecem; ficam NÃO VERIFICADO.
+- Tipo e subtipo de 26 poderes (Raio Arcano, Pele de Ferro, Frenesi, En Garde, Aparar etc.) continuam sem tipo confirmado, embora o livro os descreva em p045-p090; não conferido nesta rodada.
+- Magias conhecidas acima do 1º nível e progressão de PM por círculo: o livro dá a regra por classe (uma magia por nível, ou em níveis pares para Bardo e Druida), mas o app não a aplica; continua NÃO VERIFICADO.
+- Humano: trocar uma perícia por um poder geral (p025): não implementado; o jogador faz à mão.
+- Arcanista: caminhos Bruxo, Feiticeiro e Mago (p043), com o Mago começando com 4 magias: não modelado.
+- Armas (força mínima), armaduras (categoria), itens com espaço fracionário e Dinheiro: ver `rules-equipamento.js`; não reconferidos nesta rodada.
+
+### 8.5 Lacunas da seção 4 desta auditoria
+- Níveis 6 a 20, tabelas de armas, armaduras e equipamento, listas de magias e de poderes: já cobertos em rodadas anteriores (`TRABALHO_T20_*.md`).
+- Escolha de três atributos da raça: feito (8.2). Aumento de Atributo: feito (8.1).
+- Trocar perícia de Humano por poder geral: pendente (8.4).
+- Subclasses do Arcanista: pendente (8.4).
+- Descrição completa das habilidades de classe: pendente.
