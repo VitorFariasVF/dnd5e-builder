@@ -458,21 +458,21 @@ const RULE_XANATHAR_RACIAL_FEATS = {
     name: "Alta Magia Drow (exige elfo drow)",
     source: "Xanathar",
     allowedRaces: ["elfo"],
-    prerequisites: [{ type: "race", allowedRaces: ["elfo"] }],
+    prerequisites: [{ type: "race", allowedRaces: ["elfo"], allowedSubraces: ["drow"] }],
     grants: { attributes: {}, proficiencies: {}, features: ["drow_high_magic"] }
   },
   magia_elfo_floresta: {
     name: "Magia do Elfo da Floresta (exige elfo da floresta)",
     source: "Xanathar",
     allowedRaces: ["elfo"],
-    prerequisites: [{ type: "race", allowedRaces: ["elfo"] }],
+    prerequisites: [{ type: "race", allowedRaces: ["elfo"], allowedSubraces: ["floresta"] }],
     grants: { attributes: {}, proficiencies: {}, features: ["wood_elf_magic"] }
   },
   teleporte_das_fadas: {
     name: "Teleporte das Fadas (exige alto elfo)",
     source: "Xanathar",
     allowedRaces: ["elfo"],
-    prerequisites: [{ type: "race", allowedRaces: ["elfo"] }],
+    prerequisites: [{ type: "race", allowedRaces: ["elfo"], allowedSubraces: ["alto"] }],
     grants: { attributes: { chooseOne: ["inteligencia", "carisma"], amount: 1 }, proficiencies: {}, features: ["fey_teleportation"] }
   },
   desvanecer: {
@@ -581,6 +581,7 @@ function buildRuleContext(personagem) {
   return {
     personagem: p,
     raceKey: p.raca || null,
+    subraceKey: p.subraca || null,
     racePvPorNivel: racaEfetiva ? racaEfetiva.pvPorNivel : 0,
     backgroundKey: p.origem || null,
     classKey: p.classe || null,
@@ -1169,9 +1170,20 @@ function resolveArcaneArcherCantrip(context) {
   return { ...empty, bonusCantrips: [truque] };
 }
 
+// Truques Adicionais do Celestial (XGtE, nível 1): Luz e Chama Sagrada, sem contar no limite de truques conhecidos.
+const RULE_CELESTIAL_BONUS_CANTRIPS = ["Luz", "Chama Sagrada"];
+
 function resolveSubclassSpellBenefits(context) {
   if (context.subclassCompositeKey === "feiticeiro:divine_soul") return resolveDivineSoulAffinitySpell(context);
   if (context.subclassCompositeKey === "guerreiro:arcane_archer") return resolveArcaneArcherCantrip(context);
+  const base = resolveSubclassSpellRuleBenefits(context);
+  if (context.subclassCompositeKey === "bruxo:celestial" && context.level >= 1) {
+    return { ...base, bonusCantrips: [...RULE_CELESTIAL_BONUS_CANTRIPS] };
+  }
+  return base;
+}
+
+function resolveSubclassSpellRuleBenefits(context) {
   const rule = RULE_SUBCLASS_SPELL_RULES[context.subclassCompositeKey];
   const empty = { alwaysPrepared: [], expandedList: [], bonusKnown: [], bonusCantrips: [] };
   if (!rule) return empty;
@@ -1384,6 +1396,8 @@ function auditFeatPrerequisite(context, featId, prerequisite, resolved) {
   }
   if (prerequisite.type === "race") {
     if (![].concat(prerequisite.allowedRaces || []).includes(context.raceKey)) return `${getRuleFeatName(featId)} exige raça permitida: ${[].concat(prerequisite.allowedRaces || []).join(", ")}.`;
+    // Talentos de sub-raça (ex.: Elfo Alto, Elfo da Floresta, Drow): exigem a sub-raça escolhida.
+    if (prerequisite.allowedSubraces && !prerequisite.allowedSubraces.includes(context.subraceKey)) return `${getRuleFeatName(featId)} exige sub-raça permitida: ${prerequisite.allowedSubraces.join(", ")}.`;
   }
   if (prerequisite.type === "proficiency") {
     if (!ruleHasProficiency(resolved, prerequisite)) return `${getRuleFeatName(featId)} exige proficiência prévia compatível.`;
@@ -1498,7 +1512,9 @@ function buildLegacyPatch(resolved) {
       cantripsConhecidos: spellcasting.cantrips ? spellcasting.cantrips.classLimit : 0,
       magiasConhecidas: spellcasting.spells ? spellcasting.spells.knownLimit : 0,
       magiasPreparadas: spellcasting.spells ? spellcasting.spells.preparedLimit : 0,
-      listaTruques: spellcasting.cantrips ? spellcasting.cantrips.final : [],
+      // Truques bônus de subclasse (ex.: Luz do Celestial) são recalculados a cada resolução;
+      // não entram em listaTruques, para não consumirem o limite de truques da classe.
+      listaTruques: spellcasting.cantrips ? ruleUnique((spellcasting.cantrips.final || []).filter(n => !(spellcasting.cantrips.fromSubclass || []).includes(n))) : [],
       listaMagias: buildLegacySpellList(spellcasting),
       grimorio: spellcasting.wizard ? spellcasting.wizard.spellbook : [],
       magiasSubclasseSemprePreparadas: spellcasting.spells ? spellcasting.spells.alwaysPrepared : [],

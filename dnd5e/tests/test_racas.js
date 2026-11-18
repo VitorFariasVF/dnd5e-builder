@@ -246,6 +246,45 @@ function finaisPara(obj) {
     run(`validarPericias()`) === 'Não repita perícias já recebidas pela raça.', run(`validarPericias()`));
 }
 
+/* ---------- 9. Talentos raciais de Xanathar (PT, pp. 72-75) ---------- */
+{
+  // Catálogo: os 15 talentos do livro, com as mesmas chaves usadas pela engine.
+  const ids = Object.keys(get('RULE_XANATHAR_RACIAL_FEATS'));
+  check('Talentos raciais do Xanathar: 15 entradas', ids.length === 15, ids.join(','));
+
+  // Segunda Chance (Halfling): livro PT dá +1 Constituição OU Carisma (sem Destreza). Inglês (fan wikis) tem Destreza.
+  const sc = get('RULE_XANATHAR_RACIAL_FEATS.segunda_chance');
+  check('Segunda Chance: pré-requisito Halfling', JSON.stringify(sc.allowedRaces) === '["halfling"]');
+  check('Segunda Chance: aumento é Constituição ou Carisma (sem Destreza)',
+    JSON.stringify(sc.grants.attributes.chooseOne) === '["constituicao","carisma"]' && sc.grants.attributes.amount === 1);
+
+  const resFeat = (raca, sub, feat, featOptions) => clone(run(`resolveCharacterRules(Object.assign(createInitialState().personagem, ${JSON.stringify({
+    raca, subraca: sub, nivel: 4, opcoesClasse: { asi: [{ level: 4, type: 'feat', feat, featOptions: featOptions || {} }] }
+  })}))`));
+  const errosSubraca = r => (r.resolved.errors || []).filter(e => String(e).includes('sub-raça'));
+
+  const scOk = resFeat('halfling', null, 'segunda_chance', { attribute: 'carisma' });
+  check('Segunda Chance aceita Halfling com aumento de Carisma', errosSubraca(scOk).length === 0 && scOk.resolved.errors.length === 0, JSON.stringify(scOk.resolved.errors));
+
+  // Pré-requisitos de sub-raça (livro PT: Elfo (alto), Elfo (floresta), Elfo (drow)).
+  const alto = resFeat('elfo', 'alto', 'teleporte_das_fadas', { attribute: 'inteligencia' });
+  check('Teleporte das Fadas aceita Elfo Alto', errosSubraca(alto).length === 0 && alto.resolved.errors.length === 0, JSON.stringify(alto.resolved.errors));
+  const altoNaFloresta = resFeat('elfo', 'floresta', 'teleporte_das_fadas', { attribute: 'inteligencia' });
+  check('Teleporte das Fadas recusa Elfo da Floresta', errosSubraca(altoNaFloresta).length === 1, JSON.stringify(altoNaFloresta.resolved.errors));
+  const altoSemSub = resFeat('elfo', null, 'teleporte_das_fadas', { attribute: 'inteligencia' });
+  check('Teleporte das Fadas recusa elfo sem sub-raça', errosSubraca(altoSemSub).length === 1, JSON.stringify(altoSemSub.resolved.errors));
+
+  const floresta = resFeat('elfo', 'floresta', 'magia_elfo_floresta', {});
+  check('Magia do Elfo da Floresta aceita Elfo da Floresta', errosSubraca(floresta).length === 0 && floresta.resolved.errors.length === 0, JSON.stringify(floresta.resolved.errors));
+  const florestaNoAlto = resFeat('elfo', 'alto', 'magia_elfo_floresta', {});
+  check('Magia do Elfo da Floresta recusa Elfo Alto', errosSubraca(florestaNoAlto).length === 1, JSON.stringify(florestaNoAlto.resolved.errors));
+
+  const drow = resFeat('elfo', 'drow', 'alta_magia_drow', {});
+  check('Alta Magia Drow aceita Drow', errosSubraca(drow).length === 0 && drow.resolved.errors.length === 0, JSON.stringify(drow.resolved.errors));
+  const drowNoAlto = resFeat('elfo', 'alto', 'alta_magia_drow', {});
+  check('Alta Magia Drow recusa Elfo Alto', errosSubraca(drowNoAlto).length === 1, JSON.stringify(drowNoAlto.resolved.errors));
+}
+
 /* ---------- Saída no formato dos outros testes ---------- */
 console.log(JSON.stringify(resultados, null, 2));
 const total = resultados.length;

@@ -168,6 +168,40 @@ check('Totem (Urso) tem Buscador de Espíritos no 3º nível', () => {
   return !!s && s.features.some(f => f.level === 3 && f.nome === 'Buscador de Espíritos');
 });
 
+/* 7. Truques Adicionais do Celestial (XGtE, PT p. 18): Luz e Chama Sagrada, sem contar no limite */
+const resCelestial = (extra) => JSON.parse(JSON.stringify(get(`resolveCharacterRules(Object.assign(createInitialState().personagem, ${JSON.stringify(Object.assign({ classe: 'bruxo', subclasse: 'celestial', nivel: 1 }, extra || {}))}))`)));
+const celMagia = { listaTruques: ['Rajada Mística', 'Mãos Mágicas'], listaMagias: [] };
+check('Celestial nível 1: concede Luz e Chama Sagrada como truques bônus', () => {
+  const r = resCelestial({ magia: celMagia });
+  return JSON.stringify(r.resolved.spellcasting.cantrips.fromSubclass) === '["Luz","Chama Sagrada"]';
+});
+check('Celestial: truques bônus não entram em listaTruques (não gastam o limite)', () => {
+  const r = resCelestial({ magia: celMagia });
+  return JSON.stringify(r.legacyPatch.magia.listaTruques) === '["Rajada Mística","Mãos Mágicas"]' &&
+    JSON.stringify(r.legacyPatch.magia.truquesSubclasseBonus) === '["Luz","Chama Sagrada"]';
+});
+check('Celestial: resolução sem erro com dois truques de bruxo escolhidos', () => {
+  const r = resCelestial({ magia: celMagia });
+  return r.ok === true && r.resolved.errors.length === 0;
+});
+check('Celestial: após aplicar o resultado e resolver de novo, continua sem erro e sem duplicar', () => {
+  const r1 = resCelestial({ magia: celMagia });
+  const p2 = JSON.parse(JSON.stringify(Object.assign(get('createInitialState().personagem'), { classe: 'bruxo', subclasse: 'celestial', nivel: 1 })));
+  p2.magia = Object.assign(p2.magia, JSON.parse(JSON.stringify(r1.legacyPatch.magia)));
+  const r2 = JSON.parse(JSON.stringify(get(`resolveCharacterRules(${JSON.stringify(p2)})`)));
+  return r2.ok === true && r2.resolved.errors.length === 0 &&
+    JSON.stringify(r2.resolved.spellcasting.cantrips.final) === '["Rajada Mística","Mãos Mágicas","Luz","Chama Sagrada"]';
+});
+check('Outro patrono de bruxo (Grande Antigo) não recebe truques bônus', () => {
+  const r = resCelestial({ subclasse: 'great_old_one', magia: celMagia });
+  return (r.resolved.spellcasting.cantrips.fromSubclass || []).length === 0;
+});
+check('Descrição do Celestial não diz mais que o app não concede os truques', () => {
+  const s = SUBCLASS_OPTIONS.bruxo.find(x => x.key === 'celestial');
+  const f = s.features.find(x => x.nome === 'Truques Adicionais');
+  return !!f && !/manualmente/.test(f.resumo);
+});
+
 const falhas = results.filter(r => !r.ok);
 console.log(`test_subclasses: ${results.length - falhas.length}/${results.length} OK`);
 if (falhas.length) {
