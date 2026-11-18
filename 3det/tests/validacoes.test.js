@@ -1,5 +1,6 @@
 /* Validações da 3DeT Victory: caso aceito e caso recusado para cada regra de criação.
-   Regras de jogo (limite de pontos, −2, incompatibilidade, Maestria) bloqueiam no modo estrito e viram aviso no livre.
+   Regras de jogo (limite de pontos, incompatibilidade, Maestria) bloqueiam no modo estrito e viram aviso no livre.
+   Desvantagens além de −2 são aviso nos dois modos: o livro (p.65) permite, sem pontos extras.
    Erros de formato bloqueiam nos dois modos. */
 const { criarAmbiente, avaliar } = require("./_ambiente");
 const { teste, sair, assert } = require("./_teste");
@@ -58,14 +59,17 @@ teste("saldo negativo vira aviso no modo livre (não bloqueia)", () => {
   assert.ok(temMsg(avisos(valida(3, p, "livre")), "faltam"));
 });
 
-teste("desvantagens somando −3 são recusadas no modo estrito (limite −2)", () => {
+teste("desvantagens somando −3 não são erro, nos dois modos: livro p.65 permite, só sem pontos extras", () => {
   const p = base(); p.desvantagens = [{ id: "tapado", valor: -1 }, { id: "ambiente", valor: -1 }, { id: "inapto", valor: -1 }];
-  assert.ok(temMsg(erros(valida(6, p)), "o limite é −2"));
+  assert.strictEqual(erros(valida(6, p)).length, 0);
+  assert.strictEqual(erros(valida(6, p, "livre")).length, 0);
+  assert.ok(temMsg(avisos(valida(6, p)), "Além de −2 não geram pontos"));
+  assert.strictEqual(avaliar(ctx, `tdtPontosDeDesvantagens(${JSON.stringify(p)})`), 2);
 });
 
-teste("desvantagens somando −2 são aceitas", () => {
+teste("desvantagens somando −2 não geram aviso de limite", () => {
   const p = base(); p.desvantagens = [{ id: "tapado", valor: -1 }, { id: "ambiente", valor: -1 }];
-  assert.ok(!temMsg(valida(6, p), "o limite é −2"));
+  assert.ok(!temMsg(valida(6, p), "Além de −2"));
 });
 
 teste("Aceleração com Lento (incompatíveis, PDF p57) é recusado no modo estrito", () => {
@@ -166,11 +170,47 @@ teste("desvantagem com valor fora da faixa é recusada (Assombrado: −2 a −1)
   assert.ok(!temMsg(valida(6, q), "Valor de Assombrado"));
 });
 
-teste("desvantagem repetida que não é 'multiplo' é recusada; Insano (multiplo) repete", () => {
+teste("desvantagem repetida que não é 'multiplo' é recusada; Transtorno (multiplo, −1 cada) repete", () => {
   const p = base(); p.desvantagens = [{ id: "tapado", valor: -1 }, { id: "tapado", valor: -1 }];
   assert.ok(temMsg(erros(valida(6, p)), "Tapado só pode ser escolhida uma vez"));
-  const q = base(); q.desvantagens = [{ id: "insano", valor: -1 }, { id: "insano", valor: -1 }];
-  assert.ok(!temMsg(valida(6, q), "Insano só pode"));
+  const q = base(); q.desvantagens = [{ id: "transtorno", valor: -1 }, { id: "transtorno", valor: -1 }];
+  assert.ok(!temMsg(valida(6, q), "Transtorno só pode"));
+});
+
+teste("'insano' não existe mais no app; o livro chama de Transtorno (–1 pt cada)", () => {
+  const p = base(); p.desvantagens = [{ id: "insano", valor: -1 }];
+  assert.ok(temMsg(erros(valida(6, p)), "Desvantagem fora da lista"));
+  assert.strictEqual(avaliar(ctx, `tdtDesvantagemRegra("transtorno").valor`), -1);
+});
+
+teste("Artefato e Grimório: livro diz 1 pt ou mais, então custo acima de 9 é aceito", () => {
+  const p = base(); p.vantagens = [{ id: "artefato", qtd: 1, custo: 12, nota: "" }];
+  assert.ok(!temMsg(erros(valida(5, p)), "Custo de Artefato"));
+  const q = base(); q.vantagens = [{ id: "grimorio", qtd: 1, custo: 0, nota: "" }];
+  assert.ok(temMsg(erros(valida(5, q)), "Custo de Grimório deve ser de 1 ou mais"));
+});
+
+teste("Cópia virou Clone (p51, 1 pt): a regra do livro usa esse nome", () => {
+  assert.strictEqual(avaliar(ctx, `tdtVantagemRegra("clone").nome`), "Clone");
+  assert.strictEqual(avaliar(ctx, `tdtVantagemRegra("copia")`), null);
+  assert.strictEqual(avaliar(ctx, `tdtVantagemRegra("clone").custo`), 1);
+});
+
+teste("Código: o livro lista nove códigos (p68); Transtorno: oito opções (p74-75)", () => {
+  assert.strictEqual(avaliar(ctx, `TDT_EFEITOS_DESVANTAGENS.codigo.lista.length`), 9);
+  assert.strictEqual(avaliar(ctx, `Object.keys(TDT_EFEITOS_DESVANTAGENS.transtorno.opcoes).length`), 8);
+});
+
+teste("Inventário: níveis com os nomes do livro (p58): 0 Seminventário, 1 Pequeno, 2 Grande, 3 Supremo", () => {
+  const d = avaliar(ctx, `tdtVantagemRegra("inventario").desc`);
+  ["Seminventário", "Pequeno", "Grande", "Supremo"].forEach(n => assert.ok(d.includes(n), n));
+});
+
+teste("Kemono, Vampiro e Abissal: fonte traz a página do livro, sem 'PT'", () => {
+  const f = id => avaliar(ctx, `tdtArquetipoRegra("${id}").fonte`);
+  assert.ok(/PDF p95/.test(f("kemono")) && !/\bPT\b/.test(f("kemono")));
+  assert.ok(/PDF p102/.test(f("vampiro")) && !/\bPT\b/.test(f("vampiro")));
+  assert.ok(/p80/.test(f("abissal")) && !/confirmar/.test(f("abissal")));
 });
 
 teste("perícia fora da lista é recusada; perícia repetida também", () => {

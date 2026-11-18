@@ -78,11 +78,12 @@ function tdtFichaHtml(){
   const arqTexto = arq
     ? `${tdtEsc(arq.nome)} · custo ${tdtEsc(arq.custo === null ? "NÃO VERIFICADO" : arq.custo)}. Poderes: ${tdtEsc(arq.poderes.length ? arq.poderes.join("; ") : "sem poderes listados")}. Desvantagens do arquétipo: ${tdtEsc((arq.desvantagens || []).join("; ") || "nenhuma")} (não contam no limite de −2). Fonte: ${tdtEsc(arq.fonte)}.`
     : "a definir";
+  const temRetrato = tdtImagemValida(p.imagem);
   const pagina1 = `<div class="pagina"><div class="moldura" aria-hidden="true"></div><div class="conteudo">
-    <header class="topo"><div><h1>${tdtEsc(p.nome || "Personagem sem nome")}</h1>
+    <header class="topo${temRetrato ? " comRetrato" : ""}"><div><h1>${tdtEsc(p.nome || "Personagem sem nome")}</h1>
       <p class="linha">${tdtEsc(p.conceito || "Conceito a definir")}</p>
       <p class="meta">Jogador: ${tdtEsc(p.jogador || "—")} · ${tdtEsc(tdtNomeNivel(p.nivelPoder))} · ${tdtEsc(p.pontosTotal === null ? "—" : p.pontosTotal)} pontos</p></div>
-      <div class="selo">3DeT Victory<strong>Ficha de criação</strong></div></header>
+      <div class="selo">3DeT Victory<strong>Ficha de criação</strong></div>${temRetrato ? `<img class="retrato" src="${p.imagem}" alt="Imagem do personagem">` : ""}</header>
     <div class="atributos">${atr}</div>
     <div class="recursos">
       <div class="rec"><span>PA · Pontos de Ação</span><strong>${tdtEsc(nRec(rec.PA))}</strong></div>
@@ -124,6 +125,8 @@ const TDT_PDF_CSS = `
   h1{font:800 22pt/1.02 Impact,"Arial Narrow",Arial,sans-serif;text-transform:uppercase;letter-spacing:.02em;margin:0 0 1mm}
   .linha{font:italic 10.5pt Arial,sans-serif;color:var(--acento);margin:0 0 1mm}
   .meta{font-size:8pt;color:var(--suave);margin:0}
+  .topo.comRetrato{grid-template-columns:1fr auto 22mm}
+  .retrato{display:block;width:22mm;height:28mm;object-fit:cover;border:1.2pt solid var(--tinta);justify-self:end;background:var(--sup)}
   .selo{text-align:center;font-size:7pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--tinta);padding:2mm 3mm;border-radius:1mm;max-width:40mm}
   .selo strong{display:block;font:700 9pt Arial,sans-serif;letter-spacing:0;text-transform:none;color:#ffd6c7;margin-top:.6mm}
   .atributos{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm;margin:0 0 3mm}

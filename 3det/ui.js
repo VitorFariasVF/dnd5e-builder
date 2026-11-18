@@ -84,6 +84,8 @@ function tdtCorpoEtapa(n){
       return `
       <label for="nome">Nome do personagem</label><input id="nome" data-campo="nome" value="${v(p.nome)}" autocomplete="off">
       <label for="jogador">Jogador</label><input id="jogador" data-campo="jogador" value="${v(p.jogador)}" autocomplete="off">
+      <label for="imagem-personagem">Imagem do personagem (PNG ou JPEG, até 5 MB)</label>
+      <div class="tdt-imagem" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${tdtImagemPrevia(p.imagem)}<input id="imagem-personagem" type="file" accept="image/png,image/jpeg" data-acao="imagem-arquivo">${tdtImagemValida(p.imagem) ? `<button type="button" class="small secondary" data-acao="imagem-remover">Remover imagem</button>` : ""}</div>
       <label for="conceito">Conceito (uma frase)</label><input id="conceito" data-campo="conceito" value="${v(p.conceito)}" autocomplete="off">
       <label for="nivel-poder">Nível de poder</label><select id="nivel-poder" data-campo="nivelPoder">${tdtOpcoesNivel(p.nivelPoder)}</select>
       <label for="pontos-total">Pontos totais${preset ? " (fixos pelo nível de poder)" : " (pontos livres)"}</label>
@@ -177,7 +179,8 @@ function tdtItemVantagem(v, i){
   if(r.multiplo) controles.push(`<label for="vant-qtd-${i}">Quantidade</label><input id="vant-qtd-${i}" type="number" inputmode="numeric" min="1" step="1" data-campo="vant-qtd" data-i="${i}" value="${tdtEsc(v.qtd === undefined || v.qtd === null ? "" : v.qtd)}">`);
   if(r.custo === undefined){
     const opcoes = Array.isArray(r.custoOpcoes) ? r.custoOpcoes : Array.from({ length: r.custoMax - r.custoMin + 1 }, (_, k) => r.custoMin + k);
-    controles.push(`<label for="vant-custo-${i}">Custo escolhido</label><select id="vant-custo-${i}" data-campo="vant-custo" data-i="${i}">${opcoes.map(o => `<option value="${o}"${o === v.custo ? " selected" : ""}>${o}</option>`).join("")}</select>`);
+    if(r.custoAberto) controles.push(`<label for="vant-custo-${i}">Custo escolhido (1 ou mais)</label><input id="vant-custo-${i}" type="number" inputmode="numeric" min="1" step="1" data-campo="vant-custo" data-i="${i}" value="${tdtEsc(v.custo === undefined || v.custo === null ? "" : v.custo)}">`);
+    else controles.push(`<label for="vant-custo-${i}">Custo escolhido</label><select id="vant-custo-${i}" data-campo="vant-custo" data-i="${i}">${opcoes.map(o => `<option value="${o}"${o === v.custo ? " selected" : ""}>${o}</option>`).join("")}</select>`);
   }
   if(r.id === "maestria"){
     const ops = (state.personagem.pericias || []).map(id => { const pr = tdtPericiaRegra(id); return pr ? `<option value="${pr.id}"${pr.id === v.nota ? " selected" : ""}>${tdtEsc(pr.nome)}</option>` : ""; }).join("");
@@ -198,6 +201,10 @@ function tdtItemDesvantagem(d, i){
   if(r.valor === undefined){
     const ops = Array.from({ length: r.valorMax - r.valorMin + 1 }, (_, k) => r.valorMin + k);
     controles.push(`<label for="desv-valor-${i}">Valor</label><select id="desv-valor-${i}" data-campo="desv-valor" data-i="${i}">${ops.map(o => `<option value="${o}"${o === d.valor ? " selected" : ""}>${o}</option>`).join("")}</select>`);
+  }
+  if(d.id === "transtorno"){
+    const tipos = ["cleptomania", "compulsão", "distração", "fantasia", "fobia", "megalomania", "mitomania", "paranoia"];
+    controles.push(`<label for="desv-subtipo-${i}">Transtorno</label><select id="desv-subtipo-${i}" data-campo="desv-subtipo" data-i="${i}"><option value="">Escolha um</option>${tipos.map(t => `<option value="${t}"${t === d.subtipo ? " selected" : ""}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join("")}</select>`);
   }
   controles.push(`<label for="desv-nota-${i}">Nota (opcional)</label><input id="desv-nota-${i}" data-campo="desv-nota" data-i="${i}" value="${tdtEsc(d.nota || "")}" autocomplete="off">`);
   return `<li class="card-nested" id="desv-item-${i}" tabindex="-1">
@@ -338,6 +345,7 @@ function tdtAplicarCampo(campo, el){
     case "vant-nota": if(p.vantagens[i]) p.vantagens[i].nota = texto; break;
     case "desv-valor": if(p.desvantagens[i]) p.desvantagens[i].valor = numero(); break;
     case "desv-nota": if(p.desvantagens[i]) p.desvantagens[i].nota = texto; break;
+    case "desv-subtipo": if(p.desvantagens[i]) p.desvantagens[i].subtipo = texto || null; break;
     case "historia": p.historia = texto; break;
     case "anotacoes": p.anotacoes = texto; break;
     default: return;
@@ -426,6 +434,43 @@ function tdtGerarPdf(){
   w.document.open(); w.document.write(tdtPaginaPdfCompleta()); w.document.close();
 }
 
+/* Imagem do personagem: JPEG de até 300 px no maior lado (canvas), qualidade 0,8. Arquivo acima de 5 MB não é lido. */
+const TDT_IMAGEM_MAX_ARQUIVO = 5 * 1024 * 1024;
+const TDT_IMAGEM_LADO = 300;
+function tdtImagemPrevia(src){
+  return tdtImagemValida(src)
+    ? `<img src="${src}" alt="Imagem do personagem" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--linha,#ccc)">`
+    : `<span class="muted">Sem imagem</span>`;
+}
+function tdtCarregarImagem(input){
+  const arquivo = input.files && input.files[0];
+  input.value = "";
+  if(!arquivo) return;
+  if(!["image/png", "image/jpeg"].includes(arquivo.type)) return tdtAvisoNaTela("Use um arquivo PNG ou JPEG.");
+  if(arquivo.size > TDT_IMAGEM_MAX_ARQUIVO) return tdtAvisoNaTela("Arquivo acima de 5 MB. A imagem não foi carregada.");
+  const url = URL.createObjectURL(arquivo);
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    if(!img.naturalWidth || !img.naturalHeight) return tdtAvisoNaTela("Não foi possível ler esta imagem.");
+    const escala = Math.min(1, TDT_IMAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+    const ctx2d = canvas.getContext("2d");
+    ctx2d.fillStyle = "#ffffff";
+    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+    ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const dados = canvas.toDataURL("image/jpeg", 0.8);
+    if(!tdtImagemValida(dados)) return tdtAvisoNaTela("Não foi possível guardar esta imagem.");
+    state.personagem.imagem = dados;
+    salvarEstado();
+    tdtRender();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); tdtAvisoNaTela("Não foi possível ler esta imagem."); };
+  img.src = url;
+}
+
 function tdtImportar(arquivo){
   arquivo.text().then(texto => {
     const r = lerBackup(texto);
@@ -480,11 +525,13 @@ function tdtLigarEventos(){
     else if(acao === "desv-add"){ tdtAdicionarDesvantagem(id); salvarEstado(); tdtRender(); }
     else if(acao === "desv-remover"){ state.personagem.desvantagens.splice(i, 1); salvarEstado(); tdtRender(); }
     else if(acao === "limpar"){ if(window.confirm("Apagar a ficha atual e as fichas salvas deste navegador?")){ limparDadosSalvos(); substituirEstado(estadoPadrao()); tdtRender(); } }
+    else if(acao === "imagem-remover"){ state.personagem.imagem = ""; salvarEstado(); tdtRender(); }
     else if(acao === "sugerir-atributos") tdtSugerirAtributosNaTela();
   });
   const aoMudar = ev => {
     const el = ev.target;
     if(el.dataset && el.dataset.busca){ tdtFiltrarCatalogo(el); return; }
+    if(el.dataset && el.dataset.acao === "imagem-arquivo"){ if(ev.type === "change" && el.files && el.files[0]) tdtCarregarImagem(el); return; }
     const campo = el.dataset && el.dataset.campo;
     if(!campo) return;
     if(campo === "importar"){ if(el.files && el.files[0]) tdtImportar(el.files[0]); return; }

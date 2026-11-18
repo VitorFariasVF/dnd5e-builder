@@ -7,7 +7,6 @@ var TDT_EFEITOS_VANTAGENS = {
   arena: { desc: "Em um tipo de terreno escolhido com aprovação do mestre, gasta 2 PM para obter Ganho em um teste.", pagina: 48, fonte: "3DeT Victory, PDF p48 (livro do usuário)" },
   base: { desc: "Ponto de descanso para onde se pode teleportar fora de combate, levando aliados até Poder + Habilidade. Testes ali têm Ganho.", pagina: 49, nota: "Viagem só de ida; risco ou perigo, como estar preso, pode impedir o acesso. Texto continua na p50.", fonte: "3DeT Victory, PDF p49-p50 (livro do usuário)" },
   confusao: { desc: "Com 2 PM, um ataque bem-sucedido confunde o alvo, que passa a escolher alvos ao acaso. Até o fim da cena ou dano.", pagina: 51, fonte: "3DeT Victory, PDF p51 (livro do usuário)" },
-  copia: { desc: "Cada clone criado custa 2 PM e um movimento; um ataque que acerte o criador é absorvido por um clone, que desaparece.", pagina: 51, nota: "O livro chama esta vantagem de Clone nas regras e de Cópia nas fichas de monstros (p216, p220, p275, p277). Ver também a entrada Clone no bloco naoNoApp.", fonte: "3DeT Victory, PDF p51 (livro do usuário; nome Cópia nas fichas de NPC)" },
   cura: { desc: "Gasta 2 PM para curar 1D PV por vez, até dados iguais à Habilidade. Também permite refazer um teste de R contra efeito duradouro.", pagina: 51, fonte: "3DeT Victory, PDF p51 (livro do usuário)" },
   desgaste: { desc: "Com 2 PM, o alvo que sofre dano repete esse dano na rodada seguinte, a menos que gaste sua próxima ação para evitar.", pagina: 52, fonte: "3DeT Victory, PDF p52 (livro do usuário)" },
   devoto: { desc: "Em testes enquanto segue ou defende sua devoção, gasta 2 PM para ter Ganho. Pode usar isso até duas vezes por cena.", pagina: 53, fonte: "3DeT Victory, PDF p53 (livro do usuário)" },
@@ -45,9 +44,9 @@ var TDT_EFEITOS_VANTAGENS = {
   mais_vida: { desc: "Cada compra soma +10 PV ao total de Pontos de Vida, podendo ser comprada várias vezes.", pagina: 65, fonte: "3DeT Victory, PDF p65 (livro do usuário)" },
   voo: { desc: "Levantar voo do chão custa um movimento e 2 PM; manter o voo não custa PM. Só quem também voa consegue acompanhar.", pagina: 65, fonte: "3DeT Victory, PDF p65 (livro do usuário)" },
 
-  // Bloco separado: vantagens que estão no livro mas não no app.
+  // Bloco separado: vantagens que estão no livro mas ainda não no app (brutal). Clone está no bloco principal.
   brutal: { desc: "Em combate, recupera PV ou PM por dano causado (1 por 3) e, ao derrotar, 3 PV e 1 PM. Cada versão custa 1 pt.", pagina: 50, naoNoApp: true, custoLivro: "1 pt cada versão (Vida, Mana, Derrota); versões se acumulam (p50)", fonte: "3DeT Victory, PDF p50 (livro do usuário)" },
-  clone: { desc: "Cada clone criado custa 2 PM e um movimento; um ataque que acerte o criador é absorvido por um clone, que desaparece.", pagina: 51, naoNoApp: true, nota: "Pode ser o mesmo efeito da entrada copia (nome Cópia no app); confirmar com o usuário antes de duplicar no app.", fonte: "3DeT Victory, PDF p51 (livro do usuário)" }
+  clone: { desc: "Cada clone criado custa 2 PM e um movimento; um ataque que acerte o criador é absorvido por um clone, que desaparece.", pagina: 51, nota: "Nome do livro na regra (p51). As fichas de NPC escrevem Cópia (p216, p220, p275, p277): é a mesma vantagem.", fonte: "3DeT Victory, PDF p51 (livro do usuário)" }
 };
 
 /* Liga os efeitos ao catálogo: só preenche desc que ainda está null. */

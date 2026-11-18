@@ -1,7 +1,7 @@
 /* Validações por etapa. Cada item é { nivel, msg, campo }; campo é o id do elemento, para rolar e focar.
    nivel "erro": bloqueia o avanço. nivel "aviso": só informa.
-   Regra de jogo (limite de pontos, −2 em desvantagens, incompatibilidade, Maestria): "erro" no modo estrito,
-   "aviso" no modo livre. Erro de formato (valor fora da faixa, id desconhecido) bloqueia nos dois modos.
+   Regra de jogo (limite de pontos, incompatibilidade, Maestria): "erro" no modo estrito, "aviso" no modo livre.
+   Desvantagens além de −2 são só aviso: o livro permite, sem pontos extras (p.65). Erro de formato (valor fora da faixa, id desconhecido) bloqueia nos dois modos.
    Mensagens em português. Depende de engine.js (carregado antes da chamada, não na leitura). */
 
 function tdtNivelRegra(modo){ return modo === "estrito" ? "erro" : "aviso"; }
@@ -58,8 +58,9 @@ function tdtChecarVantagens(p, reg, add){
     if(r.custo === undefined){
       if(Array.isArray(r.custoOpcoes)){
         if(!r.custoOpcoes.includes(v.custo)) add("erro", "Custo de " + r.nome + " deve ser " + r.custoOpcoes.join(", ") + ".", campo);
-      } else if(!tdtInteiro(v.custo) || v.custo < r.custoMin || v.custo > r.custoMax){
-        add("erro", "Custo de " + r.nome + " deve ser de " + r.custoMin + " a " + r.custoMax + ".", campo);
+      } else if(!tdtInteiro(v.custo) || v.custo < r.custoMin || (!r.custoAberto && v.custo > r.custoMax)){
+        const faixa = r.custoAberto ? r.custoMin + " ou mais" : r.custoMin + " a " + r.custoMax;
+        add("erro", "Custo de " + r.nome + " deve ser de " + faixa + ".", campo);
       }
     }
     if(r.id === "maestria" && !(p.pericias || []).includes(v.nota)){
@@ -82,10 +83,11 @@ function tdtChecarDesvantagens(p, reg, add){
   });
 }
 
-/* Regras que valem a partir da etapa 3: saldo, limite de −2 em desvantagens e incompatibilidades. */
+/* Regras que valem a partir da etapa 3: saldo, desvantagens além de −2 e incompatibilidades.
+   Desvantagens além de −2 são permitidas pelo livro (p.65): só não dão pontos extras. Por isso é só aviso. */
 function tdtChecarGlobal(p, reg, add){
   const soma = tdtValorDesvantagens(p), limite = TDT_RULES.criacao.desvantagensMax;
-  if(soma !== null && soma < -limite) add(reg, "As desvantagens somam " + soma + "; o limite é −" + limite + ".", "contador-pontos");
+  if(soma !== null && soma < -limite) add("aviso", "As desvantagens somam " + soma + ". Além de −" + limite + " não geram pontos (livro, p.65).", "contador-pontos");
   const r = tdtResumoPontos(p);
   if(r.saldo !== null && r.saldo < 0) add(reg, "Gastos: " + r.gastos + " de " + r.disponiveis + " disponíveis; faltam " + (-r.saldo) + " pontos.", "contador-pontos");
   tdtIncompatibilidades(p).forEach(par => {

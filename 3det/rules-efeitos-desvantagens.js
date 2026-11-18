@@ -7,7 +7,7 @@ var TDT_EFEITOS_DESVANTAGENS = {
   atrapalhado: { desc: "Em testes de Habilidade de coordenação e agilidade você tem Perda e nunca tem acertos críticos. Incompatível com Ágil.", pagina: 67, fonte: "3DeT Victory, PDF p67 (livro do usuário)" },
   aura: { desc: "Causa Perda em testes sociais seus. Versão -1: testes de outros Perto de você têm Perda. Versão -2: vale até para testes Longe.", pagina: 67, fonte: "3DeT Victory, PDF p67 (livro do usuário)", nota: "Versão -1 e -2 (valorMin -2, valorMax -1)." },
   bateria: { desc: "Ao chegar a 0 PM você fica inconsciente e indefeso. Com PM abaixo de sua H, todos os seus testes têm Perda.", pagina: 67, fonte: "3DeT Victory, PDF p67 (livro do usuário)" },
-  codigo: { desc: "Você segue um código de conduta. Violá-lo dá Perda em todos os testes até você se redimir ou cumprir o código na próxima chance.", pagina: 68, fonte: "3DeT Victory, PDF p68 (livro do usuário)", nota: "Multiplo: cada código vale -1; o livro lista vários códigos (Asimov, Caçador, Combate, Derrota, Gratidão, Heróis, Honestidade, Redenção)." },
+  codigo: { desc: "Você segue um código de conduta. Violá-lo dá Perda em todos os testes até você se redimir ou cumprir o código na próxima chance.", pagina: 68, fonte: "3DeT Victory, PDF p68 (livro do usuário)", nota: "Multiplo: cada código vale -1. O livro lista nove códigos (p68), conferidos em 'lista'.", lista: ["1ª Lei de Asimov", "2ª Lei de Asimov", "Código do Caçador", "Código do Combate", "Código da Derrota", "Código da Gratidão", "Código dos Heróis", "Código da Honestidade", "Código da Redenção"] },
   dependencia: { desc: "Precisa de algo raro ou desumano todo dia; se não satisfazer, Perda em todos os testes até satisfazer. Só para vilões NPCs.", pagina: 68, fonte: "3DeT Victory, PDF p68-69 (livro do usuário)" },
   diferente: { desc: "Seu corpo não é padrão: só usa equipamentos feitos para você e tem Perda com itens de outros. Às vezes pode ter Ganho.", pagina: 69, fonte: "3DeT Victory, PDF p69 (livro do usuário)" },
   elo_vital: { desc: "Dano em PV é repassado ao aliado vinculado na mesma quantia (ajustado por escala); curas não são repassadas.", pagina: 69, fonte: "3DeT Victory, PDF p69 (livro do usuário)" },
@@ -19,7 +19,6 @@ var TDT_EFEITOS_DESVANTAGENS = {
   inculto: { desc: "Sem familiaridade com a cultura e a língua locais: testes sociais com quem não te entende têm Perda.", pagina: 71, fonte: "3DeT Victory, PDF p71 (livro do usuário)" },
   indeciso: { desc: "Em testes de Resistência de força de vontade você tem Perda e nunca tem acertos críticos. Incompatível com Resoluto.", pagina: 71, fonte: "3DeT Victory, PDF p71 (livro do usuário)" },
   infame: { desc: "Em testes sociais contra NPCs que te reconhecem (geralmente 1-4 em 1d), você sempre tem Perda. Incompatível com Famoso.", pagina: 71, fonte: "3DeT Victory, PDF p71 (livro do usuário)" },
-  insano: { desc: null, pagina: 74, fonte: "3DeT Victory, PDF p74-75 (livro do usuário)", nota: "Não existe 'Insano' no livro: a desvantagem é Transtorno (-1 cada, escolha de um dos oito em naoNoApp.transtornos). Sem efeito único." },
   lento: { desc: "Em testes de iniciativa você tem Perda e gasta um movimento extra para cruzar cada distância. Incompatível com Aceleração.", pagina: 71, fonte: "3DeT Victory, PDF p71 (livro do usuário)", nota: "No app a fonte cita PDF p57; no livro o texto está na p71." },
   maldicao: { desc: "Maldição constante. -1: efeito suave, quase só incômodo. -2: grave; dano que você causa volta a você e falhas em um atributo viram críticas.", pagina: 71, fonte: "3DeT Victory, PDF p71 (livro do usuário)", nota: "Versão -1 e -2 (valorMin -2, valorMax -1)." },
   monstruoso: { desc: "Aparência grotesca: em iniciativa você tem Perda (salvo surpresa) e em testes sociais de aparência também. Incompatível com Inofensivo.", pagina: 71, fonte: "3DeT Victory, PDF p71-72 (livro do usuário)" },
@@ -33,9 +32,8 @@ var TDT_EFEITOS_DESVANTAGENS = {
   tapado: { desc: "Em testes de Habilidade de inteligência e raciocínio você tem Perda e nunca tem acertos críticos. Incompatível com Gênio.", pagina: 74, fonte: "3DeT Victory, PDF p74 (livro do usuário)" },
   utensilio: { desc: "Precisa de um item para usar bem uma perícia; sem ele, nada de acertos críticos nela. Versão -2: sem o item, sem vantagens com PM.", pagina: 75, fonte: "3DeT Victory, PDF p75 (livro do usuário)", custoLivro: "-1 ou -2 (app só tem -1; a versão -2 não está no app)", nota: "Custo do app mantido em -1; registrado apenas a divergência." },
 
-  // Não está no app como desvantagem única: bloco de referência para Insano/Transtorno (PDF p74-75).
-  naoNoApp: {
-    transtornos: {
+  // Referência para Transtorno (desvantagem "transtorno" em rules.js): escolha de uma das oito opções (PDF p74-75).
+  transtorno: {
       custo: "-1 cada (escolha de uma opção)",
       pagina: "74-75",
       fonte: "3DeT Victory, PDF p74-75 (livro do usuário)",
@@ -50,7 +48,6 @@ var TDT_EFEITOS_DESVANTAGENS = {
         mitomania: { desc: "Não diz a verdade; para dizer algo verdadeiro precisa passar em um teste, inclusive para aliados." },
         paranoia: { desc: "Não confia em ninguém: precisa de teste para aceitar ajuda, inclusive cura; descanso recupera só metade." }
       }
-    }
   }
 };
 

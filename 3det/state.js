@@ -19,6 +19,7 @@ function estadoPadrao(){
     personagem: {
       nome: "",
       jogador: "",
+      imagem: "",                // data URL JPEG ou PNG (só na importação) de até 300 px; "" = sem imagem
       conceito: "",
       nivelPoder: "iniciante",   // "iniciante" | "heroi" | "veterano" | "livre" (rules.niveisDePoder)
       pontosTotal: 10,           // preenchido pelo nível; editável só em "livre"
@@ -35,6 +36,11 @@ function estadoPadrao(){
 
 const state = estadoPadrao();
 
+/* Imagem do personagem: só data URL JPEG ou PNG em base64, com limite de tamanho do texto (salvamento e JSON). */
+function tdtImagemValida(valor){
+  return typeof valor === "string" && valor.length <= 400000 && /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/]+=*$/.test(valor);
+}
+
 /* Completa campos ausentes (dados de versões antigas ou importados) sem apagar o que já existe. */
 function ensureStateShape(){
   const base = estadoPadrao();
@@ -45,6 +51,10 @@ function ensureStateShape(){
   if(!Array.isArray(p.pericias)) p.pericias = [];
   if(!Array.isArray(p.vantagens)) p.vantagens = [];
   if(!Array.isArray(p.desvantagens)) p.desvantagens = [];
+  /* Ids renomeados: Cópia virou Clone e Insano virou Transtorno (livro 3DeT Victory). */
+  p.vantagens.forEach(v => { if(v && v.id === "copia") v.id = "clone"; });
+  p.desvantagens.forEach(d => { if(d && d.id === "insano") d.id = "transtorno"; });
+  p.imagem = tdtImagemValida(p.imagem) ? p.imagem : "";
   if(!["livre", "estrito"].includes(state.modo)) state.modo = "livre";
   if(!TDT_ETAPAS.some(e => e.n === state.etapa)) state.etapa = 1;
   if(state.tela !== "ficha" && state.tela !== "inicio") state.tela = "inicio";

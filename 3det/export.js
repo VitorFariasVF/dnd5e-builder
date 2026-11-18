@@ -31,8 +31,9 @@ function lerBackup(texto){
     return { ok: false, erro: "O backup não contém personagem." };
   }
 
-  const base = estadoPadrao();
   const pessoa = dados.estado.personagem;
+  if(pessoa.imagem && !tdtImagemValida(pessoa.imagem)) return { ok: false, erro: "Imagem do personagem inválida: use JPEG ou PNG em data URL, até 400 KB." };
+  const base = estadoPadrao();
   base.personagem = Object.assign(base.personagem, pessoa);
   base.personagem.atributos = Object.assign({}, base.personagem.atributos, pessoa.atributos || {});
   base.modo = dados.estado.modo === "estrito" ? "estrito" : "livre";
