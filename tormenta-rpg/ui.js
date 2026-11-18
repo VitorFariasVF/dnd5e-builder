@@ -72,18 +72,26 @@ function trpgCorpoEtapa(n){
     case 3: return trpgCampoOpcoes("classe", "Classe", TRPG_CLASSES, p.classe, TRPG_PENDENTES.classes,
       `<p class="muted trpg-detalhe" data-saida="detalhe:classe"></p>`);
     case 4: return `${trpgNaoVerificado(TRPG_PENDENTES.atributos)}
-      <p class="muted">Digite os valores de cada atributo (inteiro de 1 a 30). Os modificadores são calculados pela fórmula do d20 SRD 3.5.</p>
+      <p class="muted">Digite os valores de cada atributo (inteiro de 1 a 30). Os modificadores seguem a tabela do livro (PDF p.27), igual a (valor - 10) / 2 arredondado para baixo.</p>
       <ul class="trpg-lista-simples">${TRPG_METODOS_ATRIBUTOS.map(m => `<li><b>${trpgEsc(m.nome)}</b>: ${trpgEsc(m.regra)}. <small>${trpgEsc(m.fonte)}</small></li>`).join("")}</ul>
+      <label for="metodo-atributos">Método de geração</label>
+      <select id="metodo-atributos" data-campo="metodoAtributos">
+        <option value="manual"${p.metodoAtributos === "manual" || !p.metodoAtributos ? " selected" : ""}>Sem método (digitar à mão)</option>
+        ${TRPG_METODOS_ATRIBUTOS.map(m => `<option value="${trpgEsc(m.id)}"${p.metodoAtributos === m.id ? " selected" : ""}>${trpgEsc(m.nome)}</option>`).join("")}
+      </select>
+      <p><button type="button" class="secondary" data-acao="sugerir-atributos">Sugerir atributos</button></p>
+      <p class="muted" role="status" data-saida="nota-metodo"></p>
       <p class="muted trpg-detalhe" data-saida="detalhe:raca-ajuste"></p>
       <div class="trpg-atributos">${TRPG_ATRIBUTOS.map(a => `<div class="trpg-atr">
         <label for="atr-${a.id}">${a.nome} (${a.abrev})</label>
         <input id="atr-${a.id}" type="number" inputmode="numeric" min="1" max="30" step="1" data-campo="atr:${a.id}" value="${v(p.atributos[a.id])}">
         <output data-saida="mod:${a.id}">Modificador</output></div>`).join("")}</div>`;
     case 5: return `${trpgNaoVerificado(TRPG_PENDENTES.pericias)}
-      <p>Pontos por nível: <output data-saida="pontos">a definir</output></p>
-      <p class="muted">Graduações (fonte única, wiki de fãs): ${trpgEsc(TRPG_REGRAS.graduacoes.formula)}. Máximo por nível: NÃO VERIFICADO.</p>
+      <p>Perícias treinadas no 1º nível (método padrão, PDF p.79): <output data-saida="pontos">a definir</output></p>
+      <p class="muted">Cresce com +1 de Inteligência e com o talento Treino em Perícia. Método alternativo (PDF p.80): <output data-saida="alternativo">a definir</output></p>
+      <p class="muted">Graduações (livro, PDF p.79): ${trpgEsc(TRPG_REGRAS.graduacoes.formula)}. No método de pontos (PDF p.80): máximo de nível + 3 em perícias de classe e metade disso nas outras; 1 ponto por graduação em perícia de classe, 2 nas outras.</p>
       <p class="muted">Perícias do livro básico (fonte de comunidade): ${TRPG_PERICIAS.map(x => `${trpgEsc(x.nome)} (${trpgEsc(trpgAbrevAtr(x.atributo))})`).join(", ")}.</p>
-      <label for="disponiveis">Pontos de perícia disponíveis (deixe vazio se não souber)</label>
+      <label for="disponiveis">Pontos de perícia disponíveis (só no método alternativo, PDF p.80; deixe vazio se não usar)</label>
       <input id="disponiveis" type="number" inputmode="numeric" min="0" step="1" data-campo="disponiveis" value="${v(p.pericias.pontosDisponiveis)}">
       <label for="gastas">Graduações gastas</label>
       <input id="gastas" type="number" inputmode="numeric" min="0" step="1" data-campo="gastas" value="${v(p.pericias.graduacoesGastas)}">`;
@@ -168,7 +176,7 @@ function trpgDetalheClasse(valor){
   const c = trpgClasseDados(valor);
   if(!c) return "Classe fora da lista verificada: PV, BBA e perícias NÃO VERIFICADOS.";
   const d = c.dadoDeVida;
-  return `${c.nome}. PV: ${d.inicial} no 1º nível e +${d.porNivel} por nível seguinte, mais o modificador de Constituição. Perícias treinadas: ${c.pericias.treinadasBase} + Inteligência por nível. BBA: +${c.bba[0]} no 1º nível e +${c.bba[19]} no 20º. Resistências base: NÃO VERIFICADO. Fonte: ${c.fonte}.`;
+  return `${c.nome}. PV: ${d.inicial} no 1º nível e +${d.porNivel} por nível seguinte, mais o modificador de Constituição. Perícias treinadas no 1º nível: ${c.pericias.treinadasBase} + Inteligência (+2 se humano), PDF p.79. BBA: +${c.bba[0]} no 1º nível e +${c.bba[19]} no 20º. Resistências base: NÃO VERIFICADO. Fonte: ${c.fonte}.`;
 }
 
 function trpgDetalheMagias(valor){
@@ -191,7 +199,8 @@ function trpgHtmlResumo(){
     ["Raça e classe", `${p.raca || "a definir"} · ${p.classe || "a definir"} · nível ${p.nivel}`],
     ["Atributos", atr],
     ["CA", d.ca === null ? "—" : String(d.ca)],
-    ["Iniciativa (hipótese)", trpgFormatarBonus(d.iniciativa)],
+    ["Iniciativa (modificador de Destreza)", trpgFormatarBonus(d.iniciativa)],
+    ["Perícias treinadas no 1º nível", d.periciasTreinadas === null ? "a definir (classe, Inteligência e raça)" : String(d.periciasTreinadas)],
     ["PV máximo (manual)", p.derivados.pvMaximo === null ? "—" : String(p.derivados.pvMaximo)],
     ["PV sugerido pela classe", d.pvSugerido === null ? "—" : String(d.pvSugerido)],
     ["BBA no nível", d.bba === null ? "—" : trpgFormatarBonus(d.bba)],
@@ -207,6 +216,13 @@ function trpgHtmlResumo(){
       <button type="button" class="secondary" data-acao="pdf">Gerar PDF (2 páginas)</button></div>`;
 }
 
+/* Nota fixa do método de atributos (passo 4). Métodos de rolagem não têm sugestão; Elite e Pontos usam ordem neutra. */
+function trpgNotaMetodo(metodo){
+  if(metodo === "elite" || metodo === "pontos") return "Método " + (metodo === "elite" ? "Elite" : "Pontos") + ": a sugestão usa ordem neutra (Força, Destreza, Constituição, Inteligência, Sabedoria, Carisma), sem prioridade do livro: o manual não define prioridade de atributos por classe.";
+  if(["padrao", "classica", "heroica", "audaciosa"].includes(metodo)) return "Método por rolagem: sem sugestão. Role os dados e digite os valores. Fracasso (PDF p.28): total de modificadores 0 ou menos, ou maior valor 13 ou menos; nesse caso, role de novo.";
+  return "Escolha um método para ver a sugestão. Sem método, digite os valores à mão.";
+}
+
 /* Atualiza os campos calculados (modificadores, CA, iniciativa, pontos) sem recriar a tela. */
 function trpgAtualizarSaidas(){
   const app = trpgApp(); if(!app) return;
@@ -218,8 +234,13 @@ function trpgAtualizarSaidas(){
     else if(k === "ca") el.textContent = d.ca === null ? "—" : String(d.ca);
     else if(k === "ini") el.textContent = trpgFormatarBonus(d.iniciativa);
     else if(k === "pontos"){
-      el.textContent = d.pontosPorNivel === null ? "a definir (escolha a classe e confira a Inteligência)" : d.pontosPorNivel + " por nível";
+      el.textContent = d.periciasTreinadas === null ? "a definir (escolha a classe, a raça e confira a Inteligência)" : String(d.periciasTreinadas);
     }
+    else if(k === "alternativo"){
+      const alt = d.pontosPericiaAlternativo;
+      el.textContent = alt === null ? "a definir" : alt.nivel1 + " no 1º nível e " + alt.porNivelSeguinte + " a cada nível seguinte";
+    }
+    else if(k === "nota-metodo") el.textContent = trpgNotaMetodo(p.metodoAtributos);
     else if(k === "pvsug") el.textContent = d.pvSugerido === null ? "— (escolha a classe, o nível e a Constituição)" : String(d.pvSugerido);
     else if(k === "bba") el.textContent = d.bba === null ? "—" : trpgFormatarBonus(d.bba);
     else if(k === "resist") el.textContent = d.resistencias === null ? "—" : "a definir (base NÃO VERIFICADA)";
@@ -249,6 +270,7 @@ function trpgAplicarCampo(campo, el){
     case "aparencia": p.aparencia = texto; break;
     case "historia": p.historia = texto; break;
     case "raca": p.raca = texto; break;
+    case "metodoAtributos": p.metodoAtributos = texto || "manual"; break;
     case "classe": p.classe = texto; break;
     case "disponiveis": p.pericias.pontosDisponiveis = numero(); break;
     case "gastas": p.pericias.graduacoesGastas = numero(); break;
@@ -281,6 +303,17 @@ function trpgMostrarErro(erro, total){
     el.focus({ preventScroll: true });
     el.scrollIntoView({ block: "center" });
   } else a.scrollIntoView({ block: "center" });
+}
+
+/* Botão "Sugerir atributos": aplica os valores de Elite ou Pontos; métodos de rolagem mostram o aviso na etapa. */
+function trpgSugerirNaTela(){
+  const p = state.personagem;
+  const r = trpgSugerirAtributos(p.metodoAtributos);
+  if(!r.ok){ trpgMostrarErro({ msg: r.motivo, campo: null }, 1); return; }
+  TRPG_ATRIBUTOS.forEach(a => { p.atributos[a.id] = r.valores[a.id]; });
+  salvarEstado();
+  trpgRender();
+  trpgAviso("Valores sugeridos aplicados.");
 }
 
 function trpgAvancar(){
@@ -360,6 +393,7 @@ function trpgLigarEventos(){
     const acao = b.dataset.acao, id = b.dataset.id;
     if(acao === "novo") trpgNovaFicha();
     else if(acao === "avancar") trpgAvancar();
+    else if(acao === "sugerir-atributos") trpgSugerirNaTela();
     else if(acao === "voltar") trpgVoltar();
     else if(acao === "ir") trpgIrPara(Number(b.dataset.etapa));
     else if(acao === "inicio") trpgIrInicio();

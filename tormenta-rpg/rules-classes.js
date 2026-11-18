@@ -1,6 +1,7 @@
 /* Classes do livro básico da Tormenta RPG (edição d20, Jambô). Arquivo gerado a partir do compêndio
    de classes do VTT "Tormenta RPG e Império de Jade" (github.com/mclemente/fvtt-trpg, commit ad33f72, GPL-3).
-   Fonte de comunidade, não é o livro: as páginas citadas em cada 'fonte' vêm desse compêndio e não foram conferidas no livro.
+   Conferido no livro (PDF p.48 a p.76): PV inicial e por nível, perícias treinadas no 1º nível e listas de perícia de classe das 13 classes.
+   Não conferido no livro: BBA, talentos adicionais, círculos de magia (vêm do compêndio do VTT).
    Mecânica só (números, listas, progressões). Não há texto de descrição aqui.
    NÃO VERIFICADO neste arquivo: base de Fortitude, Reflexos e Vontade por classe (campo resistencias.base = null).
    Os campos 'saves' e 'hitDice' do compêndio foram descartados: são valores genéricos (str/con e d12 em todas as classes),
@@ -8,7 +9,7 @@
 const TRPG_CLASSES = {
   "guerreiro": {
     "nome": "Guerreiro",
-    "fonte": "Livro Básico, pg. 59 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 59 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.60); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 20,
       "porNivel": 5,
@@ -88,7 +89,7 @@ const TRPG_CLASSES = {
   },
   "bardo": {
     "nome": "Bardo",
-    "fonte": "Livro Básico, pg. 48 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 48 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.49); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 12,
       "porNivel": 3,
@@ -208,7 +209,7 @@ const TRPG_CLASSES = {
   },
   "druida": {
     "nome": "Druida",
-    "fonte": "Livro Básico, pg. 53 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 53 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.54); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 16,
       "porNivel": 4,
@@ -316,7 +317,7 @@ const TRPG_CLASSES = {
   },
   "clerigo": {
     "nome": "Clérigo",
-    "fonte": "Livro Básico, pg. 51 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 51 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.52); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 16,
       "porNivel": 4,
@@ -408,7 +409,7 @@ const TRPG_CLASSES = {
   },
   "swashbuckler": {
     "nome": "Swashbuckler",
-    "fonte": "Livro Básico, pg. 75 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 75 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.76); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 16,
       "porNivel": 4,
@@ -505,7 +506,7 @@ const TRPG_CLASSES = {
   },
   "samurai": {
     "nome": "Samurai",
-    "fonte": "Livro Básico, pg. 73 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 73 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.74); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 20,
       "porNivel": 5,
@@ -606,7 +607,7 @@ const TRPG_CLASSES = {
   },
   "monge": {
     "nome": "Monge",
-    "fonte": "Livro Básico, pg. 64 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 64 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.65); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 16,
       "porNivel": 4,
@@ -699,7 +700,7 @@ const TRPG_CLASSES = {
   },
   "paladino": {
     "nome": "Paladino",
-    "fonte": "Livro Básico, pg. 67 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 67 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.68); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 20,
       "porNivel": 5,
@@ -796,7 +797,7 @@ const TRPG_CLASSES = {
   },
   "mago": {
     "nome": "Mago",
-    "fonte": "Livro Básico, pg. 63 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 63 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.64); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 8,
       "porNivel": 2,
@@ -874,7 +875,7 @@ const TRPG_CLASSES = {
   },
   "ranger": {
     "nome": "Ranger",
-    "fonte": "Livro Básico, pg. 70 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 70 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.71); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 16,
       "porNivel": 4,
@@ -977,7 +978,7 @@ const TRPG_CLASSES = {
   },
   "feiticeiro": {
     "nome": "Feiticeiro",
-    "fonte": "Livro Básico, pg. 56 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 56 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.57); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 8,
       "porNivel": 2,
@@ -1059,7 +1060,7 @@ const TRPG_CLASSES = {
   },
   "barbaro": {
     "nome": "Bárbaro",
-    "fonte": "Livro Básico, pg. 47 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 47 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.48); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 24,
       "porNivel": 6,
@@ -1142,7 +1143,7 @@ const TRPG_CLASSES = {
   },
   "ladino": {
     "nome": "Ladino",
-    "fonte": "Livro Básico, pg. 60 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; transcrição de comunidade, página não conferida no livro)",
+    "fonte": "Livro Básico, pg. 60 (conforme compêndio de classes do VTT fvtt-trpg, commit ad33f72; conferido no livro: PV, perícias treinadas e perícias de classe (PDF p.61); BBA e talentos: compêndio do VTT)",
     "dadoDeVida": {
       "inicial": 12,
       "porNivel": 3,

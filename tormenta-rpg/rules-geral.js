@@ -6,7 +6,7 @@
    que só aparecem em outros livros (ex.: Jogatina, Meditação) NÃO entram aqui: NÃO VERIFICADO. */
 /* Fonte das perícias: compêndio de classes do VTT fvtt-trpg (github.com/mclemente/fvtt-trpg, commit ad33f72), listas "Perícias de Classe".
    Página do livro: NÃO VERIFICADO. */
-const FONTE_PERICIAS = "Compêndio de classes do VTT fvtt-trpg (comunidade), listas de perícias de classe; mesmo atributo na wiki de fãs tsrd, página \"Perícias Básico\"; página do livro NÃO VERIFICADO";
+const FONTE_PERICIAS = "Livro Tormenta RPG, PDF p.82 (atributo-chave) e p.48 a p.76 (listas de perícias de classe, conferidas). Atributos conferidos com o livro";
 const TRPG_PERICIAS = [
   { id: "acrobacia", nome: "Acrobacia", atributo: "destreza", fonte: FONTE_PERICIAS },
   { id: "adestrar-animais", nome: "Adestrar Animais", atributo: "carisma", fonte: FONTE_PERICIAS },
@@ -47,16 +47,28 @@ const TRPG_TALENTOS = {
   "vontade-de-ferro": { nome: "Vontade de Ferro", pre: [], beneficio: "+2 no bônus base de Vontade. Pode ser escolhido várias vezes, e os efeitos se acumulam.", fonte: "talentos.db (VTT fvtt-trpg)", resistencia: "vontade" }
 };
 
-/* Métodos de geração de atributos. Nomes e valores: wiki de fãs "Tormenta para iniciantes" (tsrd.fandom.com).
-   Fonte única. Os custos da compra de pontos e a regra exata do Elite não foram lidos: NÃO VERIFICADO. */
+/* Métodos de geração de atributos. Confirmados no livro: Padrão, Clássica, Heroica, Audaciosa e Elite (PDF p.27);
+   Pontos e custos por valor (PDF p.28). A prioridade de atributos por classe não consta no livro. */
 const TRPG_METODOS_ATRIBUTOS = [
-  { id: "padrao", nome: "Padrão", regra: "4d6", fonte: "Tormenta para iniciantes (wiki de fãs)" },
-  { id: "classica", nome: "Clássica", regra: "3d6", fonte: "Tormenta para iniciantes (wiki de fãs)" },
-  { id: "heroica", nome: "Heroica", regra: "2d6+6", fonte: "Tormenta para iniciantes (wiki de fãs)" },
-  { id: "audaciosa", nome: "Audaciosa", regra: "1d20", fonte: "Tormenta para iniciantes (wiki de fãs)" },
-  { id: "elite", nome: "Elite", regra: "valores fixos (não consta quais)", fonte: "Tormenta para iniciantes (wiki de fãs); valores NÃO VERIFICADO" },
-  { id: "pontos", nome: "Pontos", regra: "20 pontos para comprar os atributos", fonte: "Tormenta para iniciantes (wiki de fãs); custo por valor NÃO VERIFICADO" }
+  { id: "padrao", nome: "Padrão", regra: "4d6, descarta o menor dado e soma os outros três", fonte: "Livro Tormenta RPG, PDF p.27" },
+  { id: "classica", nome: "Clássica", regra: "3d6", fonte: "Livro Tormenta RPG, PDF p.27" },
+  { id: "heroica", nome: "Heroica", regra: "2d6 + 6", fonte: "Livro Tormenta RPG, PDF p.27" },
+  { id: "audaciosa", nome: "Audaciosa", regra: "1d20", fonte: "Livro Tormenta RPG, PDF p.27" },
+  { id: "elite", nome: "Elite", regra: "valores fixos 17, 15, 13, 12, 10 e 8, sem rolar", fonte: "Livro Tormenta RPG, PDF p.27" },
+  { id: "pontos", nome: "Pontos", regra: "20 pontos para comprar os valores (custos na tabela abaixo)", fonte: "Livro Tormenta RPG, PDF p.28" }
 ];
+
+/* Valores fixos do método Elite. Livro, PDF p.27: "use estes números, sem rolar nada: 17, 15, 13, 12, 10 e 8". */
+const TRPG_ELITE_VALORES = [17, 15, 13, 12, 10, 8];
+
+/* Compra por pontos: custo em pontos de cada valor de habilidade. Livro, PDF p.28 (tabela "Custo de Valores de Habilidade").
+   Total de pontos disponíveis: 20 (PDF p.28). */
+const TRPG_PONTOS_TOTAL = 20;
+const TRPG_CUSTO_PONTOS = { 7: -4, 8: -2, 9: -1, 10: 0, 11: 1, 12: 2, 13: 3, 14: 4, 15: 6, 16: 8, 17: 11, 18: 14 };
+
+/* Ordem neutra para atribuir valores sugeridos (Elite e Pontos). NÃO é prioridade do livro: o manual não define
+   prioridade de atributos por classe (PDF p.28: o jogador escolhe qual valor associar a cada habilidade). */
+const TRPG_ORDEM_NEUTRA = ["forca", "destreza", "constituicao", "inteligencia", "sabedoria", "carisma"];
 
 /* Dinheiro inicial do personagem de 1º nível. Fonte: Tormenta para iniciantes (wiki de fãs). Fonte única.
    O texto diz "100 TO" e cita o tibar (T$) como moeda padrão do Reinado. */

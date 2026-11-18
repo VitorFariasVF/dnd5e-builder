@@ -37,29 +37,64 @@ personagens.forEach(c => {
   });
 });
 
-teste("pontos de perícia por nível: base + Inteligência, mínimo 1", () => {
-  assert.strictEqual(avaliar(ctx, "trpgPontosPorNivel({ base: 2, inteligencia: 12 })"), 3);
-  assert.strictEqual(avaliar(ctx, "trpgPontosPorNivel({ base: 0, inteligencia: 8 })"), 1);
-  assert.strictEqual(avaliar(ctx, "trpgPontosPorNivel({ base: 4, inteligencia: 18 })"), 8);
+teste("perícias treinadas no 1º nível (PDF p.79): base + Inteligência, mínimo de 1 no total", () => {
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 2, inteligencia: 12 })"), 3);
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 2, inteligencia: 8 })"), 1);
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 0, inteligencia: 8 })"), 1);
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 4, inteligencia: 18 })"), 8);
 });
 
-teste("pontos de perícia ficam null enquanto a base da classe não for conhecida", () => {
-  assert.strictEqual(avaliar(ctx, "trpgPontosPorNivel({ base: null, inteligencia: 14 })"), null);
-  assert.strictEqual(avaliar(ctx, "trpgPontosPorNivel({ base: 2, inteligencia: null })"), null);
+teste("perícias treinadas: exemplos do livro (PDF p.79) - Francis (ladino humano, Int 13) = 11; minotauro guerreiro (Int 8) = 1; goblin ladino (Int 18) = 12", () => {
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 8, inteligencia: 13, bonusRacial: 2 })"), 11);
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 2, inteligencia: 8, bonusRacial: 0 })"), 1);
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 8, inteligencia: 18, bonusRacial: 0 })"), 12);
 });
 
-teste("pontos de perícia de classes conferidas: Guerreiro (2 + Int 14) = 4; Ladino (8 + Int 18) = 12; Mago (2 + Int 8) = 1", () => {
-  const pts = (classe, inteligencia) => avaliar(ctx, `trpgDerivados(Object.assign(estadoPadrao().personagem, { classe: "${classe}", atributos: Object.assign(estadoPadrao().personagem.atributos, { inteligencia: ${inteligencia} }) })).pontosPorNivel`);
-  assert.strictEqual(pts("guerreiro", 14), 4);
-  assert.strictEqual(pts("ladino", 18), 12);
-  assert.strictEqual(pts("mago", 8), 1);
+teste("perícias treinadas ficam null sem base da classe, sem Inteligência ou sem raça escolhida", () => {
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: null, inteligencia: 14, bonusRacial: 0 })"), null);
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 2, inteligencia: null, bonusRacial: 0 })"), null);
+  assert.strictEqual(avaliar(ctx, "trpgPericiasTreinadas({ base: 2, inteligencia: 14, bonusRacial: null })"), null);
+});
+
+teste("bônus racial de perícias: humano +2 (PDF p.79); outra raça 0 sem dado; raça vazia null", () => {
+  assert.strictEqual(avaliar(ctx, 'trpgBonusRacialPericias("humano")'), 2);
+  assert.strictEqual(avaliar(ctx, 'trpgBonusRacialPericias("Humano")'), 2);
+  assert.strictEqual(avaliar(ctx, 'trpgBonusRacialPericias("Anão")'), 0);
+  assert.strictEqual(avaliar(ctx, 'trpgBonusRacialPericias("")'), null);
+  assert.strictEqual(avaliar(ctx, "trpgBonusRacialPericias(null)"), null);
+});
+
+teste("método alternativo (PDF p.80): 4 vezes no 1º nível e o mesmo valor depois; Francis (11) = 44 e 11", () => {
+  assert.deepStrictEqual(avaliar(ctx, "trpgPontosPericiaAlternativo(11)"), { nivel1: 44, porNivelSeguinte: 11 });
+  assert.strictEqual(avaliar(ctx, "trpgPontosPericiaAlternativo(null)"), null);
+});
+
+teste("derivados: perícias treinadas do Ladino com Int 13 e raça humana = 11; sem raça = null", () => {
+  const com = avaliar(ctx, 'trpgDerivados(Object.assign(estadoPadrao().personagem, { classe: "ladino", raca: "humano", atributos: Object.assign(estadoPadrao().personagem.atributos, { inteligencia: 13 }) }))');
+  assert.strictEqual(com.periciasTreinadas, 11);
+  assert.deepStrictEqual(com.pontosPericiaAlternativo, { nivel1: 44, porNivelSeguinte: 11 });
+  const sem = avaliar(ctx, 'trpgDerivados(Object.assign(estadoPadrao().personagem, { classe: "ladino", raca: "", atributos: Object.assign(estadoPadrao().personagem.atributos, { inteligencia: 13 }) }))');
+  assert.strictEqual(sem.periciasTreinadas, null);
+});
+
+teste("perícias treinadas de classes conferidas no livro (PDF p.49 a p.76): Bardo 6, Guerreiro 2, Monge 4, Ladino 8 (Int 10, sem bônus)", () => {
+  const n = (classe) => avaliar(ctx, 'trpgDerivados(Object.assign(estadoPadrao().personagem, { classe: "' + classe + '", raca: "Anão" }))').periciasTreinadas;
+  assert.strictEqual(n("bardo"), 6);
+  assert.strictEqual(n("guerreiro"), 2);
+  assert.strictEqual(n("monge"), 4);
+  assert.strictEqual(n("ladino"), 8);
+});
+
+teste("iniciativa exibida segue só o modificador de Destreza (graduação da perícia não somada, PDF p.80 e p.82)", () => {
+  const d = avaliar(ctx, 'trpgDerivados(Object.assign(estadoPadrao().personagem, { nivel: 5, classe: "ladino", atributos: Object.assign(estadoPadrao().personagem.atributos, { destreza: 16 }) }))');
+  assert.strictEqual(d.iniciativa, 3);
 });
 
 teste("sem classe escolhida, BBA e PV sugerido ficam null; resistências não dependem da classe", () => {
   const d = avaliar(ctx, "trpgDerivados(estadoPadrao().personagem)");
   assert.strictEqual(d.bba, null);
   assert.notStrictEqual(d.resistencias.fortitude, null);
-  assert.strictEqual(d.pontosPorNivel, null);
+  assert.strictEqual(d.periciasTreinadas, null);
   assert.strictEqual(d.pvSugerido, null);
   assert.strictEqual(d.circulos, null);
 });

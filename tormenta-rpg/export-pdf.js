@@ -56,7 +56,7 @@ function trpgFichaHtml(){
     <div class="vitais">
       <div class="vital pv"><span>PV máximo</span><strong>${trpgEsc(pvMax)}</strong><small>atuais: ${trpgEsc(pvAtual)}${d.pvSugerido === null ? "" : " · sugerido pela classe: " + trpgEsc(d.pvSugerido)}</small></div>
       <div class="vital"><span>Armadura (CA)</span><strong>${trpgEsc(d.ca === null ? "—" : d.ca)}</strong><small>10 + bônus + Des + tamanho</small></div>
-      <div class="vital"><span>Iniciativa</span><strong>${trpgEsc(trpgFormatarBonus(d.iniciativa))}</strong><small>hipótese, NÃO VERIFICADO</small></div>
+      <div class="vital"><span>Iniciativa</span><strong>${trpgEsc(trpgFormatarBonus(d.iniciativa))}</strong><small>modificador de Destreza; graduação da perícia não somada</small></div>
       <div class="vital"><span>Deslocamento</span><strong>${trpgEsc(p.derivados.deslocamento || "—")}</strong><small>a confirmar</small></div>
       <div class="vital"><span>Ataque base</span><strong>${trpgEsc(d.bba === null ? "—" : trpgFormatarBonus(d.bba))}</strong><small>${d.bba === null ? naoDefinido : "BBA da classe (fonte de comunidade)"}</small></div>
     </div>

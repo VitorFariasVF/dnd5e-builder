@@ -36,20 +36,20 @@ const TRPG_REGRAS = {
     formula: "10 + metade do nível + modificador de Destreza + bônus de armadura + bônus de escudo",
     fonte: "d20 SRD 3.5, Combate (cayzle.com/3Esrd/combat.html); aplicação à Tormenta: a confirmar no livro"
   },
-  graduacoes: {
-    nome: "Graduações de perícia",
-    formula: "perícia treinada: nível + 3; outras perícias: nível / 2 (arredondamento não consta)",
-    fonte: "Wiki de fãs tsrd.fandom.com, página 'Perícias Básico': 'Perícia treinada: nível + 3 graduações.' e 'Outras perícias: nível/2 graduações.' Fonte única. Máximo por nível: NÃO VERIFICADO"
-  },
   iniciativa: {
     nome: "Iniciativa",
-    formula: "modificador de Destreza (hipótese d20, sem bônus extras)",
-    fonte: "NÃO VERIFICADO (texto de iniciativa não obtido)"
+    formula: "exibida: modificador de Destreza. Total do teste no livro: modificador de Destreza + graduação da perícia Iniciativa (não calculada: falta marcar se é treinada)",
+    fonte: "Livro Tormenta RPG: PDF p.82 (tabela de perícias: Iniciativa, Destreza, sem exigência de treino); p.80 (exemplo: Iniciativa +7 = Destreza +3 + 4 graduações); p.87 (entrada da perícia); p.28 (Destreza aplicada a Iniciativa); p.225 (teste de Iniciativa no combate). Decisão: mantém só o modificador de Destreza até haver marcação de perícia treinada"
   },
   pontosPericia: {
-    nome: "Pontos de perícia por nível",
-    formula: "base da classe + modificador de Inteligência, com mínimo de 1 por nível",
-    fonte: "Mínimo de 1 por nível: d20 SRD 3.5 (cayzle.com/3Esrd/basics.html). Base da classe e soma com Inteligência: texto de classe do compêndio do VTT fvtt-trpg (comunidade), não conferido no livro"
+    nome: "Perícias treinadas no 1º nível (método padrão)",
+    formula: "base da classe + modificador de Inteligência + 2 se humano; mínimo de 1 perícia treinada no total. Aumenta com +1 de Inteligência (cada +1 no modificador) e com o talento Treino em Perícia",
+    fonte: "Livro Tormenta RPG, PDF p.79 (número por classe, humanos +2, mínimo de 1 treinada; exemplos de Francis, minotauro e goblin conferidos: 11, 1 e 12). Método alternativo (4 vezes no 1º nível, depois o mesmo valor a cada nível): PDF p.80. Bônus racial de outras raças: NÃO VERIFICADO"
+  },
+  graduacoes: {
+    nome: "Graduações de perícia",
+    formula: "perícia treinada: nível + 3; outras perícias: nível / 2, arredondado para baixo",
+    fonte: "Livro Tormenta RPG, PDF p.79 (\"Perícia treinada: nível + 3 graduações\"; \"Outras perícias: nível/2 graduações\"). Máximo por nível do método de pontos: PDF p.80"
   }
 };
 
@@ -59,9 +59,9 @@ const TRPG_REGRAS = {
 /* Lista do que ainda não foi verificado. A interface e o PDF mostram isto nas etapas correspondentes. */
 const TRPG_PENDENTES = {
   racas: "Fonte de comunidade (wiki de fãs). Os oito nomes de raça saem da wiki; o ajuste de atributo só é lido para o anão (fonte única). Ajustes das demais raças, tamanho, deslocamento e traços: NÃO VERIFICADO.",
-  classes: "Fonte de comunidade (compêndio do VTT). PV, BBA, perícias de classe, talentos adicionais e círculos de magia das 13 classes vêm dele, com a página citada. Base de Fortitude, Reflexos e Vontade por classe: NÃO VERIFICADO.",
-  atributos: "Métodos (Padrão, Clássica, Heroica, Audaciosa, Elite e Pontos) vêm da wiki de fãs. Custo da compra de pontos e valores do Elite: NÃO VERIFICADO.",
-  pericias: "Pontos por nível: base da classe (fonte de comunidade) + Inteligência, mínimo 1 (d20 SRD). Perícias de classe vêm do compêndio do VTT. Subtipos de Conhecimento e Ofício e perícias fora do livro básico: NÃO VERIFICADO.",
+  classes: "PV, perícias treinadas e listas de perícia de classe das 13 classes conferidos no livro (PDF p.48 a p.76). BBA, talentos adicionais, círculos de magia e base de Fortitude, Reflexos e Vontade por classe: fonte de comunidade (compêndio do VTT) ou NÃO VERIFICADO.",
+  atributos: "Métodos Padrão, Clássica, Heroica, Audaciosa e Elite, e a compra por pontos (custos de cada valor), conferidos no livro (PDF p.27 e p.28). Sugestão de Elite e Pontos usa ordem neutra: a prioridade de atributos por classe não consta no livro. Regra de fracasso (PDF p.28) não é aplicada automaticamente.",
+  pericias: "Perícias treinadas no 1º nível: base da classe + Inteligência (+2 humanos), conferido no livro (PDF p.79). Método alternativo de pontos (PDF p.80) só mostra o cálculo, não controla as graduações. Perícias não marcadas como treinadas e a graduação de Iniciativa: NÃO VERIFICADO no app. Subtipos de Conhecimento e Ofício e perícias fora do livro básico: NÃO VERIFICADO.",
   talentos: "Talentos principais (13), com pré-requisitos, vêm do compêndio do VTT. Demais talentos, talentos de poder e talentos de classe por nível: NÃO VERIFICADO.",
   magias: "Círculos liberados em cada nível vêm do compêndio do VTT. Quantidade de magias por dia, listas de magias e magias conhecidas: NÃO VERIFICADO.",
   equipamento: "Catálogo de armas, armaduras, preços e equipamento inicial: NÃO VERIFICADO. Dinheiro inicial: 100 TO (fonte única, wiki de fãs).",
