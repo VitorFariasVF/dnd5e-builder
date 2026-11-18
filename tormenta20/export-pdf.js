@@ -122,7 +122,8 @@ function t20GerarHtmlFicha(st){
   const tracos = raca ? raca.habilidades.map(h => `<li><strong>${t20Esc(h.nome)}</strong>: ${t20Esc(h.efeito)}</li>`) : [];
 
   const pers = p.personalidade || {};
-  const cabecalho = `<header class="topo"><div class="brasao" style="--cor:${cor}"><span>${t20Esc((cls.nome || "T").charAt(0))}</span></div><div class="titulo"><h1>${t20Esc(p.nome || "Personagem sem nome")}</h1><p class="linha-classe" style="--cor:${cor}">${subtitulo}</p><p class="meta">Jogador: ${t20Esc(p.jogador || "—")} · Modo: ${t20Esc(s.modo || "—")} · ${t20Esc(T20_EDICAO)}</p></div><div class="selo" style="--cor:${cor}">Tormenta20<strong>${s.modo === "estrito" ? "Ficha em modo estrito" : "Ficha em modo livre"}</strong></div></header>`;
+  const temRetrato = t20ImagemValida(p.imagem);
+  const cabecalho = `<header class="topo${temRetrato ? " comRetrato" : ""}"><div class="brasao" style="--cor:${cor}"><span>${t20Esc((cls.nome || "T").charAt(0))}</span></div><div class="titulo"><h1>${t20Esc(p.nome || "Personagem sem nome")}</h1><p class="linha-classe" style="--cor:${cor}">${subtitulo}</p><p class="meta">Jogador: ${t20Esc(p.jogador || "—")} · Modo: ${t20Esc(s.modo || "—")} · ${t20Esc(T20_EDICAO)}</p></div><div class="selo" style="--cor:${cor}">Tormenta20<strong>${s.modo === "estrito" ? "Ficha em modo estrito" : "Ficha em modo livre"}</strong></div>${temRetrato ? `<img class="retrato" src="${p.imagem}" alt="Imagem do personagem">` : ""}</header>`;
   const rodape = n => `<div class="rodape">Dados do Livro Básico, ainda em conferência · Criador de fichas RPG · VF Tools · Tormenta20 · página ${n} de 2</div>`;
 
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t20Esc(p.nome || "Ficha")} — Ficha Tormenta20</title><style>${T20_PDF_CSS}</style></head><body>
@@ -175,6 +176,8 @@ const T20_PDF_CSS = `
   .moldura::after{content:"";position:absolute;inset:1.4mm;border:.5pt solid var(--cor);border-radius:1mm}
   .conteudo{position:relative;padding-bottom:10mm}
   .topo{display:grid;grid-template-columns:20mm 1fr auto;gap:4mm;align-items:center;padding:3mm 4mm;border-radius:2mm;background:linear-gradient(90deg,color-mix(in srgb,var(--cor) 16%,transparent),transparent 78%);border-left:1.8mm solid var(--cor);margin-bottom:3mm}
+  .topo.comRetrato{grid-template-columns:20mm 1fr auto 21mm}
+  .retrato{display:block;width:21mm;height:26mm;object-fit:cover;border:1pt solid var(--cor);border-radius:1.5mm;justify-self:end;background:var(--sup)}
   .brasao{width:19mm;height:19mm;border-radius:50%;border:1.6pt solid var(--cor);display:grid;place-items:center;background:var(--sup);color:var(--cor)}
   .brasao span{font:700 22pt var(--serifa)}
   h1{font:600 22pt/1.05 var(--serifa);margin:0 0 1mm}

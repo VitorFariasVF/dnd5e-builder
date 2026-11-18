@@ -28,6 +28,7 @@ function t20LerBackup(texto){
   const aceitas = [T20_VERSAO_ESQUEMA_ANTERIOR, T20_VERSAO_ESQUEMA];
   if(!aceitas.includes(obj.versaoEsquema)) return { ok: false, erro: `Versão de backup ${obj.versaoEsquema} não suportada (aceitas: ${aceitas.join(" e ")}).` };
   if(!obj.personagem || typeof obj.personagem !== "object") return { ok: false, erro: "Backup sem os dados do personagem." };
+  if(obj.personagem.imagem && !t20ImagemValida(obj.personagem.imagem)) return { ok: false, erro: "Imagem do personagem inválida: use JPEG ou PNG em data URL, até 400 KB." };
   return { ok: true, dados: obj };
 }
 

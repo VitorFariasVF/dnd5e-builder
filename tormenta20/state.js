@@ -11,6 +11,7 @@ function t20EstadoInicial(){
     personagem: {
       nome: "",
       jogador: "",
+      imagem: "",          // data URL JPEG (ou PNG, só na importação) de até 300 px; "" = sem imagem
       nivel: 1,            // 1 a T20_NIVEL_MAX
       raca: null,          // id em T20_RACAS_COMPLETAS
       origem: null,        // nome em T20_ORIGENS
@@ -62,6 +63,11 @@ function t20NormalizarMagia(x){
   return { nome, circulo: Math.trunc(Number(o.circulo)) || 1, livre };
 }
 
+/* Imagem do personagem: só data URL JPEG ou PNG em base64, com limite de tamanho do texto (salvamento e JSON). */
+function t20ImagemValida(valor){
+  return typeof valor === "string" && valor.length <= 400000 && /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/]+=*$/.test(valor);
+}
+
 function ensureStateShape(){
   const fresh = t20EstadoInicial();
   state.modo = (state.modo === "estrito" || state.modo === "livre") ? state.modo : null;
@@ -83,6 +89,7 @@ function ensureStateShape(){
   p.pmManual = t20NumeroOuNulo(p.pmManual);
   p.treinoManual = t20NumeroOuNulo(p.treinoManual);
   p.dinheiro = Number(p.dinheiro) || 0;
+  p.imagem = t20ImagemValida(p.imagem) ? p.imagem : "";
   state.personagem = p;
   function zerarTodos(base){ return Object.fromEntries(Object.keys(base).map(k => [k, 0])); }
 }
