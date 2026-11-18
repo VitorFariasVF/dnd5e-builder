@@ -128,6 +128,22 @@ check('PDF: ficha sem imagem não gera retrato', () => {
   return !html.includes('<img class="retrato"') && !html.includes('<header class="topo comRetrato"');
 });
 
+const AVISO_TESTE = 'A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.';
+check('Aviso de imagem: sobrevive a uma re-renderização e some ao trocar ou remover a imagem', () => {
+  novaFicha(); state.personagem.imagem = JPEG_OK;
+  atualizarImagemPersonagem(AVISO_TESTE, JPEG_OK);
+  const apos1 = htmlImagemPersonagem();            // re-renderização da etapa de identificação
+  const apos2 = htmlImagemPersonagem();            // e mais uma
+  const sobreviveu = apos1.includes(AVISO_TESTE) && apos2.includes(AVISO_TESTE);
+  state.personagem.imagem = PNG_OK;                // imagem trocada
+  const trocou = !htmlImagemPersonagem().includes(AVISO_TESTE);
+  state.personagem.imagem = JPEG_OK;
+  atualizarImagemPersonagem(AVISO_TESTE, JPEG_OK);
+  state.personagem.imagem = '';                    // imagem removida
+  const removeu = !htmlImagemPersonagem().includes(AVISO_TESTE);
+  return sobreviveu && trocou && removeu;
+});
+
 const falhas = results.filter(r => !r.ok);
 console.log('test_imagem_personagem: ' + (results.length - falhas.length) + '/' + results.length + ' OK');
 if (falhas.length) { console.log('Falhas:', falhas.map(f => f.name)); process.exitCode = 1; }

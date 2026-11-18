@@ -287,15 +287,19 @@ function atualizarAtributoStandard(attr){
 /* Imagem do personagem (etapa de identificação): redimensionada no navegador para JPEG 0,8 com lado maior de 300 px. */
 const IMAGEM_PERSONAGEM_MAX_ARQUIVO = 5 * 1024 * 1024;
 const IMAGEM_PERSONAGEM_LADO = 300;
-function htmlImagemPersonagem(aviso=""){
+/* Aviso do último envio fica guardado aqui e some só quando a imagem é trocada ou removida (para = imagem a que o aviso se refere). */
+let imagemPersonagemAviso = { para: "", texto: "" };
+function htmlImagemPersonagem(){
   const img = state.personagem.imagem;
   const temImagem = imagemPersonagemValida(img);
+  const aviso = imagemPersonagemAviso.para === img ? imagemPersonagemAviso.texto : "";
   const previa = temImagem ? `<img src="${img}" alt="Imagem do personagem" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--line,#ccc)" />` : `<span class="muted">Sem imagem</span>`;
   return `<label for="imagemPersonagem">Imagem do personagem (PNG ou JPEG, até 5 MB)</label><div class="actions" style="align-items:center">${previa}<input id="imagemPersonagem" type="file" accept="image/png,image/jpeg" onchange="carregarImagemPersonagem(this)" />${temImagem ? `<button type="button" class="secondary small" onclick="removerImagemPersonagem()">Remover imagem</button>` : ""}</div>${aviso ? `<p class="alert warning">${aviso}</p>` : ""}`;
 }
-function atualizarImagemPersonagem(aviso=""){
+function atualizarImagemPersonagem(aviso="", para=state.personagem.imagem){
+  imagemPersonagemAviso = { para, texto: aviso };
   const box = document.getElementById("imagemPersonagemBox");
-  if(box) box.innerHTML = htmlImagemPersonagem(aviso);
+  if(box) box.innerHTML = htmlImagemPersonagem();
 }
 /* PNG mantém a transparência (canal alfa) quando o resultado cabe no limite; senão cai para JPEG com fundo branco e avisa. */
 const IMAGEM_PERSONAGEM_AVISO_JPEG = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
@@ -337,7 +341,7 @@ function carregarImagemPersonagem(input){
     if(!imagemPersonagemValida(dataUrl)) return atualizarImagemPersonagem("Não foi possível guardar esta imagem.");
     state.personagem.imagem = dataUrl;
     salvarEstado();
-    atualizarImagemPersonagem(escolha.aviso);
+    atualizarImagemPersonagem(escolha.aviso, dataUrl);
   };
   img.onerror = () => { URL.revokeObjectURL(url); atualizarImagemPersonagem("Não foi possível ler esta imagem."); };
   img.src = url;
