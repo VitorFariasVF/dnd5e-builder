@@ -1,5 +1,5 @@
 /* Talentos extras (rules-talentos-extra.js): existência, fonte, merge sem sobrescrever os principais.
-   Valores esperados digitados à mão a partir do livro (PDF p97 a p113). node tormenta-rpg/tests/talentos_extra.test.js */
+   Valores esperados digitados à mão a partir do livro (PDF p97 a p114). node tormenta-rpg/tests/talentos_extra.test.js */
 const vm = require("vm");
 const fs = require("fs");
 const path = require("path");
@@ -35,16 +35,37 @@ teste("cada talento novo tem nome, lista de pré-requisitos (array), benefício 
   assert.deepStrictEqual(faltas, []);
 });
 
-teste("páginas dos talentos novos ficam na faixa de combate, perícia, destino e domínios (PDF p97 a p113)", () => {
+teste("páginas dos talentos novos ficam na faixa de combate, perícia, destino, magia, domínios e Tormenta (PDF p97 a p114)", () => {
   const fora = idsExtras.filter(id => {
     const p = Number((extras[id].fonte.match(/PDF p(\d+)/) || [])[1]);
-    return !(p >= 97 && p <= 113);
+    return !(p >= 97 && p <= 114);
   });
   assert.deepStrictEqual(fora, []);
 });
 
-teste("benefício de cada talento novo tem no máximo 20 palavras", () => {
-  const longos = idsExtras.filter(id => extras[id].beneficio.split(/\s+/).length > 20);
+/* Talentos de magia, metamágicos e da Tormenta (incluídos nesta rodada): benefício de no máximo 20 palavras.
+   Os de combate/destino/domínios mantêm o limite de 60 palavras, porque a regra completa pede mais texto (ver abaixo). */
+const idsNovosMagia = [
+  "acelerar-magia", "ampliar-magia", "aumentar-magia", "elevar-magia", "estender-magia", "magia-sem-gestos", "magia-silenciosa", "maximizar-magia", "potencializar-magia",
+  "conhecimento-magico", "contramagica-aprimorada", "dominar-magia", "familiar", "foco-em-magia", "foco-em-magia-aprimorado", "magia-natural", "magias-em-combate", "mago-de-batalha", "poder-magico", "potencializar-invocacao", "devoto", "estudioso-arcano", "expulsao-aprimorada", "expulsar-fascinar-mortos-vivos",
+  "anatomia-insana", "carapaca", "corpo-aberrante", "membros-estendidos", "mente-caotica", "resistencia-a-energia", "sentido-sismico", "visao-ampla", "visao-no-escuro", "visco-rubro"
+];
+teste("talentos de magia, metamágicos e da Tormenta estão todos no arquivo, com página PDF p107 a p114", () => {
+  const faltam = idsNovosMagia.filter(id => !extras[id]);
+  assert.deepStrictEqual(faltam, []);
+  const fora = idsNovosMagia.filter(id => { const p = Number((extras[id].fonte.match(/PDF p(\d+)/) || [])[1]); return !(p >= 107 && p <= 114); });
+  assert.deepStrictEqual(fora, []);
+});
+
+teste("benefício dos talentos de magia, metamágicos e da Tormenta tem no máximo 20 palavras", () => {
+  const longos = idsNovosMagia.filter(id => extras[id].beneficio.split(/\s+/).length > 20);
+  assert.deepStrictEqual(longos, []);
+  assert.strictEqual(idsNovosMagia.length, 34);
+});
+
+/* Ao Sabor do Destino traz a tabela de benefícios por nível do livro (PDF p110), por isso o limite geral é 100. */
+teste("benefício de cada talento novo tem no máximo 100 palavras", () => {
+  const longos = idsExtras.filter(id => extras[id].beneficio.split(/\s+/).length > 100);
   assert.deepStrictEqual(longos, []);
 });
 
@@ -94,12 +115,26 @@ teste("domínios trazem o texto do devoto e não criam o talento Devoto", () => 
   const dominios = idsExtras.filter(id => id.startsWith("dominio-"));
   assert.ok(dominios.length >= 10, "domínios: " + dominios.length);
   dominios.forEach(id => assert.ok(extras[id].pre.some(p => /^Devoto de /.test(p)), "pré sem devoto: " + id));
-  assert.strictEqual(todos["devoto"], undefined);
+  assert.ok(todos["devoto"] && todos["devoto"].nome === "Devoto", "talento Devoto deve estar no arquivo (PDF p109-110)");
 });
 
-teste("talentos com efeito complexo trazem nota de efeito não implementado", () => {
-  ["ataque-em-movimento", "ataque-giratorio", "ao-sabor-do-destino"].forEach(id => {
-    assert.ok(/não implementado/.test(extras[id].nota || ""), "sem nota: " + id);
+/* Os 13 talentos que tinham nota passam a ter o efeito escrito por completo; por isso não têm mais nota. */
+teste("os 13 talentos antes com nota agora têm o efeito escrito e sem nota", () => {
+  const antigos = ["ataque-atordoante", "aparar", "ataque-em-movimento", "ataque-giratorio", "mestre-em-arma", "perito-em-arma", "tiro-em-movimento", "investida-implacavel", "investida-montada", "ao-sabor-do-destino", "lideranca", "dominio-magia", "dominio-morte"];
+  const semNota = antigos.filter(id => extras[id] && extras[id].nota !== undefined);
+  assert.deepStrictEqual(semNota, []);
+  assert.ok(extras["ataque-atordoante"].beneficio.includes("CD 10 + metade do nível + Sab"), "ataque-atordoante sem a CD");
+  assert.ok(extras["ao-sabor-do-destino"].beneficio.includes("20º +4 em ataque e dano"), "ao-sabor sem a tabela de níveis");
+  assert.ok(extras["perito-em-arma"].beneficio.includes("bônus de Carisma vezes por dia"), "perito-em-arma com o limite errado");
+});
+
+/* Talentos da Tormenta: custo de Carisma escrito, mas não aplicado pelo motor (nota). */
+teste("talentos da Tormenta trazem custo de Carisma e a nota de que não é aplicado", () => {
+  const tormenta = idsNovosMagia.filter(id => extras[id].custo !== undefined);
+  assert.strictEqual(tormenta.length, 10);
+  tormenta.forEach(id => {
+    assert.strictEqual(extras[id].custo, "perde 1 ponto de Carisma por talento", id);
+    assert.ok(/não aplicado pelo motor/.test(extras[id].nota || ""), "sem nota: " + id);
   });
 });
 

@@ -61,6 +61,10 @@ function trpgCorpoEtapa(n){
     case 1: return `
       <label for="nome">Nome do personagem</label><input id="nome" data-campo="nome" value="${v(p.nome)}" autocomplete="off">
       <label for="jogador">Jogador</label><input id="jogador" data-campo="jogador" value="${v(p.jogador)}" autocomplete="off">
+      <div class="imagem-personagem"><label for="imagem-arquivo">Imagem do personagem (PNG ou JPEG, até 5 MB)</label>
+        <input id="imagem-arquivo" type="file" accept="image/png,image/jpeg" data-campo="imagem">
+        <p id="imagem-aviso" class="muted" role="status"></p>
+        ${p.imagem ? `<div class="actions"><img src="${v(p.imagem)}" alt="Prévia da imagem do personagem" width="96" height="96" style="object-fit:cover;border-radius:6px"><button type="button" class="secondary small" data-acao="remover-imagem">Remover imagem</button></div>` : `<p class="muted">Sem imagem.</p>`}</div>
       <label for="nivel">Nível (1 a ${TRPG_META.nivelMaximoEscopo})</label><input id="nivel" type="number" inputmode="numeric" min="1" max="${TRPG_META.nivelMaximoEscopo}" step="1" data-campo="nivel" value="${v(p.nivel)}">
       <label for="modo">Modo de criação</label><select id="modo" data-campo="modo">
         <option value="livre"${state.modo === "livre" ? " selected" : ""}>Livre: texto livre em raça e classe</option>
@@ -68,7 +72,7 @@ function trpgCorpoEtapa(n){
       <label for="aparencia">Aparência</label><textarea id="aparencia" data-campo="aparencia">${v(p.aparencia)}</textarea>
       <label for="historia">História</label><textarea id="historia" data-campo="historia">${v(p.historia)}</textarea>`;
     case 2: return trpgCampoOpcoes("raca", "Raça", TRPG_RACAS, p.raca, TRPG_PENDENTES.racas,
-      `<p class="muted trpg-detalhe" data-saida="detalhe:raca"></p>`);
+      `<p class="muted trpg-detalhe" data-saida="detalhe:raca"></p><div data-saida="escolha-racial"></div><p class="muted" role="status" data-saida="aviso-escolha"></p>`);
     case 3: return trpgCampoOpcoes("classe", "Classe", TRPG_CLASSES, p.classe, TRPG_PENDENTES.classes,
       `<p class="muted trpg-detalhe" data-saida="detalhe:classe"></p>`);
     case 4: return `${trpgNaoVerificado(TRPG_PENDENTES.atributos)}
@@ -161,8 +165,35 @@ function trpgRacaDados(valor){
 
 function trpgTextoAjustes(r){
   if(!r) return "NÃO VERIFICADO";
-  if(!r.ajustes) return "escolha de atributo (não modelada no app)";
-  return Object.keys(r.ajustes).map(k => `${trpgAbrevAtr(k)} ${r.ajustes[k] > 0 ? "+" : ""}${r.ajustes[k]}`).join(", ");
+  const partes = r.ajustes ? Object.keys(r.ajustes).map(k => `${trpgAbrevAtr(k)} ${r.ajustes[k] > 0 ? "+" : ""}${r.ajustes[k]}`) : [];
+  if(r.escolha) partes.push("+" + r.escolha.valor + " em " + r.escolha.quantidade + " habilidades à escolha" + (r.escolha.excluir.length ? " (exceto " + r.escolha.excluir.map(trpgAbrevAtr).join(", ") + ")" : ""));
+  return partes.length ? partes.join(", ") : "escolha de atributo (não modelada no app)";
+}
+
+/* Campos da escolha racial (etapa 2). Recria os campos só quando a raça muda, para não perder o foco ao escolher. */
+function trpgAtualizarEscolhaRacial(el){
+  const r = trpgRacaDados(state.personagem.raca);
+  const chave = r && r.escolha ? r.nome : "";
+  if(el.dataset.raca === chave) return;
+  el.dataset.raca = chave;
+  if(!r || !r.escolha){ el.innerHTML = ""; return; }
+  const e = r.escolha, escolhas = trpgEscolhasRaciais(state.personagem);
+  const excl = e.excluir.length ? " (exceto " + e.excluir.map(trpgNomeAtr).join(", ") + ")" : "";
+  let html = `<fieldset class="trpg-escolha"><legend>Escolha de habilidades de ${trpgEsc(r.nome)}: +${e.valor} em ${e.quantidade} habilidades diferentes${excl}</legend>`;
+  for(let i = 0; i < e.quantidade; i++){
+    const ops = TRPG_ATRIBUTOS.filter(a => !e.excluir.includes(a.id))
+      .map(a => `<option value="${a.id}"${escolhas[i] === a.id ? " selected" : ""}>${trpgEsc(a.nome)}</option>`).join("");
+    html += `<label for="escolha-racial-${i}">Habilidade ${i + 1}</label><select id="escolha-racial-${i}" data-campo="escolhaRacial:${i}"><option value="">Escolha</option>${ops}</select>`;
+  }
+  el.innerHTML = html + "</fieldset>";
+}
+
+/* Texto do aviso da escolha racial: o que foi aplicado, ou o motivo de nada ter sido aplicado. */
+function trpgTextoAvisoEscolha(p){
+  const esc = trpgEscolhaRacial(p);
+  if(!esc.aplicavel) return "";
+  if(!esc.ok) return "Aviso: " + esc.motivo;
+  return "Ajuste aplicado nos atributos finais: " + Object.keys(esc.ajustes).map(k => `${trpgAbrevAtr(k)} ${esc.ajustes[k] > 0 ? "+" : ""}${esc.ajustes[k]}`).join(", ") + ".";
 }
 
 function trpgDetalheRaca(valor){
@@ -249,9 +280,12 @@ function trpgAtualizarSaidas(){
     else if(k === "detalhe:classe") el.textContent = trpgDetalheClasse(p.classe);
     else if(k === "detalhe:magias") el.textContent = trpgDetalheMagias(p.classe);
     else if(k === "detalhe:talentos-classe") el.textContent = classe ? "Talentos adicionais da classe (fonte de comunidade): " + classe.talentosAdicionais.join("; ") + "." : "Talentos adicionais: escolha uma classe verificada para vê-los.";
+    else if(k === "escolha-racial") trpgAtualizarEscolhaRacial(el);
+    else if(k === "aviso-escolha") el.textContent = trpgTextoAvisoEscolha(p);
     else if(k === "detalhe:raca-ajuste"){
       const r = trpgRacaDados(p.raca);
       if(!r) el.textContent = "Ajuste racial: escolha a raça na etapa 2.";
+      else if(r.escolha) el.textContent = "Ajuste racial de " + r.nome + ": " + trpgTextoAjustes(r) + " (" + r.ajustesFonte + "). " + trpgTextoAvisoEscolha(p);
       else if(!r.ajustes) el.textContent = "Ajuste racial de " + r.nome + ": " + r.ajustesFonte + ".";
       else el.textContent = "Ajuste racial de " + r.nome + ": " + trpgTextoAjustes(r) + " (" + r.ajustesFonte + "). Não é aplicado automaticamente: some-o aos valores digitados.";
     }
@@ -263,6 +297,12 @@ function trpgAplicarCampo(campo, el){
   const p = state.personagem, texto = el.value;
   const numero = () => texto.trim() === "" ? null : Number(texto);
   if(campo.startsWith("atr:")){ p.atributos[campo.slice(4)] = numero(); return; }
+  if(campo.startsWith("escolhaRacial:")){
+    if(!p.escolhasRaciais || typeof p.escolhasRaciais !== "object") p.escolhasRaciais = { ajustesEscolha: [] };
+    if(!Array.isArray(p.escolhasRaciais.ajustesEscolha)) p.escolhasRaciais.ajustesEscolha = [];
+    p.escolhasRaciais.ajustesEscolha[Number(campo.split(":")[1])] = texto || null;
+    return;
+  }
   switch(campo){
     case "nome": p.nome = texto; break;
     case "jogador": p.jogador = texto; break;
@@ -377,6 +417,32 @@ function trpgImportar(arquivo){
   }).catch(() => trpgAvisoNaTela("Não foi possível ler o arquivo."));
 }
 
+/* Imagem do personagem: confere tipo e tamanho, redimensiona com canvas (lado maior até 300 px) e grava como JPEG 0.8. */
+function trpgCarregarImagem(arquivo){
+  const aviso = document.getElementById("imagem-aviso");
+  const dizer = msg => { if(aviso) aviso.textContent = msg; else trpgAviso(msg); };
+  if(!["image/png", "image/jpeg"].includes(arquivo.type)){ dizer("Escolha um arquivo PNG ou JPEG."); return; }
+  if(arquivo.size > TRPG_IMAGEM.maxBytesOriginal){ dizer("A imagem tem mais de 5 MB. Escolha um arquivo menor."); return; }
+  const url = URL.createObjectURL(arquivo);
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    const escala = Math.min(1, TRPG_IMAGEM.ladoMaximo / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(img.naturalWidth * escala));
+    c.height = Math.max(1, Math.round(img.naturalHeight * escala));
+    const g = c.getContext("2d");
+    g.fillStyle = "#ffffff"; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(img, 0, 0, c.width, c.height);
+    const data = c.toDataURL("image/jpeg", TRPG_IMAGEM.qualidade);
+    if(!trpgImagemValida(data)){ dizer("Não foi possível preparar esta imagem."); return; }
+    state.personagem.imagem = data;
+    salvarEstado(); trpgRender(); trpgAviso("Imagem carregada.");
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); dizer("Não foi possível ler esta imagem."); };
+  img.src = url;
+}
+
 function trpgAvisoNaTela(msg){
   const app = trpgApp(); const card = app && app.querySelector(".card"); if(!card) return;
   card.querySelectorAll(".aviso-etapa").forEach(n => n.remove());
@@ -402,6 +468,7 @@ function trpgLigarEventos(){
     else if(acao === "duplicar"){ duplicarNoHistorico(id); trpgRender(); trpgAviso("Cópia criada."); }
     else if(acao === "excluir"){ if(window.confirm("Excluir esta ficha deste navegador?")){ excluirDoHistorico(id); trpgRender(); } }
     else if(acao === "salvar"){ salvarNoHistorico(false); trpgAviso("Ficha salva neste navegador."); }
+    else if(acao === "remover-imagem"){ state.personagem.imagem = ""; salvarEstado(); trpgRender(); trpgAviso("Imagem removida."); }
     else if(acao === "backup") trpgBaixarBackup();
     else if(acao === "pdf") trpgGerarPdf();
     else if(acao === "limpar"){ if(window.confirm("Apagar a ficha atual e as fichas salvas deste navegador?")){ limparDadosSalvos(); substituirEstado(estadoPadrao()); trpgRender(); } }
@@ -410,6 +477,7 @@ function trpgLigarEventos(){
     const el = ev.target, campo = el.dataset && el.dataset.campo;
     if(!campo) return;
     if(campo === "importar"){ if(el.files && el.files[0]) trpgImportar(el.files[0]); return; }
+    if(campo === "imagem"){ if(ev.type === "change" && el.files && el.files[0]) trpgCarregarImagem(el.files[0], el); return; }
     trpgAplicarCampo(campo, el);
     salvarEstado();
     trpgAtualizarSaidas();

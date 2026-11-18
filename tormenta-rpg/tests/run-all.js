@@ -2,7 +2,7 @@
 const { execFileSync } = require("child_process");
 const path = require("path");
 
-const arquivos = ["regras.test.js", "criacao.test.js", "talentos.test.js", "validacoes.test.js", "backup.test.js", "pdf.test.js", "release.test.js", "talentos_extra.test.js", "racas_tamanho.test.js"];
+const arquivos = ["regras.test.js", "criacao.test.js", "talentos.test.js", "validacoes.test.js", "backup.test.js", "pdf.test.js", "release.test.js", "talentos_extra.test.js", "racas_tamanho.test.js", "imagem.test.js"];
 let falhou = false;
 arquivos.forEach(f => {
   try {

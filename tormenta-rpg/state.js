@@ -23,6 +23,7 @@ function estadoPadrao(){
     personagem: {
       nome: "",
       jogador: "",
+      imagem: "",
       nivel: 1,
       raca: "",
       classe: "",
@@ -42,12 +43,23 @@ function estadoPadrao(){
 
 const state = estadoPadrao();
 
+/* Imagem do personagem: data URL JPEG (sempre gerada como JPEG pelo redimensionamento) ou PNG aceito na importação.
+   Campo ausente ou "" = sem imagem. Limites: 5 MB no arquivo original; 300 px no maior lado; qualidade 0.8. */
+const TRPG_IMAGEM = { maxBytesOriginal: 5 * 1024 * 1024, ladoMaximo: 300, qualidade: 0.8, maxCaracteres: 400000 };
+
+function trpgImagemValida(v){
+  if(v === "" || v === undefined || v === null) return true;
+  return typeof v === "string" && v.length <= TRPG_IMAGEM.maxCaracteres &&
+    /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/]+={0,2}$/.test(v);
+}
+
 /* Completa campos ausentes (dados de versões antigas ou importados) sem apagar o que já existe. */
 function ensureStateShape(){
   const base = estadoPadrao();
   if(!state.personagem || typeof state.personagem !== "object") state.personagem = base.personagem;
   const p = state.personagem;
   Object.keys(base.personagem).forEach(k => { if(p[k] === undefined) p[k] = base.personagem[k]; });
+  if(!trpgImagemValida(p.imagem)) p.imagem = "";
   p.atributos = Object.assign({}, base.personagem.atributos, p.atributos || {});
   p.pericias = Object.assign({}, base.personagem.pericias, p.pericias || {});
   p.derivados = Object.assign({}, base.personagem.derivados, p.derivados || {});

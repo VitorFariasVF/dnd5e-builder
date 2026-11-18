@@ -180,17 +180,18 @@ teste("classe digitada em texto livre é reconhecida pelo nome (Guerreiro = guer
   assert.strictEqual(d.bba, 5);
 });
 
-/* Ajustes fixos batem com a tabela do livro (PDF p.31). Humano e lefou têm escolha de habilidade: ajustes null (não modelada). */
-teste("raças: ajustes fixos batem com o livro (PDF p.31); humano e lefou ficam null (escolha não modelada)", () => {
+/* Ajustes fixos batem com a tabela do livro (PDF p.31). Humano não tem ajuste fixo (só escolha). Lefou tem Carisma –4 fixo
+   e escolha de duas habilidades (campo escolha; ver tests/racas_tamanho.test.js). */
+teste("raças: ajustes fixos batem com o livro (PDF p.31); humano sem fixo (null); lefou com Carisma –4", () => {
   assert.deepStrictEqual(avaliar(ctx, "TRPG_RACAS.anao.ajustes"), { constituicao: 4, sabedoria: 2, destreza: -2 });
   assert.deepStrictEqual(avaliar(ctx, "TRPG_RACAS.elfo.ajustes"), { destreza: 4, inteligencia: 2, constituicao: -2 });
   assert.deepStrictEqual(avaliar(ctx, "TRPG_RACAS.halfling.ajustes"), { destreza: 4, carisma: 2, forca: -2 });
   assert.strictEqual(avaliar(ctx, "TRPG_RACAS.humano.ajustes"), null);
-  assert.strictEqual(avaliar(ctx, "TRPG_RACAS.lefou.ajustes"), null);
+  assert.deepStrictEqual(avaliar(ctx, "TRPG_RACAS.lefou.ajustes"), { carisma: -4 });
 });
 
-teste("tabelas: 8 raças, 13 classes, 19 perícias, 13 talentos principais, 6 métodos de atributos", () => {
-  assert.strictEqual(avaliar(ctx, "Object.keys(TRPG_RACAS).length"), 8);
+teste("tabelas: 10 raças, 13 classes, 19 perícias, 13 talentos principais, 6 métodos de atributos", () => {
+  assert.strictEqual(avaliar(ctx, "Object.keys(TRPG_RACAS).length"), 10);
   assert.strictEqual(avaliar(ctx, "Object.keys(TRPG_CLASSES).length"), 13);
   assert.strictEqual(avaliar(ctx, "TRPG_PERICIAS.length"), 19);
   assert.strictEqual(avaliar(ctx, "Object.keys(TRPG_TALENTOS).length"), 13);

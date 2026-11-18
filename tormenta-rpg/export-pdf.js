@@ -44,8 +44,9 @@ function trpgFichaHtml(){
   const pvAtual = p.derivados.pvAtuais === null ? "—" : p.derivados.pvAtuais;
   const escudos = TRPG_ATRIBUTOS.map(a => trpgEscudoPdf(a, p.atributos[a.id], d.modificadores[a.id], cor)).join("");
   const disp = p.pericias.pontosDisponiveis === null ? naoDefinido : p.pericias.pontosDisponiveis;
-  const pagina1 = `<div class="pagina"><div class="moldura" aria-hidden="true"></div><div class="conteudo">
-    <header class="topo" style="--cor:${cor}">
+  const retrato = trpgImagemValida(p.imagem) && p.imagem ? `<img class="retrato" src="${trpgEsc(p.imagem)}" alt="Imagem do personagem">` : "";
+  const pagina1 = `<div class="pagina"><div class="moldura" aria-hidden="true"></div><div class="conteudo">${retrato}
+    <header class="topo${retrato ? " com-retrato" : ""}" style="--cor:${cor}">
       <div class="marca" style="color:${cor}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></div>
       <div><h1>${trpgEsc(p.nome || "Personagem sem nome")}</h1>
         <p class="linha-classe">${trpgEsc(p.classe || "Classe a definir")} · ${trpgEsc(p.raca || "Raça a definir")} · Nível ${trpgEsc(p.nivel)}</p>
@@ -96,6 +97,8 @@ const TRPG_PDF_CSS = `
   h1{font:600 22pt/1.05 Georgia,"Palatino Linotype",serif;margin:0 0 1mm}
   .linha-classe{font:italic 11pt Georgia,serif;color:var(--cor,var(--ouro));margin:0 0 1mm}
   .meta{font-size:8.5pt;color:var(--suave);margin:0}
+  .retrato{position:absolute;top:0;right:0;width:22mm;height:22mm;object-fit:cover;border:1pt solid var(--ouro);border-radius:2mm;background:var(--sup)}
+  .topo.com-retrato{padding-right:27mm}
   .selo{text-align:center;font-size:7.5pt;letter-spacing:.06em;text-transform:uppercase;color:var(--ouro);border:1pt solid var(--ouro);border-radius:2mm;padding:2mm 3mm;max-width:36mm}
   .selo strong{display:block;font:600 9pt Georgia,serif;letter-spacing:0;text-transform:none;color:var(--tinta);margin-top:.5mm}
   .atributos{display:grid;grid-template-columns:repeat(6,1fr);gap:2.5mm;margin:0 0 3mm}

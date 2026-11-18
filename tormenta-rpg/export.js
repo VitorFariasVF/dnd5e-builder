@@ -38,6 +38,7 @@ function lerBackup(texto){
   });
   if(!trpgValidarNivel(estado.personagem.nivel)) erros.push("nível");
   if(erros.length) return { ok: false, erro: "Valores inválidos no backup: " + erros.join(", ") + "." };
+  if(!trpgImagemValida(estado.personagem.imagem)) return { ok: false, erro: "Imagem do personagem inválida no backup (use PNG ou JPEG em data URL)." };
   return { ok: true, estado };
 }
 

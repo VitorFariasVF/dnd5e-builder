@@ -70,7 +70,7 @@ async function rodar(browser, largura, altura){
       sugestoes: document.querySelectorAll("#raca-sugestoes option").length,
       detalhe: document.querySelector("[data-saida='detalhe:raca']").textContent
     }));
-    if(r.sugestoes !== 8) throw new Error("sugestões de raça: " + r.sugestoes);
+    if(r.sugestoes !== 10) throw new Error("sugestões de raça: " + r.sugestoes);
     if(!/CON \+4, SAB \+2, DES -2/.test(r.detalhe)) throw new Error("ajuste do anão no detalhe: " + r.detalhe.slice(0, 120));
   });
   await passo(page, "raça livre", async () => {

@@ -65,6 +65,40 @@ function trpgBonusTamanhoCA(raca){
   return r && r.bonusTamanho ? Number(r.bonusTamanho.ca || 0) : 0;
 }
 
+/* Escolhas raciais gravadas na ficha (personagem.escolhasRaciais.ajustesEscolha). Sempre devolve uma lista. */
+function trpgEscolhasRaciais(personagem){
+  const e = personagem && personagem.escolhasRaciais;
+  return e && Array.isArray(e.ajustesEscolha) ? e.ajustesEscolha : [];
+}
+
+/* Ajuste da escolha racial (PDF p.31, p.37 e p.38). Só humano e lefou têm `escolha` em rules-racas.js.
+   Humano: +2 em duas habilidades diferentes. Lefou: +2 em duas diferentes, exceto Carisma, e Carisma –4 (ajuste fixo).
+   Escolha incompleta, repetida ou proibida: nada é aplicado (ajustes vazio) e `motivo` diz o que falta. */
+function trpgEscolhaRacial(personagem){
+  const r = trpgRacaPorValor(personagem && personagem.raca);
+  if(!r || !r.escolha) return { aplicavel: false, ok: true, motivo: "", ajustes: {} };
+  const e = r.escolha;
+  const falha = motivo => ({ aplicavel: true, ok: false, motivo, ajustes: {} });
+  const usadas = [];
+  for(let i = 0; i < e.quantidade; i++) usadas.push(trpgEscolhasRaciais(personagem)[i] || null);
+  const ids = TRPG_ATRIBUTOS.map(a => a.id);
+  if(usadas.some(x => !x)) return falha("Escolha as " + e.quantidade + " habilidades do ajuste racial de " + r.nome + " (+" + e.valor + " em cada). Nada foi aplicado.");
+  if(usadas.some(x => !ids.includes(x) || e.excluir.includes(x))) return falha("Habilidade inválida para o ajuste racial de " + r.nome + ". Nada foi aplicado.");
+  if(new Set(usadas).size !== usadas.length) return falha("As habilidades do ajuste racial de " + r.nome + " precisam ser diferentes. Nada foi aplicado.");
+  const ajustes = Object.assign({}, r.ajustes || {});
+  usadas.forEach(x => { ajustes[x] = (ajustes[x] || 0) + e.valor; });
+  return { aplicavel: true, ok: true, motivo: "", ajustes };
+}
+
+/* Atributos finais para os cálculos: os valores digitados mais o ajuste racial de escolha (quando completo e válido).
+   Valor vazio continua vazio. Ajustes fixos das demais raças não entram (como antes; ver rules-racas.js). */
+function trpgAtributosFinais(personagem){
+  const valores = Object.assign({}, personagem.atributos || {});
+  const esc = trpgEscolhaRacial(personagem);
+  Object.keys(esc.ajustes).forEach(k => { if(typeof valores[k] === "number") valores[k] = valores[k] + esc.ajustes[k]; });
+  return { valores, escolha: esc };
+}
+
 /* Método alternativo de pontos de perícia (PDF p.80): 4 vezes o número de perícias treinadas no 1º nível e, depois,
    esse mesmo valor a cada nível seguinte. Devolve null sem o número de perícias treinadas. */
 function trpgPontosPericiaAlternativo(treinadas){
@@ -188,7 +222,8 @@ function trpgResistenciasDerivadas(personagem){
 
 /* Derivados de uma ficha. Itens sem dado verificado voltam null. */
 function trpgDerivados(personagem){
-  const at = personagem.atributos || {};
+  const at = trpgAtributosFinais(personagem).valores;
+  const pf = Object.assign({}, personagem, { atributos: at });
   const d = personagem.derivados || {};
   const mods = {};
   TRPG_ATRIBUTOS.forEach(a => { mods[a.id] = trpgModificador(at[a.id]); });
@@ -204,7 +239,7 @@ function trpgDerivados(personagem){
     pvMaximo: d.pvMaximo === null || d.pvMaximo === undefined || d.pvMaximo === "" ? null : Number(d.pvMaximo),
     pvSugerido: trpgPVTotal({ classe, nivel: personagem.nivel, constituicao: at.constituicao }),
     bba: trpgBBA(classe, personagem.nivel),
-    resistencias: trpgResistenciasDerivadas(personagem),
+    resistencias: trpgResistenciasDerivadas(pf),
     circulos: trpgCirculosDisponiveis(classe, personagem.nivel)
   };
 }

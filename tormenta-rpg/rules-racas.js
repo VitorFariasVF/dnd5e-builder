@@ -1,17 +1,22 @@
-/* Raças da Tormenta RPG (Jambô). Oito raças, como no app.
-   Fonte: livro Tormenta RPG, capítulo 2 (Raças), PDF p.31 a p.41. Páginas PDF citadas em cada campo.
+/* Raças da Tormenta RPG (Jambô). Dez raças: as oito do capítulo 2 (humano, anão, elfo, qareen, goblin, halfling,
+   minotauro, lefou) e gnomo e meio-elfo, de "Outras Raças" (PDF p.41 e p.42).
+   Fonte: livro Tormenta RPG, capítulo 2 (Raças), PDF p.31 a p.42. Páginas PDF citadas em cada campo.
    Tamanho, deslocamento e traços foram conferidos no livro e resumidos aqui (não é transcrição).
    Itens que o livro não fecha de forma inequívoca ficam NÃO VERIFICADO, com o motivo.
-   Só o bônus de tamanho (campo bonusTamanho: CA e ataque) é aplicado pelo motor (engine.js). Não modelados, só texto:
-   escolhas (humano, lefou), traços condicionais (CA do anão contra Grande), CA do minotauro e do lefou, ataques naturais
-   do minotauro e resistências do qareen. */
+   Campo `escolha` (humano e lefou): o motor (engine.js, trpgEscolhaRacial) aplica o +valor nas habilidades escolhidas,
+   e os ajustes fixos de `ajustes` só nas raças com `escolha` (lefou: Carisma –4). Os ajustes fixos das demais raças
+   são só texto, como antes.
+   Só o bônus de tamanho (campo bonusTamanho: CA e ataque) é aplicado pelo motor. Não modelados, só texto:
+   traços condicionais (CA do anão e do gnomo contra Grande), CA do minotauro e do lefou, ataques naturais
+   do minotauro, resistências do qareen, deformidade do lefou e segunda escolha do meio-elfo. */
 
 const TRPG_RACAS = {
   humano: {
     nome: "Humano",
     fonte: "Livro Tormenta RPG, PDF p.31, p.32 e p.37",
     ajustes: null,
-    ajustesFonte: "Tormenta RPG, PDF p.31 e p.37: +2 em duas habilidades à escolha do jogador. Escolha NÃO modelada no app (não é aplicada).",
+    escolha: { quantidade: 2, valor: 2, excluir: [] },
+    ajustesFonte: "Tormenta RPG, PDF p.31 e p.37: +2 em duas habilidades à escolha do jogador, habilidades diferentes. O app aplica a escolha feita na etapa 2.",
     bonusTamanho: { ca: 0, ataque: 0 },
     tamanho: "Médio (PDF p.32: humanos estão na lista de criaturas Médias)",
     deslocamento: "9 m (PDF p.31 e p.32: deslocamento de criatura Média)",
@@ -120,8 +125,9 @@ const TRPG_RACAS = {
   lefou: {
     nome: "Lefou",
     fonte: "Livro Tormenta RPG, PDF p.31, p.32 e p.38",
-    ajustes: null,
-    ajustesFonte: "Tormenta RPG, PDF p.31 e p.38: +2 em duas habilidades à escolha, exceto Carisma, e Carisma –4. Escolha NÃO modelada no app (não é aplicada).",
+    ajustes: { carisma: -4 },
+    escolha: { quantidade: 2, valor: 2, excluir: ["carisma"] },
+    ajustesFonte: "Tormenta RPG, PDF p.31 e p.38: +2 em duas habilidades à escolha, exceto Carisma, habilidades diferentes; e Carisma –4. O app aplica a escolha e o –4 na etapa 2.",
     bonusTamanho: { ca: 0, ataque: 0 },
     tamanho: "Médio (PDF p.32: lefou está na lista de criaturas Médias)",
     deslocamento: "9 m (PDF p.31 e p.32: deslocamento de criatura Média)",
@@ -132,6 +138,42 @@ const TRPG_RACAS = {
       "Recebe 2 talentos da Tormenta adicionais. Não perde Carisma por eles, mas perde se adquirir outros talentos da Tormenta (PDF p.38).",
       "Deformidade: escolhe uma entre +4 em Acrobacia, escalada de 4,5 m, +4 em Intimidação, natação de 4,5 m, +4 em Percepção ou CA +1 (PDF p.38). Não modelado: escolha.",
       "Afinidade com a Tormenta: não recebe níveis negativos causados por efeitos da Tormenta, mas pode receber níveis negativos de outras fontes (PDF p.38)."
+    ]
+  },
+  gnomo: {
+    nome: "Gnomo",
+    fonte: "Livro Tormenta RPG, PDF p.41 (Outras Raças); regra de tamanho Pequeno em PDF p.32",
+    ajustes: { inteligencia: 4, constituicao: 2, forca: -2 },
+    ajustesFonte: "Tormenta RPG, PDF p.41: +4 em Inteligência, +2 em Constituição, –2 em Força.",
+    bonusTamanho: { ca: 1, ataque: 1 },
+    tamanho: "Pequeno (PDF p.41: traço de tamanho Pequeno; regra em PDF p.32)",
+    deslocamento: "6 m (regra de criaturas Pequenas, PDF p.32; o PDF p.41 não repete o valor)",
+    tracos: [
+      "Tamanho Pequeno: +1 na CA e +1 nas jogadas de ataque, +4 em Furtividade, e usa armas menores (PDF p.41; regra em PDF p.32).",
+      "Visão na penumbra: ignora camuflagem por escuridão, exceto a total, e vê duas vezes mais longe que humanos com pouca luz (PDF p.41).",
+      "+4 em testes de Intuição e de Ofício (alquimia) (PDF p.41).",
+      "Classe de armadura +4 contra adversários de tamanho Grande ou maior (PDF p.41). Não modelado: condicional.",
+      "Comunicação com animais livre, como a magia falar com animais (PDF p.41).",
+      "Com Carisma 10 ou mais, lança livremente globos de luz, som fantasma e prestidigitação (PDF p.41). NÃO VERIFICADO: o livro diz 'livremente' e não fixa custo em PM nem frequência.",
+      "Ajuste de nível +2 em comparação ao D20 padrão (PDF p.41: vale para as raças de Outras Raças)."
+    ]
+  },
+  "meio-elfo": {
+    nome: "Meio-Elfo",
+    fonte: "Livro Tormenta RPG, PDF p.41 e p.42. Regra OPCIONAL no livro: 'Se quiser, use as seguintes regras para meio-elfos' (PDF p.42)",
+    ajustes: { destreza: 2 },
+    ajustesFonte: "Tormenta RPG, PDF p.42: +2 em Destreza e +2 em outra habilidade à escolha, exceto Constituição. A segunda escolha NÃO é aplicada pelo app.",
+    bonusTamanho: { ca: 0, ataque: 0 },
+    tamanho: "Médio (PDF p.32: tamanho não citado entre os traços, logo Médio)",
+    deslocamento: "9 m (PDF p.32: deslocamento de criatura Média)",
+    tracos: [
+      "+2 em outra habilidade à escolha do jogador, exceto Constituição (PDF p.42). Não modelado: escolha.",
+      "Visão na penumbra: ignora camuflagem por escuridão, exceto a total, e vê duas vezes mais longe que humanos com pouca luz (PDF p.42).",
+      "1 talento bônus à escolha do jogador (PDF p.42).",
+      "1 perícia treinada extra, que não precisa ser escolhida entre as perícias de classe (PDF p.42).",
+      "+2 em testes de Vontade contra encantamentos (PDF p.42).",
+      "+2 em testes de Identificar Magia e Percepção (PDF p.42).",
+      "Ajuste de nível +2 em comparação ao D20 padrão (PDF p.41: vale para as raças de Outras Raças)."
     ]
   }
 };
