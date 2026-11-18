@@ -133,4 +133,17 @@ teste("limite do redimensionamento: 300 px no maior lado e JPEG 0.8", () => {
   assert.strictEqual(avaliar(ctx, "TRPG_IMAGEM.maxBytesOriginal"), 5 * 1024 * 1024);
 });
 
+teste("aviso da imagem fica na ficha: sobrevive a re-renderizações e some ao trocar ou remover a imagem", () => {
+  const r = avaliar(ctx, `(() => {
+    const AV = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
+    state.personagem.imagem = ${JSON.stringify(JPEG)};
+    trpgAvisoImagem = { para: state.personagem.imagem, texto: AV };
+    const a = trpgCorpoEtapa(1).includes(AV), b = trpgCorpoEtapa(1).includes(AV);
+    state.personagem.imagem = ${JSON.stringify(PNG)}; const trocou = !trpgCorpoEtapa(1).includes(AV);
+    state.personagem.imagem = ""; trpgAvisoImagem = { para: "", texto: "" };
+    return { sobreviveu: a && b, trocou, removeu: !trpgCorpoEtapa(1).includes(AV) };
+  })()`);
+  assert.deepStrictEqual(r, { sobreviveu: true, trocou: true, removeu: true });
+});
+
 sair("imagem");
