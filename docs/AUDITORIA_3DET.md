@@ -67,7 +67,10 @@ Conferidas no PDF `3det_victory.pdf` (289 pp.) em 2026-11-18. Página = número 
 | Cópia / Clone | Nome **Clone**, id `clone`, custo 1. `copia` removido. | p51 (regra); p216, p220, p275, p277 (fichas de NPC) | O livro define a regra como Clone. As fichas de NPC escrevem Cópia com o mesmo efeito. Um só item. |
 | Insano / Transtorno | `insano` trocado por **Transtorno**, −1 cada, pode repetir. Escolha de uma das oito opções (cleptomania, compulsão, distração, fantasia, fobia, megalomania, mitomania, paranoia). | p74-75 | O livro não tem Insano. Tem "Transtorno –1pt cada" com oito opções. |
 | Código | **Nove** itens: 1ª e 2ª Lei de Asimov, Caçador, Combate, Derrota, Gratidão, Heróis, Honestidade, Redenção. Lista em `TDT_EFEITOS_DESVANTAGENS.codigo.lista`. | p68 | O livro lista nove itens. As duas Leis de Asimov contam como dois. |
-| Artefato e Grimório | Custo **1 pt ou mais, sem máximo**. O validador aceita acima de 9 (`custoAberto`). Não acumulam (vantagem única). | p48 (Artefato), p54-55 (Grimório) | O livro não dá teto de custo. "Um item especial, único". O limite de 1 arma, 1 armadura e 2 acessórios (p139) não é aplicado: a vantagem não guarda o tipo do item. |
+| Artefato | Custo **1 pt ou mais, sem teto** (`custoAberto`, sem `custoMax`). Cada entrada é **um item** (`itens: true`): pode repetir, tem campo `tipo` (arma, armadura ou acessório) e não usa quantidade. Limite por personagem: **1 arma, 1 armadura e 2 acessórios**. | p48 (vantagem), p139 (limite e tipos) | O livro não dá teto de custo. O p139 diz "Um personagem pode usar no máximo uma arma, uma armadura e dois acessórios". Para o limite ter efeito, o app precisa de mais de uma entrada, por isso não é vantagem única. |
+| Grimório | Custo **1 pt ou mais, sem teto**. Sem limite de itens nem de tipo. | p54-55 | Conferido: o texto não traz limite. |
+| Ataque Especial e Defesa Especial | Lista completa das variações, com custo em PM. Antes listava só 4 ou 5. | p49 (Ataque), p51-52 (Defesa) | O livro tem 12 variações de ataque e 9 de defesa. Os custos foram conferidos no texto. |
+| Transtorno (escolha) | A escolha das oito opções fica em `subtipo` (campo novo na desvantagem). Sem escolha, erro nos dois modos. A ficha mostra o efeito da opção escolhida, com a página. | p74-75 | O livro diz "Escolha um entre os seguintes". Os efeitos das oito opções já estavam no catálogo (`rules-efeitos-desvantagens.js`) e foram conferidos. |
 | Kemono | Fonte trocada de PT para **PDF p95**. Cacoete agora lista as seis opções: Antipático, Atrapalhado, Fracote, Frágil, Indeciso ou Tapado. | p95 | Texto do livro. |
 | Vampiro | Fonte trocada de PT para **PDF p102**. Dependência não entra para o jogador. | p102 | O livro diz que Dependência "está aqui apenas para vilões NPCs". |
 | "Pequeno" (Inventário) | Níveis com nomes do livro: 0 Seminventário, 1 Pequeno, 2 Grande, 3 Supremo, com os itens de cada nível. | p58 | "Pequeno" é o nível 1 pt do Inventário, não vantagem à parte. |
@@ -76,22 +79,26 @@ Conferidas no PDF `3det_victory.pdf` (289 pp.) em 2026-11-18. Página = número 
 ## Decisões de interpretação (conferir)
 
 1. **Limite de −2 pelo valor, não pela contagem. Resolvido pelo livro:** "até –2 pontos em desvantagens" (p36) e "pode acumular até –2 pontos em desvantagens... além desse limite..., mas sem receber mais pontos" (p65). A soma é pelo valor, e o app já dá no máximo 2 pontos (`tdtPontosDeDesvantagens`). Mudança junto: somar mais de −2 deixou de ser erro e virou aviso, porque o livro permite a desvantagem extra. Desvantagens de arquétipo não entram no limite (p36).
-2. **Perícia da Maestria na `nota`.** O formato de estado tem só `{id, qtd, custo, nota}`, então a perícia escolhida para cada Maestria fica em `nota`. Nas outras vantagens, `nota` é texto livre. Isso impede uma nota livre em Maestria, e a tela mostra essa restrição.
-3. **Stepper e toasts.** O `dnd5e/ui-theme.js` depende de globais do ui.js do D&D, então não foi carregado. O stepper segue as mesmas classes (`stepper`, `stepper-dots`, `stepper-track`) do `core/theme.css`. Confirmações usam `VFTool.toast`.
-4. **Nível de poder "Pontos livres".** Os pontos totais são editáveis apenas nesse caso. Nos outros, o campo fica somente leitura com o valor do nível.
-5. **Backup inclui o modo.** O campo `estado` guarda `modo` e `personagem`. A etapa não entra no backup, e a importação abre a ficha na etapa 1.
+2. **Limite de Artefato é regra de jogo.** O p139 diz "Um personagem pode usar no máximo...", sem mencionar o mestre. Por isso o validador trata como regra de jogo: erro no modo estrito e aviso no livre (mesmo nível da Maestria e das incompatibilidades). O app conta os itens da ficha, não os equipados, porque não guarda o que está em uso. Tipo ausente vira pendência de regra; tipo fora da lista é erro de formato.
+3. **Fonte das vantagens e desvantagens.** Todas as entradas com fonte PT ou KI agora citam página do Victory (`3DeT Victory, PDF pNN`), obtida por busca no texto do livro. A página foi aceita quando o cabeçalho da entrada no livro (nome e custo) batia com o `rules.js`. Nenhuma entrada ficou sem página. Os textos de efeito do KI (campo `desc`) não foram reescritos: só a fonte mudou.
+4. **Perícia da Maestria na `nota`.** O formato de estado tem só `{id, qtd, custo, nota}`, então a perícia escolhida para cada Maestria fica em `nota`. Nas outras vantagens, `nota` é texto livre. Isso impede uma nota livre em Maestria, e a tela mostra essa restrição.
+5. **Stepper e toasts.** O `dnd5e/ui-theme.js` depende de globais do ui.js do D&D, então não foi carregado. O stepper segue as mesmas classes (`stepper`, `stepper-dots`, `stepper-track`) do `core/theme.css`. Confirmações usam `VFTool.toast`.
+6. **Nível de poder "Pontos livres".** Os pontos totais são editáveis apenas nesse caso. Nos outros, o campo fica somente leitura com o valor do nível.
+7. **Backup inclui o modo.** O campo `estado` guarda `modo` e `personagem`. A etapa não entra no backup, e a importação abre a ficha na etapa 1.
 
 ## Lacunas
 
-Lista de `TDT_RULES.lacunas`, mais um item sobre exportação:
+Lista de `TDT_RULES.lacunas`, revista em 2026-11-18 contra o livro:
 
-- Efeito da maioria das vantagens e desvantagens. Só as do Kit Introdutório estão descritas.
-- Arquétipos Abissal e Alien: efeitos não lidos. Aberrante custa 1 pt (PDF p79); Anão custa 1 pt (PDF p82), conferido no livro 3DeT Victory em 2026-11-18.
-- Kits e regras completas de veículos e artefatos.
-- 3D&T Alpha (5 características) não implementado. Só o Victory, com 3 atributos.
+- **Efeitos das vantagens e desvantagens.** O app tem um resumo curto de cada uma (`rules-efeitos-*.js`), com página em `fonte`. Não é o texto completo do livro (p45-75).
+- **Poderes de arquétipo** (Deformidade, Teratismo, Desfavor, Xenobiologia, Talento, Abascanto). O texto confere com o livro (p79-82), mas o app não aplica o efeito nas contas. Não há vantagem equivalente.
+- **Artefatos.** O limite por tipo está aplicado (p139). Faltam as Qualidades de Artefatos (Abençoado, Acurado, Amaldiçoado etc., p139), que mudam o custo em XP. Veículos (p140-141) têm ficha própria e não são criados aqui. O Victory não traz kits.
+- **Fora do escopo: 3D&T Alpha** (5 características). É outro sistema e não é implementado. Este app cria fichas só do 3D&T Victory (3 atributos).
 - Sem exportação para VTT. Nenhum VTT foi verificado para este sistema.
-- Pendências para `ui.js` (fora do escopo desta etapa): (a) os selects de Artefato e Grimório usam `custoMax` 9 e mostram "custo 1 a 9"; o livro não tem teto, então o texto e a lista precisam mudar (linhas 146 e 179); (b) Transtorno precisa de um campo para escolher uma das oito opções; hoje a escolha fica em nota livre; (c) Artefato sem campo de tipo (arma, armadura, acessório), então o limite de 1/1/2 do livro (p139) não é checado.
-- Nas outras entradas, as fontes ainda citam PT e KI. Só as entradas listadas em "Decisões pelo livro" foram trocadas.
+
+Pendências de `ui.js` da rodada anterior, resolvidas nesta: custo "1 ou mais" para Artefato e Grimório (sem "a 9"); escolha de Transtorno por campo próprio; campo de tipo em Artefato com limite validado.
+
+Bug achado e corrigido: 21 desvantagens (ex.: Ambiente, Bateria, Amnésia) tinham resumo no catálogo, mas o carregador só preenchia `desc` quando o campo existia como `null`. Agora o resumo aparece em todas.
 
 ## O que não foi verificado
 
@@ -104,10 +111,10 @@ Lista de `TDT_RULES.lacunas`, mais um item sobre exportação:
 ## Como rodar os testes
 
 ```
-node 3det/tests/run-all.js     # engine (15), validações (38), backup (13), release (10), sugestão (10): 86 testes
+node 3det/tests/run-all.js     # engine (15), validações (38), backup (13), release (10), sugestão (10), imagem (11), migração (3), livro 3DeT Victory (16)
 node 3det/tests/e2e.js         # navegador: precisa de Chrome e de Playwright (global ou local)
 ```
 
 O `run-all.js` sai com código diferente de zero se algum teste falhar. O `e2e.js` percorre as sete etapas, baixa o backup, reimporta, abre o PDF e confere a ausência de rolagem lateral e de erros de console em 1100 px e 360 px.
 
-Resultado da última rodada das decisões pelo livro (2026-11-18): `run-all.js` passa nos 86 testes. O `e2e.js` não foi rodado nesta rodada (precisa de Chrome e Playwright), e não está confirmado que ele ainda passa com a troca de Insano por Transtorno e de Cópia por Clone.
+Resultado da rodada de 2026-11-18 (itens do livro: Artefato, Transtorno, fontes, lacunas): `run-all.js` passa em todos os testes, incluindo os 16 de `livro_3det.test.js`. O `e2e.js` (Chrome) também passou: fluxo completo, sem erro de console e sem rolagem lateral em 1100 px e 360 px.

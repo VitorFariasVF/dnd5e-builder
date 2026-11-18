@@ -51,12 +51,12 @@ var TDT_EFEITOS_DESVANTAGENS = {
   }
 };
 
-/* Liga os efeitos ao catálogo: só preenche desc que ainda está null. */
+/* Liga os efeitos ao catálogo: preenche desc quando falta (null ou ausente). */
 (function(){
   var R = window.TDT_RULES;
   if(!R || !Array.isArray(R.desvantagens)) return;
   R.desvantagens.forEach(function(d){
     var e = TDT_EFEITOS_DESVANTAGENS[d.id];
-    if(d.desc === null && d.desc !== undefined && e && e.desc) d.desc = e.desc;
+    if(!d.desc && e && e.desc) d.desc = e.desc;
   });
 })();

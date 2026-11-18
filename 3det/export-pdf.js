@@ -52,8 +52,9 @@ function tdtPdfVantagens(p){
     const custo = tdtCustoVantagem(v);
     const qtd = r.multiplo && v.qtd > 1 ? " × " + v.qtd : "";
     const nota = r.id === "maestria" ? " · Maestria em " + ((tdtPericiaRegra(v.nota) || {}).nome || "perícia a definir") : (v.nota ? " · " + v.nota : "");
+    const tipoItem = r.itens && v.tipo ? " · " + (((TDT_RULES.artefatoTipos || []).find(t => t.id === v.tipo) || {}).nome || v.tipo) : "";
     const efeito = r.desc ? r.desc : TDT_NOTA_EFEITO;
-    return `<strong>${tdtEsc(r.nome)}</strong> (${tdtEsc(custo === null ? "custo a definir" : custo + " pt")}${tdtEsc(qtd)})${tdtEsc(nota)}. <span class="suave">${tdtEsc(efeito)}</span>`;
+    return `<strong>${tdtEsc(r.nome)}</strong> (${tdtEsc(custo === null ? "custo a definir" : custo + " pt")}${tdtEsc(qtd)})${tdtEsc(tipoItem)}${tdtEsc(nota)}. <span class="suave">${tdtEsc(efeito)}</span>`;
   }), "Nenhuma vantagem escolhida.");
 }
 
@@ -61,9 +62,10 @@ function tdtPdfDesvantagens(p){
   return tdtPdfLinhas((p.desvantagens || []).map(d => {
     const r = tdtDesvantagemRegra(d.id);
     if(!r) return tdtEsc(d.id + " (fora da lista)");
+    const subtipo = d.id === "transtorno" && d.subtipo ? " (" + (((TDT_RULES.transtornosOpcoes || []).find(t => t.id === d.subtipo) || {}).nome || d.subtipo) + ")" : "";
     const nota = d.nota ? " · " + d.nota : "";
     const efeito = r.desc ? r.desc : TDT_NOTA_EFEITO;
-    return `<strong>${tdtEsc(r.nome)}</strong> (${tdtEsc(d.valor)})${tdtEsc(nota)}. <span class="suave">${tdtEsc(efeito)}</span>`;
+    return `<strong>${tdtEsc(r.nome)}${tdtEsc(subtipo)}</strong> (${tdtEsc(d.valor)})${tdtEsc(nota)}. <span class="suave">${tdtEsc(efeito)}</span>`;
   }), "Nenhuma desvantagem escolhida.");
 }
 

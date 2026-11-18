@@ -44,13 +44,22 @@ function tdtChecarPericias(p, add){
 }
 
 function tdtChecarVantagens(p, reg, add){
-  const vistos = new Set();
+  const vistos = new Set(), porTipo = {};
   (p.vantagens || []).forEach((v, i) => {
     const campo = "vant-item-" + i, r = tdtVantagemRegra(v.id);
     if(!r){ add("erro", "Vantagem fora da lista de rules.js: " + v.id + ".", campo); return; }
-    if(!r.multiplo && vistos.has(v.id)) add("erro", r.nome + " só pode ser escolhida uma vez.", campo);
+    if(!r.multiplo && !r.itens && vistos.has(v.id)) add("erro", r.nome + " só pode ser escolhida uma vez.", campo);
     vistos.add(v.id);
-    if(r.multiplo){
+    if(r.itens){
+      /* Artefato: cada entrada é um item, com tipo. Qtd não se aplica. */
+      const t = (TDT_RULES.artefatoTipos || []).find(x => x.id === v.tipo);
+      if(v.tipo === undefined || v.tipo === null || v.tipo === "") add(reg, "Escolha o tipo do Artefato: arma, armadura ou acessório.", "vant-tipo-" + i);
+      else if(!t) add("erro", "Tipo de Artefato inválido: use arma, armadura ou acessório.", "vant-tipo-" + i);
+      else {
+        porTipo[t.id] = (porTipo[t.id] || 0) + 1;
+        if(porTipo[t.id] > t.max) add(reg, "No máximo " + t.max + " " + t.nome.toLowerCase() + (t.max > 1 ? "s" : "") + " de Artefato por personagem (livro, p.139).", campo);
+      }
+    } else if(r.multiplo){
       if(!tdtInteiro(v.qtd) || v.qtd < 1) add("erro", "Quantidade de " + r.nome + " deve ser um inteiro de 1 ou mais.", campo);
     } else if(v.qtd !== undefined && v.qtd !== null && v.qtd !== 1){
       add("erro", r.nome + " não pode ser comprada mais de uma vez.", campo);
@@ -80,6 +89,9 @@ function tdtChecarDesvantagens(p, reg, add){
     const min = r.valor !== undefined ? r.valor : r.valorMin;
     const max = r.valor !== undefined ? r.valor : r.valorMax;
     if(!tdtInteiro(d.valor) || d.valor < min || d.valor > max) add("erro", "Valor de " + r.nome + " deve ser de " + min + " a " + max + ".", campo);
+    /* Transtorno: o livro pede uma das oito opções (PDF p74-75). Sem ela, o efeito não existe. */
+    if(r.id === "transtorno" && !(TDT_RULES.transtornosOpcoes || []).some(x => x.id === d.subtipo))
+      add("erro", "Escolha um dos oito transtornos do livro (PDF p.74-75).", "desv-subtipo-" + i);
   });
 }
 

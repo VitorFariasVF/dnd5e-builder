@@ -26,8 +26,8 @@ function estadoPadrao(){
       atributos: { P: null, H: null, R: null },
       arquetipo: "",             // id de rules.arquetipos ou "" (vazio)
       pericias: [],              // ids de rules.pericias
-      vantagens: [],             // [{ id, qtd, custo, nota }]
-      desvantagens: [],          // [{ id, valor, nota }]
+      vantagens: [],             // [{ id, qtd, custo, nota, tipo }]; tipo só em Artefato (arma|armadura|acessorio)
+      desvantagens: [],          // [{ id, valor, nota, subtipo }]; subtipo só em Transtorno (id de rules.transtornosOpcoes)
       historia: "",
       anotacoes: ""
     }
@@ -54,6 +54,9 @@ function ensureStateShape(){
   /* Ids renomeados: Cópia virou Clone e Insano virou Transtorno (livro 3DeT Victory). */
   p.vantagens.forEach(v => { if(v && v.id === "copia") v.id = "clone"; });
   p.desvantagens.forEach(d => { if(d && d.id === "insano") d.id = "transtorno"; });
+  /* Subtipo de Transtorno: versões antigas guardavam com acento ("compulsão"); o id é sem acento. */
+  const semAcento = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  p.desvantagens.forEach(d => { if(d && typeof d.subtipo === "string" && d.subtipo) d.subtipo = semAcento(d.subtipo); });
   p.imagem = tdtImagemValida(p.imagem) ? p.imagem : "";
   if(!["livre", "estrito"].includes(state.modo)) state.modo = "livre";
   if(!TDT_ETAPAS.some(e => e.n === state.etapa)) state.etapa = 1;

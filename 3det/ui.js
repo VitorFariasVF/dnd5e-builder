@@ -145,6 +145,7 @@ function tdtCorpoEtapa(n){
 function tdtTextoCusto(r){
   if(r.custo !== undefined) return "custo " + r.custo + (r.multiplo ? " (cada)" : "");
   if(Array.isArray(r.custoOpcoes)) return "custo " + r.custoOpcoes.join(", ");
+  if(r.custoAberto) return "custo " + r.custoMin + " ou mais";
   return "custo " + r.custoMin + " a " + r.custoMax;
 }
 
@@ -158,7 +159,7 @@ function tdtNotaEfeito(r){
 }
 
 function tdtCatalogoVantagem(r){
-  const jaTem = !r.multiplo && (state.personagem.vantagens || []).some(x => x.id === r.id);
+  const jaTem = !r.multiplo && !r.itens && (state.personagem.vantagens || []).some(x => x.id === r.id);
   return `<li class="card-nested tdt-item" data-nome="${tdtEsc(tdtNormalizar(r.nome))}">
     <div><strong>${tdtEsc(r.nome)}</strong> <small class="muted">${tdtEsc(tdtTextoCusto(r))}</small><br><small class="muted">${tdtNotaEfeito(r)}</small></div>
     <div class="actions"><button type="button" class="small" data-acao="vant-add" data-id="${r.id}"${jaTem ? " disabled" : ""}>Adicionar</button></div></li>`;
@@ -182,6 +183,10 @@ function tdtItemVantagem(v, i){
     if(r.custoAberto) controles.push(`<label for="vant-custo-${i}">Custo escolhido (1 ou mais)</label><input id="vant-custo-${i}" type="number" inputmode="numeric" min="1" step="1" data-campo="vant-custo" data-i="${i}" value="${tdtEsc(v.custo === undefined || v.custo === null ? "" : v.custo)}">`);
     else controles.push(`<label for="vant-custo-${i}">Custo escolhido</label><select id="vant-custo-${i}" data-campo="vant-custo" data-i="${i}">${opcoes.map(o => `<option value="${o}"${o === v.custo ? " selected" : ""}>${o}</option>`).join("")}</select>`);
   }
+  if(r.itens){
+    const ops = (TDT_RULES.artefatoTipos || []).map(t => `<option value="${t.id}"${t.id === v.tipo ? " selected" : ""}>${tdtEsc(t.nome)}</option>`).join("");
+    controles.push(`<label for="vant-tipo-${i}">Tipo do item</label><select id="vant-tipo-${i}" data-campo="vant-tipo" data-i="${i}"><option value="">Escolha um tipo</option>${ops}</select>`);
+  }
   if(r.id === "maestria"){
     const ops = (state.personagem.pericias || []).map(id => { const pr = tdtPericiaRegra(id); return pr ? `<option value="${pr.id}"${pr.id === v.nota ? " selected" : ""}>${tdtEsc(pr.nome)}</option>` : ""; }).join("");
     controles.push(`<label for="vant-nota-${i}">Perícia da Maestria</label><select id="vant-nota-${i}" data-campo="vant-nota" data-i="${i}"><option value="">Escolha uma perícia</option>${ops}</select>`);
@@ -202,13 +207,17 @@ function tdtItemDesvantagem(d, i){
     const ops = Array.from({ length: r.valorMax - r.valorMin + 1 }, (_, k) => r.valorMin + k);
     controles.push(`<label for="desv-valor-${i}">Valor</label><select id="desv-valor-${i}" data-campo="desv-valor" data-i="${i}">${ops.map(o => `<option value="${o}"${o === d.valor ? " selected" : ""}>${o}</option>`).join("")}</select>`);
   }
+  let efeitoEscolhido = "";
   if(d.id === "transtorno"){
-    const tipos = ["cleptomania", "compulsão", "distração", "fantasia", "fobia", "megalomania", "mitomania", "paranoia"];
-    controles.push(`<label for="desv-subtipo-${i}">Transtorno</label><select id="desv-subtipo-${i}" data-campo="desv-subtipo" data-i="${i}"><option value="">Escolha um</option>${tipos.map(t => `<option value="${t}"${t === d.subtipo ? " selected" : ""}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join("")}</select>`);
+    const ops = (TDT_RULES.transtornosOpcoes || []).map(t => `<option value="${t.id}"${t.id === d.subtipo ? " selected" : ""}>${tdtEsc(t.nome)}</option>`).join("");
+    controles.push(`<label for="desv-subtipo-${i}">Transtorno</label><select id="desv-subtipo-${i}" data-campo="desv-subtipo" data-i="${i}"><option value="">Escolha um</option>${ops}</select>`);
+    const ef = typeof TDT_EFEITOS_DESVANTAGENS !== "undefined" && TDT_EFEITOS_DESVANTAGENS.transtorno && TDT_EFEITOS_DESVANTAGENS.transtorno.opcoes;
+    const op = ef && d.subtipo && ef[d.subtipo];
+    if(op) efeitoEscolhido = `<br><small class="muted">${tdtEsc(op.desc)} (PDF p.74-75)</small>`;
   }
   controles.push(`<label for="desv-nota-${i}">Nota (opcional)</label><input id="desv-nota-${i}" data-campo="desv-nota" data-i="${i}" value="${tdtEsc(d.nota || "")}" autocomplete="off">`);
   return `<li class="card-nested" id="desv-item-${i}" tabindex="-1">
-    <div><strong>${tdtEsc(r.nome)}</strong> <small class="muted">${tdtEsc("valor " + (d.valor === undefined || d.valor === null ? "a definir" : d.valor))}</small><br><small class="muted">${tdtNotaEfeito(r)}</small></div>
+    <div><strong>${tdtEsc(r.nome)}</strong> <small class="muted">${tdtEsc("valor " + (d.valor === undefined || d.valor === null ? "a definir" : d.valor))}</small><br><small class="muted">${tdtNotaEfeito(r)}</small>${efeitoEscolhido}</div>
     <div class="tdt-controles">${controles.join("")}</div>
     <div class="actions"><button type="button" class="small danger" data-acao="desv-remover" data-i="${i}">Remover</button></div></li>`;
 }
@@ -342,6 +351,7 @@ function tdtAplicarCampo(campo, el){
     }
     case "vant-qtd": if(p.vantagens[i]) p.vantagens[i].qtd = numero(); break;
     case "vant-custo": if(p.vantagens[i]) p.vantagens[i].custo = numero(); break;
+    case "vant-tipo": if(p.vantagens[i]) p.vantagens[i].tipo = texto || null; break;
     case "vant-nota": if(p.vantagens[i]) p.vantagens[i].nota = texto; break;
     case "desv-valor": if(p.desvantagens[i]) p.desvantagens[i].valor = numero(); break;
     case "desv-nota": if(p.desvantagens[i]) p.desvantagens[i].nota = texto; break;
@@ -408,7 +418,7 @@ function tdtAdicionarVantagem(id){
   const r = tdtVantagemRegra(id);
   if(!r) return;
   const custo = r.custo !== undefined ? r.custo : Array.isArray(r.custoOpcoes) ? r.custoOpcoes[0] : r.custoMin;
-  state.personagem.vantagens.push({ id, qtd: 1, custo, nota: "" });
+  state.personagem.vantagens.push(r.itens ? { id, qtd: 1, custo, nota: "", tipo: null } : { id, qtd: 1, custo, nota: "" });
 }
 
 function tdtAdicionarDesvantagem(id){
