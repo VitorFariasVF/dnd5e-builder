@@ -212,6 +212,85 @@ function cocFichaCombate(inv){
   return { db: dbTexto, dbConhecido: !!(der && der.danoConhecido), combate, armas };
 }
 
+/* ---- Criação orientada: sugestão de distribuição dos pontos de ocupação ----
+   Função pura (sem estado nem DOM). Espalha `pontos` (o pool de poolOcupacao) entre as perícias que
+   periciasDeOcupacao aceita: crédito, perícias fixas, escolhas de grupo e perícias livres.
+   Regra usada (a mesma que validarPericiasOcupacao confere):
+   - cada perícia recebe pontos de ocupação um a um, sempre para a que tem menos (empate: ordem da ocupação);
+   - total da perícia (base + pontos de ocupação) não passa de COC_TETO_PERICIA.valor;
+   - o crédito também fica dentro da faixa da ocupação (ocupacao.credito). Começa perto de pontos / nº de perícias.
+   Escolhas: as que o jogador já fez (escolhas.grupos e escolhas.livres) são mantidas. O que falta vem das primeiras
+   opções da lista do app e volta marcado em escolhaSugerida. Livres só saem de COC_PERICIAS, sem mitos e sem crédito.
+   Retorna { ok, motivo?, pontos, distribuicao, escolhasGrupo, livresOcupacao, escolhaSugerida }. `car` pode ser null:
+   então perícias com base variável (DES/2, EDU) contam como 0 no teto. */
+function sugerirDistribuicaoOcupacao(ocupacao, pontos, car, escolhas){
+  if(!ocupacao) return { ok: false, motivo: "sem_ocupacao" };
+  const total = Number(pontos);
+  if(!Number.isInteger(total) || total < 0) return { ok: false, motivo: "pontos_invalidos" };
+  const esc = escolhas || {};
+  const usadas = new Set(ocupacao.pericias);
+
+  const escolhasGrupo = [], grupoSugerido = [];
+  (ocupacao.grupos || []).forEach((g, i) => {
+    const feitas = [...new Set(((esc.grupos || [])[i] || []).filter(id => g.opcoes.includes(id)))].slice(0, g.n);
+    feitas.forEach(id => usadas.add(id));
+    let sugerida = false;
+    for(const id of g.opcoes){
+      if(feitas.length >= g.n) break;
+      if(usadas.has(id)) continue;
+      feitas.push(id); usadas.add(id); sugerida = true;
+    }
+    escolhasGrupo.push(feitas);
+    grupoSugerido.push(sugerida);
+  });
+
+  /* Perícias que a tela oferece como livres: as da lista do app, sem as fixas, as de grupo, mitos e crédito. */
+  const fixasOuGrupo = new Set([...ocupacao.pericias, ...(ocupacao.grupos || []).flatMap(g => g.opcoes)]);
+  const candidatasLivres = COC_PERICIAS.map(p => p.id).filter(id => !fixasOuGrupo.has(id) && id !== "mitos" && id !== "credito");
+  const livresEscolhidas = [...new Set((esc.livres || []).filter(id => candidatasLivres.includes(id) && !usadas.has(id)))].slice(0, ocupacao.livres || 0);
+  livresEscolhidas.forEach(id => usadas.add(id));
+  let livreSugerida = false;
+  for(const id of candidatasLivres){
+    if(livresEscolhidas.length >= (ocupacao.livres || 0)) break;
+    if(usadas.has(id)) continue;
+    livresEscolhidas.push(id); usadas.add(id); livreSugerida = true;
+  }
+
+  const teto = COC_TETO_PERICIA.valor;
+  const faixaCredito = ocupacao.credito || [0, teto];
+  const ids = [...new Set(["credito", ...ocupacao.pericias, ...escolhasGrupo.flat(), ...livresEscolhidas])].filter(id => cocPericia(id));
+  const cap = id => {
+    if(id === "credito") return Math.min(faixaCredito[1], teto);
+    return Math.max(0, teto - baseDaPericia(cocPericia(id), car));
+  };
+  const capacidade = ids.reduce((s, id) => s + cap(id), 0);
+  if(faixaCredito[0] > total) return { ok: false, motivo: "pontos_insuficientes", pontos: total };
+  if(total > capacidade) return { ok: false, motivo: "teto", pontos: total };
+
+  const outras = ids.filter(id => id !== "credito");
+  const valor = {};
+  outras.forEach(id => { valor[id] = 0; });
+  let credito = Math.min(cap("credito"), Math.max(faixaCredito[0], Math.floor(total / ids.length)));
+  let restante = total - credito;
+  while(restante > 0){
+    const alvo = outras.filter(id => valor[id] < cap(id))
+      .sort((a, b) => valor[a] - valor[b] || outras.indexOf(a) - outras.indexOf(b))[0];
+    if(!alvo) break;
+    valor[alvo]++; restante--;
+  }
+  if(restante > 0){
+    const extra = Math.min(restante, cap("credito") - credito);
+    credito += extra; restante -= extra;
+  }
+  valor.credito = credito;
+  if(restante > 0) return { ok: false, motivo: "teto", pontos: total };
+
+  const distribuicao = {};
+  Object.entries(valor).forEach(([id, v]) => { if(v > 0) distribuicao[id] = v; });
+  return { ok: true, pontos: total, distribuicao, escolhasGrupo, livresOcupacao: livresEscolhidas,
+    escolhaSugerida: { grupos: grupoSugerido, livres: livreSugerida } };
+}
+
 /* Resumo de como as contas batem (usado na tela e no PDF). */
 function resumoCriacao(inv){
   const car = caracteristicasFinais(inv);

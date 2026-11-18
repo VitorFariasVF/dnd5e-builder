@@ -226,15 +226,21 @@ function etapaOcupacao(){
   return `<h2>Ocupação</h2>${corpo}`;
 }
 
+/* Aviso do botão "Sugerir distribuição" (some ao trocar de etapa). */
+let avisoSugestao = "";
+function botaoSugerir(){
+  return `<p><button type="button" data-acao="sugerir-ocupacao" id="btn-sugerir-ocupacao">Sugerir distribuição</button>${avisoSugestao ? ` <span class="hint" role="status" data-sugestao>${esc(avisoSugestao)}</span>` : ""}</p>`;
+}
 function etapaPericiasOcupacao(){
   const inv = estado.investigador;
   const o = cocOcupacao(inv.ocupacaoId);
-  if(!o) return `<h2>Perícias de ocupação</h2><p class="hint">Escolha a ocupação primeiro.</p>`;
+  if(!o) return `<h2>Perícias de ocupação</h2>${botaoSugerir()}${avisoSugestao ? "" : `<p class="hint">Escolha a ocupação antes.</p>`}`;
   const car = caracteristicasFinais(inv);
   const r = resumoCriacao(inv);
   const fixas = [...o.pericias, ...o.grupos.flatMap(g => g.opcoes)];
   let html = `<h2>Perícias de ocupação</h2>
-    <p>Pontos de ocupação: <b data-live="gasto-ocup">${r.gastoOcupacao}</b> de <b data-live="pool-ocup">${r.poolOcupacao}</b> distribuídos. Crédito: <b data-live="tot-credito">${cocTotalPericia(inv, "credito", car)}</b>% (faixa ${o.credito[0]} a ${o.credito[1]}%).</p>`;
+    <p>Pontos de ocupação: <b data-live="gasto-ocup">${r.gastoOcupacao}</b> de <b data-live="pool-ocup">${r.poolOcupacao}</b> distribuídos. Crédito: <b data-live="tot-credito">${cocTotalPericia(inv, "credito", car)}</b>% (faixa ${o.credito[0]} a ${o.credito[1]}%).</p>
+    ${botaoSugerir()}`;
   if(o.grupos.length){
     html += o.grupos.map((g, gi) => {
       const sel = (inv.escolhasGrupo[gi] || []);
@@ -434,8 +440,40 @@ function idDoCampo(campo){
 }
 
 /* ---- ações ---- */
+/* Aplica a sugestão de pontos de ocupação. Não sobrescreve pontos já gastos; escolhas de grupo e livres já feitas são mantidas. */
+function sugerirOcupacaoNaFicha(){
+  const inv = estado.investigador;
+  const o = cocOcupacao(inv.ocupacaoId);
+  if(!o){ avisoSugestao = "Escolha a ocupação antes."; return render(); }
+  const car = caracteristicasFinais(inv);
+  if(!car){ avisoSugestao = "Preencha as características antes."; return render(); }
+  if(o.formula.alternativas && !o.formula.alternativas[inv.ocupacaoAlt]){
+    avisoSugestao = "Escolha a característica da fórmula de pontos antes.";
+    return render();
+  }
+  if(somaPontos(inv.pontosOcupacao) > 0){
+    avisoSugestao = "Já há pontos de ocupação distribuídos. A sugestão não foi aplicada para não sobrescrevê-los. Zere os campos para usá-la.";
+    return render();
+  }
+  const r = sugerirDistribuicaoOcupacao(o, poolOcupacao(inv, car), car, { grupos: inv.escolhasGrupo, livres: inv.livresOcupacao });
+  if(!r.ok){
+    avisoSugestao = r.motivo === "pontos_insuficientes" ? "Pontos insuficientes para o crédito mínimo desta ocupação." : "A distribuição passaria do teto de perícia. Confira as características.";
+    return render();
+  }
+  inv.pontosOcupacao = r.distribuicao;
+  inv.escolhasGrupo = r.escolhasGrupo;
+  inv.livresOcupacao = r.livresOcupacao;
+  const marcadas = r.escolhaSugerida.grupos.some(Boolean) || r.escolhaSugerida.livres;
+  avisoSugestao = marcadas
+    ? "Sugestão aplicada. Escolhas de grupo ou livres que faltavam vieram das primeiras opções: confira."
+    : "Sugestão aplicada. Confira e ajuste à vontade.";
+  salvar();
+  render();
+}
+
 function irPara(n){
   errosAtuais = [];
+  avisoSugestao = "";
   estado.etapa = Math.min(Math.max(1, n), COC_ETAPAS.length);
   salvar();
   render();
@@ -463,6 +501,7 @@ function acao(nome, el){
   switch(nome){
     case "avancar": return avancar();
     case "voltar": return voltar();
+    case "sugerir-ocupacao": return sugerirOcupacaoNaFicha();
     case "ir": return irPara(Number(el.dataset.etapa));
     case "rolar-car": rolarCaracteristica1(el.dataset.id); salvar(); return render();
     case "rolar-todas": COC_CARACTERISTICAS.forEach(c => rolarCaracteristica1(c.id)); salvar(); return render();
