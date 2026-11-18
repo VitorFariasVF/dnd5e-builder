@@ -75,7 +75,7 @@ teste("custo de vantagem de faixa usa o valor escolhido (Alcance 2, Inventário 
 });
 
 teste("custo de vantagem de opções só aceita o valor escolhido (Riqueza 8)", () => {
-  assert.strictEqual(calc("tdtCustoVantagem({ id: 'riqueza', qtd: 1, custo: 8, nota: '' })", {}), 8);
+  assert.strictEqual(calc("tdtCustoVantagem({ id: 'riqueza', qtd: 1, custo: 6, nota: '' })", {}), 6);
 });
 
 teste("desvantagens: o ganho é limitado a 2 (soma −3 vale 2 pontos, não 3)", () => {

@@ -110,7 +110,9 @@ function tdtCorpoEtapa(n){
         <li>PM <output data-saida="pm">a definir</output> <small class="muted">Pontos de Mana</small></li>
         <li>PV <output data-saida="pv">a definir</output> <small class="muted">Pontos de Vida</small></li>
       </ul>
-      <p class="muted">Cada ponto em atributo custa ${TDT_RULES.criacao.atributoCusto}. Valores de ${TDT_RULES.criacao.atributoMin} a ${TDT_RULES.criacao.atributoMax}.</p>`;
+      <p class="muted">Cada ponto em atributo custa ${TDT_RULES.criacao.atributoCusto}. Valores de ${TDT_RULES.criacao.atributoMin} a ${TDT_RULES.criacao.atributoMax}.</p>
+      <div class="actions"><button type="button" class="secondary" data-acao="sugerir-atributos">Sugerir atributos</button></div>
+      <p class="muted" id="sugestao-atributos" role="status" aria-live="polite"></p>`;
     case 4: return `
       <fieldset class="tdt-fieldset"><legend>Perícias (${TDT_RULES.periciaCusto} ponto cada)</legend>
         <div class="tdt-checks">${TDT_RULES.pericias.map(x => `<label class="tdt-check"><input type="checkbox" id="pericia-${x.id}" data-campo="pericia" data-id="${x.id}"${(p.pericias || []).includes(x.id) ? " checked" : ""}><span>${tdtEsc(x.nome)}${x.alias ? " (no Kit: " + tdtEsc(x.alias) + ")" : ""}</span></label>`).join("")}</div>
@@ -247,6 +249,33 @@ function tdtDetalheArquetipo(id){
   const pendente = /não lidos|NÃO VERIFICADO/i.test(r.fonte) ? " Efeitos não lidos ou não verificados: confira no manual." : "";
   const desv = (r.desvantagens || []).length ? r.desvantagens.join("; ") : "nenhuma";
   return `${r.nome}. Custo: ${custo}. Poderes: ${poderes}. Desvantagens do arquétipo: ${desv} (não contam no limite de −2).${pendente} Fonte: ${r.fonte}.`;
+}
+
+/* Criação orientada (etapa 3): preenche P, H e R com a sugestão equilibrada do nível e do arquétipo.
+   Pede confirmação antes de trocar atributos que já têm valor. Atualiza a tela sem repintar. */
+function tdtSugerirAtributosNaTela(){
+  const p = state.personagem, saida = document.getElementById("sugestao-atributos");
+  const mostrar = t => { if(saida) saida.textContent = t; };
+  const nivelOk = TDT_RULES.niveisDePoder.some(x => x.id === p.nivelPoder);
+  if(!nivelOk){ mostrar("Escolha um nível de poder (Iniciante, Herói ou Veterano) na etapa 1 para sugerir atributos."); return; }
+  const arq = tdtArquetipoId(p);
+  if(!arq){ mostrar("Escolha um arquétipo na etapa 2 para sugerir atributos."); return; }
+  const s = tdtSugerirAtributos(p.nivelPoder, arq);
+  if(!s){ mostrar("Não há sugestão: o custo deste arquétipo ainda não foi verificado. Confira no manual."); return; }
+  const ja = TDT_RULES.atributos.some(a => p.atributos[a.id] !== null && p.atributos[a.id] !== undefined);
+  const resumo = TDT_RULES.atributos.map(a => a.id + s[a.id]).join(", ");
+  if(ja && !window.confirm("Os atributos já têm valores. Trocar pela sugestão (" + resumo + ")?")){
+    mostrar("Sugestão cancelada. Os atributos atuais foram mantidos.");
+    return;
+  }
+  TDT_RULES.atributos.forEach(a => {
+    p.atributos[a.id] = s[a.id];
+    const el = document.getElementById("atr-" + a.id);
+    if(el) el.value = s[a.id];
+  });
+  salvarEstado(); tdtAtualizarSaidas();
+  mostrar("Sugestão equilibrada, sem prioridade do livro (o manual não traz distribuição por arquétipo): " + resumo + ". "
+    + "Atributos gastam " + s.gastoAtributos + " de " + (s.pontosNivel - s.custoArquetipo) + " pontos disponíveis; sobram " + s.restante + " para perícias e vantagens.");
 }
 
 /* Atualiza os campos calculados (recursos, pontos, detalhes) sem recriar a tela. */
@@ -451,6 +480,7 @@ function tdtLigarEventos(){
     else if(acao === "desv-add"){ tdtAdicionarDesvantagem(id); salvarEstado(); tdtRender(); }
     else if(acao === "desv-remover"){ state.personagem.desvantagens.splice(i, 1); salvarEstado(); tdtRender(); }
     else if(acao === "limpar"){ if(window.confirm("Apagar a ficha atual e as fichas salvas deste navegador?")){ limparDadosSalvos(); substituirEstado(estadoPadrao()); tdtRender(); } }
+    else if(acao === "sugerir-atributos") tdtSugerirAtributosNaTela();
   });
   const aoMudar = ev => {
     const el = ev.target;

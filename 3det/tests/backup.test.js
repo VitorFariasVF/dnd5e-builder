@@ -14,7 +14,7 @@ const PREENCHIDA = `(() => {
   s.personagem.pericias = ["arte", "maquinas", "saber"];
   s.personagem.vantagens = [
     { id: "maestria", qtd: 2, custo: 1, nota: "arte" },
-    { id: "riqueza", qtd: 1, custo: 8, nota: "" },
+    { id: "riqueza", qtd: 1, custo: 6, nota: "" },
     { id: "alcance", qtd: 1, custo: 2, nota: "" }
   ];
   s.personagem.desvantagens = [{ id: "assombrado", valor: -2, nota: "" }, { id: "tapado", valor: -1, nota: "" }];

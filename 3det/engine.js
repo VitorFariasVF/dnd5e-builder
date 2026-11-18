@@ -141,3 +141,40 @@ function tdtIncompatibilidades(p){
   }
   return itens;
 }
+
+/* Criação orientada: sugestão de P, H e R para um nível de poder e um arquétipo. Função pura.
+   Orçamento dos atributos = pontos do nível − custo do arquétipo. Perícias, vantagens e desvantagens ficam fora.
+   Regras do manual (PT p.33–39 e p.130): atributos de 0 a 5, 1 ponto cada, sem passar de 5 na criação;
+   recomenda-se pelo menos 1 em cada. O livro NÃO traz distribuição sugerida por arquétipo: a sugestão é
+   equilibrada (diferença máxima de 1 entre atributos), sem prioridade do livro.
+   Devolve null se o nível ou o arquétipo não existem, ou se o custo do arquétipo não foi verificado.
+   `restante` são os pontos que sobram para perícias e vantagens (com nível 20 ou 35 os atributos não consomem tudo). */
+function tdtSugerirAtributos(nivelId, arquetipoId){
+  const nivel = tdtAchar(TDT_RULES.niveisDePoder, nivelId);
+  if(!nivel || !arquetipoId) return null;
+  const arq = tdtArquetipoRegra(arquetipoId);
+  if(!arq || !tdtInteiro(arq.custo)) return null;
+  const orcamento = nivel.pontos - arq.custo;
+  if(orcamento < 0) return null;
+
+  const { atributoMin, atributoMax, atributoRecomendadoMin, atributoCusto } = TDT_RULES.criacao;
+  const ids = TDT_RULES.atributos.map(a => a.id);
+  const unidades = Math.min(Math.floor(orcamento / atributoCusto), ids.length * atributoMax);
+  const minimo = unidades >= ids.length * atributoRecomendadoMin ? atributoRecomendadoMin : atributoMin;
+
+  const valores = {};
+  ids.forEach(id => { valores[id] = minimo; });
+  let usado = minimo * ids.length;
+  for(let k = 0; usado < unidades; k++){
+    const id = ids[k % ids.length];
+    if(valores[id] < atributoMax){ valores[id]++; usado++; }
+  }
+
+  const gastoAtributos = usado * atributoCusto;
+  return Object.assign({}, valores, {
+    pontosNivel: nivel.pontos,
+    custoArquetipo: arq.custo,
+    gastoAtributos,
+    restante: nivel.pontos - arq.custo - gastoAtributos
+  });
+}

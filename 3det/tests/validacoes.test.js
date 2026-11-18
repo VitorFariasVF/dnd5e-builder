@@ -114,10 +114,10 @@ teste("Alcance com custo 3 é recusado (faixa 1 a 2); custo 2 é aceito", () => 
   assert.ok(!temMsg(valida(5, q), "Custo de Alcance"));
 });
 
-teste("Riqueza com custo 3 é recusada (opções 2, 4, 8); custo 8 é aceito", () => {
+teste("Riqueza com custo 3 é recusada (opções 2, 4, 6, PDF p62); custo 6 é aceito", () => {
   const p = base(); p.vantagens[3].custo = 3;
-  assert.ok(temMsg(erros(valida(5, p)), "Custo de Riqueza deve ser 2, 4, 8"));
-  const q = base(); q.vantagens[3].custo = 8;
+  assert.ok(temMsg(erros(valida(5, p)), "Custo de Riqueza deve ser 2, 4, 6"));
+  const q = base(); q.vantagens[3].custo = 6;
   assert.ok(!temMsg(valida(5, q), "Custo de Riqueza"));
 });
 
