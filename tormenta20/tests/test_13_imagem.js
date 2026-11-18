@@ -41,7 +41,7 @@ const geraJpeg = () => JPEG_REDUZIDO;
 /* ui.js não é carregado pelo ambiente de teste (depende do DOM): só o trecho puro do formato é executado aqui. */
 {
   const fonteUi = require("fs").readFileSync(require("path").join(__dirname, "..", "ui.js"), "utf8");
-  const ini = fonteUi.indexOf("const T20_IMAGEM_AVISO_JPEG");
+  const ini = fonteUi.indexOf("/* Aviso do último envio");
   const fim = fonteUi.indexOf("function t20RedimensionarImagem");
   require("vm").runInContext(fonteUi.slice(ini, fim), ctx);
 }
@@ -58,6 +58,19 @@ t.check("formato: JPEG continua JPEG, sem aviso e sem tentar PNG", (() => {
   let tentou = false;
   const e = ctx.t20EscolherFormatoImagem("image/jpeg", () => { tentou = true; return PNG_ALFA; }, geraJpeg);
   return e.dados === JPEG_REDUZIDO && e.aviso === "" && !tentou;
+})());
+
+t.check("aviso da imagem: sobrevive a re-renderizações e some ao trocar ou remover a imagem", (() => {
+  ctx.state.personagem.imagem = JPEG_OK;
+  require("vm").runInContext(`t20AvisoImagem = { para: ${JSON.stringify(JPEG_OK)}, texto: T20_IMAGEM_AVISO_JPEG }`, ctx);
+  const AVISO_JPEG = require("vm").runInContext("T20_IMAGEM_AVISO_JPEG", ctx);
+  const sobreviveu = ctx.t20AvisoImagemAtual() === AVISO_JPEG && ctx.t20AvisoImagemAtual() === AVISO_JPEG;
+  ctx.state.personagem.imagem = JPEG_REDUZIDO;
+  const trocou = ctx.t20AvisoImagemAtual() === "";
+  ctx.state.personagem.imagem = JPEG_OK;
+  require("vm").runInContext('t20AvisoImagem = { para: "", texto: "" }', ctx);
+  const removeu = ctx.t20AvisoImagemAtual() === "";
+  return sobreviveu && trocou && removeu;
 })());
 
 /* Persistência local */
