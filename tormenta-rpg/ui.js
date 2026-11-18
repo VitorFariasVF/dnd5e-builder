@@ -63,7 +63,7 @@ function trpgCorpoEtapa(n){
       <label for="jogador">Jogador</label><input id="jogador" data-campo="jogador" value="${v(p.jogador)}" autocomplete="off">
       <div class="imagem-personagem"><label for="imagem-arquivo">Imagem do personagem (PNG ou JPEG, até 5 MB)</label>
         <input id="imagem-arquivo" type="file" accept="image/png,image/jpeg" data-campo="imagem">
-        <p id="imagem-aviso" class="muted" role="status"></p>
+        <p id="imagem-aviso" class="muted" role="status">${v(trpgAvisoImagem)}</p>
         ${p.imagem ? `<div class="actions"><img src="${v(p.imagem)}" alt="Prévia da imagem do personagem" width="96" height="96" style="object-fit:cover;border-radius:6px"><button type="button" class="secondary small" data-acao="remover-imagem">Remover imagem</button></div>` : `<p class="muted">Sem imagem.</p>`}</div>
       <label for="nivel">Nível (1 a ${TRPG_META.nivelMaximoEscopo})</label><input id="nivel" type="number" inputmode="numeric" min="1" max="${TRPG_META.nivelMaximoEscopo}" step="1" data-campo="nivel" value="${v(p.nivel)}">
       <label for="modo">Modo de criação</label><select id="modo" data-campo="modo">
@@ -455,26 +455,47 @@ function trpgImportar(arquivo){
 }
 
 /* Imagem do personagem: confere tipo e tamanho, redimensiona com canvas (lado maior até 300 px) e grava como JPEG 0.8. */
+/* PNG mantém a transparência (canal alfa) quando o resultado cabe no limite; senão cai para JPEG com fundo branco e avisa. */
+let trpgAvisoImagem = "";   // aviso persistente do último envio, mostrado em #imagem-aviso
+const TRPG_AVISO_IMAGEM_JPEG = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
+function trpgEscolherFormatoImagem(tipoOriginal, gerarPng, gerarJpeg){
+  if(tipoOriginal === "image/png"){
+    const dadosPng = gerarPng();
+    if(trpgImagemValida(dadosPng) && dadosPng !== "") return { data: dadosPng, aviso: "" };
+    return { data: gerarJpeg(), aviso: TRPG_AVISO_IMAGEM_JPEG };
+  }
+  return { data: gerarJpeg(), aviso: "" };
+}
+function trpgRedimensionarImagem(img, fundoBranco){
+  const escala = Math.min(1, TRPG_IMAGEM.ladoMaximo / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(img.naturalWidth * escala));
+  c.height = Math.max(1, Math.round(img.naturalHeight * escala));
+  const g = c.getContext("2d");
+  if(fundoBranco){ g.fillStyle = "#ffffff"; g.fillRect(0, 0, c.width, c.height); }
+  g.drawImage(img, 0, 0, c.width, c.height);
+  return c;
+}
 function trpgCarregarImagem(arquivo){
   const aviso = document.getElementById("imagem-aviso");
   const dizer = msg => { if(aviso) aviso.textContent = msg; else trpgAviso(msg); };
+  trpgAvisoImagem = "";
   if(!["image/png", "image/jpeg"].includes(arquivo.type)){ dizer("Escolha um arquivo PNG ou JPEG."); return; }
   if(arquivo.size > TRPG_IMAGEM.maxBytesOriginal){ dizer("A imagem tem mais de 5 MB. Escolha um arquivo menor."); return; }
   const url = URL.createObjectURL(arquivo);
   const img = new Image();
   img.onload = () => {
     URL.revokeObjectURL(url);
-    const escala = Math.min(1, TRPG_IMAGEM.ladoMaximo / Math.max(img.naturalWidth, img.naturalHeight));
-    const c = document.createElement("canvas");
-    c.width = Math.max(1, Math.round(img.naturalWidth * escala));
-    c.height = Math.max(1, Math.round(img.naturalHeight * escala));
-    const g = c.getContext("2d");
-    g.fillStyle = "#ffffff"; g.fillRect(0, 0, c.width, c.height);
-    g.drawImage(img, 0, 0, c.width, c.height);
-    const data = c.toDataURL("image/jpeg", TRPG_IMAGEM.qualidade);
+    const escolha = trpgEscolherFormatoImagem(
+      arquivo.type,
+      () => trpgRedimensionarImagem(img, false).toDataURL("image/png"),
+      () => trpgRedimensionarImagem(img, true).toDataURL("image/jpeg", TRPG_IMAGEM.qualidade)
+    );
+    const data = escolha.data;
     if(!trpgImagemValida(data)){ dizer("Não foi possível preparar esta imagem."); return; }
     state.personagem.imagem = data;
-    salvarEstado(); trpgRender(); trpgAviso("Imagem carregada.");
+    trpgAvisoImagem = escolha.aviso;
+    salvarEstado(); trpgRender(); trpgAviso(escolha.aviso || "Imagem carregada.");
   };
   img.onerror = () => { URL.revokeObjectURL(url); dizer("Não foi possível ler esta imagem."); };
   img.src = url;
@@ -505,7 +526,7 @@ function trpgLigarEventos(){
     else if(acao === "duplicar"){ duplicarNoHistorico(id); trpgRender(); trpgAviso("Cópia criada."); }
     else if(acao === "excluir"){ if(window.confirm("Excluir esta ficha deste navegador?")){ excluirDoHistorico(id); trpgRender(); } }
     else if(acao === "salvar"){ salvarNoHistorico(false); trpgAviso("Ficha salva neste navegador."); }
-    else if(acao === "remover-imagem"){ state.personagem.imagem = ""; salvarEstado(); trpgRender(); trpgAviso("Imagem removida."); }
+    else if(acao === "remover-imagem"){ state.personagem.imagem = ""; trpgAvisoImagem = ""; salvarEstado(); trpgRender(); trpgAviso("Imagem removida."); }
     else if(acao === "backup") trpgBaixarBackup();
     else if(acao === "pdf") trpgGerarPdf();
     else if(acao === "limpar"){ if(window.confirm("Apagar a ficha atual e as fichas salvas deste navegador?")){ limparDadosSalvos(); substituirEstado(estadoPadrao()); trpgRender(); } }

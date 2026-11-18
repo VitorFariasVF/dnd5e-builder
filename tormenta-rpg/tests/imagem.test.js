@@ -97,6 +97,36 @@ teste("PDF: a imagem fica no bloco da página 1 (antes da segunda página)", () 
   assert.ok(pos.img > 0 && pos.img < pos.p2);
 });
 
+const PNG_ALFA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR4nGP4zwAH/6HsBgAlcAN+++VAswAAAABJRU5ErkJggg==";
+const PNG_GRANDE = "data:image/png;base64," + "A".repeat(400001);
+
+teste("formato: PNG com transparência fica PNG (canal alfa, tipo de cor 6), sem aviso", () => {
+  const r = avaliar(ctx, `(() => {
+    const e = trpgEscolherFormatoImagem("image/png", () => ${JSON.stringify(PNG_ALFA)}, () => ${JSON.stringify(JPEG)});
+    return e;
+  })()`);
+  assert.strictEqual(r.data, PNG_ALFA);
+  assert.strictEqual(r.aviso, "");
+  assert.strictEqual(Buffer.from(r.data.split(",")[1], "base64")[25], 6);
+});
+
+teste("formato: PNG que estoura o limite cai para JPEG com aviso", () => {
+  const r = avaliar(ctx, `trpgEscolherFormatoImagem("image/png", () => ${JSON.stringify(PNG_GRANDE)}, () => ${JSON.stringify(JPEG)})`);
+  assert.strictEqual(r.data, JPEG);
+  assert.ok(r.aviso.includes("JPEG"), "aviso deveria citar JPEG");
+});
+
+teste("formato: JPEG continua JPEG, sem aviso e sem tentar PNG", () => {
+  const r = avaliar(ctx, `(() => {
+    let tentou = false;
+    const e = trpgEscolherFormatoImagem("image/jpeg", () => { tentou = true; return ${JSON.stringify(PNG_ALFA)}; }, () => ${JSON.stringify(JPEG)});
+    return { data: e.data, aviso: e.aviso, tentou };
+  })()`);
+  assert.strictEqual(r.data, JPEG);
+  assert.strictEqual(r.aviso, "");
+  assert.strictEqual(r.tentou, false);
+});
+
 teste("limite do redimensionamento: 300 px no maior lado e JPEG 0.8", () => {
   assert.strictEqual(avaliar(ctx, "TRPG_IMAGEM.ladoMaximo"), 300);
   assert.strictEqual(avaliar(ctx, "TRPG_IMAGEM.qualidade"), 0.8);
