@@ -285,11 +285,60 @@ function atualizarAtributoStandard(attr){
   renderAtributos();
 }
 
+/* Imagem do personagem (etapa de identificação): redimensionada no navegador para JPEG 0,8 com lado maior de 300 px. */
+const IMAGEM_PERSONAGEM_MAX_ARQUIVO = 5 * 1024 * 1024;
+const IMAGEM_PERSONAGEM_LADO = 300;
+function htmlImagemPersonagem(aviso=""){
+  const img = state.personagem.imagem;
+  const temImagem = imagemPersonagemValida(img);
+  const previa = temImagem ? `<img src="${img}" alt="Imagem do personagem" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--line,#ccc)" />` : `<span class="muted">Sem imagem</span>`;
+  return `<label for="imagemPersonagem">Imagem do personagem (PNG ou JPEG, até 5 MB)</label><div class="actions" style="align-items:center">${previa}<input id="imagemPersonagem" type="file" accept="image/png,image/jpeg" onchange="carregarImagemPersonagem(this)" />${temImagem ? `<button type="button" class="secondary small" onclick="removerImagemPersonagem()">Remover imagem</button>` : ""}</div>${aviso ? `<p class="alert warning">${aviso}</p>` : ""}`;
+}
+function atualizarImagemPersonagem(aviso=""){
+  const box = document.getElementById("imagemPersonagemBox");
+  if(box) box.innerHTML = htmlImagemPersonagem(aviso);
+}
+function carregarImagemPersonagem(input){
+  const arquivo = input.files && input.files[0];
+  input.value = "";
+  if(!arquivo) return;
+  if(!["image/png","image/jpeg"].includes(arquivo.type)) return atualizarImagemPersonagem("Use um arquivo PNG ou JPEG.");
+  if(arquivo.size > IMAGEM_PERSONAGEM_MAX_ARQUIVO) return atualizarImagemPersonagem("Arquivo acima de 5 MB. A imagem não foi carregada.");
+  const url = URL.createObjectURL(arquivo);
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    if(!img.naturalWidth || !img.naturalHeight) return atualizarImagemPersonagem("Não foi possível ler esta imagem.");
+    const escala = Math.min(1, IMAGEM_PERSONAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+    const ctx2d = canvas.getContext("2d");
+    ctx2d.fillStyle = "#ffffff";
+    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+    ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+    if(!imagemPersonagemValida(dataUrl)) return atualizarImagemPersonagem("Não foi possível guardar esta imagem.");
+    state.personagem.imagem = dataUrl;
+    salvarEstado();
+    atualizarImagemPersonagem();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); atualizarImagemPersonagem("Não foi possível ler esta imagem."); };
+  img.src = url;
+}
+function removerImagemPersonagem(){
+  state.personagem.imagem = "";
+  salvarEstado();
+  atualizarImagemPersonagem();
+}
+window.carregarImagemPersonagem = carregarImagemPersonagem;
+window.removerImagemPersonagem = removerImagemPersonagem;
+
 function renderAtributos(){
   if(typeof ensureRuleAsiChoices === "function") ensureRuleAsiChoices(state.personagem);
   recalcularAtributosFinais();
   const metodo=state.personagem.metodoAtributos||"standard";
-  let corpo=`<label for="nome">Nome do personagem</label><input id="nome" value="${state.personagem.nome||""}" placeholder="Ex.: Tharion" /><label for="jogador">Jogador</label><input id="jogador" value="${state.personagem.jogador||""}" placeholder="Seu nome" /><label for="metodo">Método de atributos</label><select id="metodo" onchange="trocarMetodoAtributos()"><option value="standard" ${metodo==="standard"?"selected":""}>Standard Array</option><option value="pointbuy" ${metodo==="pointbuy"?"selected":""}>Point Buy</option></select>`;
+  let corpo=`<label for="nome">Nome do personagem</label><input id="nome" value="${state.personagem.nome||""}" placeholder="Ex.: Tharion" /><label for="jogador">Jogador</label><input id="jogador" value="${state.personagem.jogador||""}" placeholder="Seu nome" /><div id="imagemPersonagemBox">${htmlImagemPersonagem()}</div><label for="metodo">Método de atributos</label><select id="metodo" onchange="trocarMetodoAtributos()"><option value="standard" ${metodo==="standard"?"selected":""}>Standard Array</option><option value="pointbuy" ${metodo==="pointbuy"?"selected":""}>Point Buy</option></select>`;
   if(metodo==="standard"){
     corpo += ATTRIBUTE_LIST.map(attr=>`<label>${ATTRIBUTE_LABELS[attr]}<select id="attr_${attr}" onchange="atualizarAtributoStandard('${attr}')">${ATTRIBUTE_METHODS.standard.valores.map(v=>`<option value="${v}" ${state.personagem.atributosBase[attr]===v?"selected":""}>${v}</option>`).join("")}</select></label>`).join("");
   } else {
@@ -805,6 +854,7 @@ function prepararFichaImportada(){
 }
 
 function aplicarPayloadBackupNaFicha(payload){
+  if(payload.imagem && !imagemPersonagemValida(payload.imagem)) throw new Error('Imagem do personagem inválida: use data:image/jpeg ou data:image/png, em base64, até 400 KB.');
   resetStateToInitial();
   ensureStateShape();
   state.modo = payload.modo || 'B';
@@ -815,6 +865,7 @@ function aplicarPayloadBackupNaFicha(payload){
   const p = state.personagem;
   p.nome = payload.nome || '';
   p.jogador = payload.jogador || '';
+  p.imagem = payload.imagem || '';
   p.origem = encontrarChavePorNome(BACKGROUNDS, payload.origem, typeof FOUNDRY_BACKGROUND_EN_MAP !== 'undefined' ? FOUNDRY_BACKGROUND_EN_MAP : null);
   p.raca = encontrarChavePorNome(RACES, payload.raca, typeof FOUNDRY_RACE_EN_MAP !== 'undefined' ? FOUNDRY_RACE_EN_MAP : null);
   p.classe = encontrarChavePorNome(CLASSES, payload.classe, typeof FOUNDRY_CLASS_EN_MAP !== 'undefined' ? FOUNDRY_CLASS_EN_MAP : null);
@@ -922,6 +973,7 @@ function importarJsonParaEditar(obj){
     return 'backup';
   }
   if (obj?.modo && obj?.personagem) {
+    if (obj.personagem.imagem && !imagemPersonagemValida(obj.personagem.imagem)) throw new Error('Imagem do personagem inválida: use data:image/jpeg ou data:image/png, em base64, até 400 KB.');
     Object.keys(state).forEach(key => delete state[key]);
     Object.assign(state, obj);
     state.currentHistoryId = null;

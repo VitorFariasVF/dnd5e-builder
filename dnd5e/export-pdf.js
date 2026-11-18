@@ -158,6 +158,8 @@ const PDF_CSS = `
   .vital{position:relative}
   .vital .v-ico{position:absolute;left:2mm;top:2mm;width:4mm;height:4mm;color:var(--ouro);opacity:.85}
   .vital.pv .v-ico{color:#f0b254}
+  .topo.comRetrato{grid-template-columns:22mm 1fr auto 21mm}
+  .retrato{display:block;width:21mm;height:26mm;object-fit:cover;border:1pt solid var(--ouro);border-radius:1.500mm;justify-self:end;background:var(--sup)}
   .historia::first-letter{float:left;font:600 30pt/.85 var(--serifa);color:var(--ouro);padding:1mm 1.500mm 0 0}
   @media print{html{background:var(--papel)}.barra{display:none}.pagina{margin:0;box-shadow:none}}`;
 
@@ -173,6 +175,7 @@ function gerarHtmlFicha(){
   const percepcaoPassiva = 10 + (d.pericias['Percepção'] ?? 0);
 
   const status = p.validacaoResumo?.status === 'oficial' ? 'Ficha válida' : (p.validacaoResumo?.status === 'customizado' ? 'Ficha customizada' : 'Revisão pendente');
+  const temRetrato = imagemPersonagemValida(p.imagem);
   const subtitulo = [d.classe + ' ' + d.nivel, d.subclasse && d.subclasse !== 'Não definido' ? d.subclasse : '', d.raca, d.origem].filter(Boolean).map(escaparHtml).join(' · ');
 
   const atributos = ATTRIBUTE_LIST.map(a => pdfEscudoAtributo(a, d.atributos[a] ?? 10, d.modificadores[a] ?? 0)).join('');
@@ -210,7 +213,7 @@ function gerarHtmlFicha(){
   ${pdfDefs()}
   <div class="barra"><span>Pré-visualização da ficha (A4)</span><button type="button" onclick="window.print()">Imprimir / Salvar PDF</button></div>
   <article class="pagina">${moldura}<div class="conteudo">
-    <header class="topo">${pdfBrasao(p.classe)}<div><h1>${escaparHtml(d.nome || 'Personagem sem nome')}</h1><p class="linha-classe">${subtitulo}</p><p class="meta">Jogador: ${escaparHtml(d.jogador || '—')} · XP ${escaparHtml(d.xp)} · ${escaparHtml(ed.label)}</p></div><div class="selo">${escaparHtml(ed.curto)}<strong>${escaparHtml(status)}</strong></div></header>
+    <header class="topo${temRetrato ? ' comRetrato' : ''}">${pdfBrasao(p.classe)}<div><h1>${escaparHtml(d.nome || 'Personagem sem nome')}</h1><p class="linha-classe">${subtitulo}</p><p class="meta">Jogador: ${escaparHtml(d.jogador || '—')} · XP ${escaparHtml(d.xp)} · ${escaparHtml(ed.label)}</p></div><div class="selo">${escaparHtml(ed.curto)}<strong>${escaparHtml(status)}</strong></div>${temRetrato ? `<img class="retrato" src="${p.imagem}" alt="Imagem do personagem">` : ''}</header>
     <svg class="divisor" aria-hidden="true" preserveAspectRatio="none"><use href="#divisor"/></svg>
     <div class="atributos">${atributos}</div>
     <div class="vitais">${vitais}</div>

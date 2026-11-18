@@ -7,6 +7,7 @@ function createInitialState(){
     personagem:{
       nome:"",
       jogador:"",
+      imagem:"",
       origem:null,
       raca:null,
       subraca:null,
@@ -68,6 +69,12 @@ function createInitialState(){
 
 const state = createInitialState();
 
+/* Imagem do personagem: data URL JPEG ou PNG em base64 (vazio = sem imagem). Limite de tamanho do texto para o JSON e o localStorage. */
+const IMAGEM_PERSONAGEM_MAX_CHARS = 400000;
+function imagemPersonagemValida(valor){
+  return typeof valor === "string" && valor.length <= IMAGEM_PERSONAGEM_MAX_CHARS && /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/]+=*$/.test(valor);
+}
+
 function ensureStateShape(){
   const fresh = createInitialState();
   state.modo ??= fresh.modo;
@@ -89,6 +96,7 @@ function ensureStateShape(){
   if(!Array.isArray(state.personagem.periciasRaciais)) state.personagem.periciasRaciais = [];
   if(!Array.isArray(state.personagem.talentosRaciais)) state.personagem.talentosRaciais = [];
   delete state.personagem.caracteristicas;
+  if(!imagemPersonagemValida(state.personagem.imagem)) state.personagem.imagem = "";
   if(typeof aplicarCatalogoRegras === "function") aplicarCatalogoRegras(state.regras);
 }
 

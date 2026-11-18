@@ -298,6 +298,7 @@ function montarPayloadExportacao(){
     bonusOrigem2024: p.bonusOrigem2024 || null,
     nome: p.nome || '',
     jogador: p.jogador || '',
+    imagem: imagemPersonagemValida(p.imagem) ? p.imagem : '',
     modo: state.modo,
     origem: nomeCatalogo(BACKGROUNDS, p.origem),
     raca: nomeCatalogo(RACES, p.raca),
