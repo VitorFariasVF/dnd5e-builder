@@ -637,6 +637,26 @@ function tdtImagemPrevia(src){
     ? `<img src="${src}" alt="Imagem do personagem" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--linha,#ccc)">`
     : `<span class="muted">Sem imagem</span>`;
 }
+/* PNG mantém a transparência (canal alfa) quando o resultado cabe no limite; senão cai para JPEG com fundo branco e avisa. */
+const TDT_IMAGEM_AVISO_JPEG = "A imagem PNG era grande demais para guardar com transparência; foi guardada como JPEG com fundo branco.";
+function tdtEscolherFormatoImagem(tipoOriginal, gerarPng, gerarJpeg){
+  if(tipoOriginal === "image/png"){
+    const dadosPng = gerarPng();
+    if(tdtImagemValida(dadosPng)) return { dados: dadosPng, aviso: "" };
+    return { dados: gerarJpeg(), aviso: TDT_IMAGEM_AVISO_JPEG };
+  }
+  return { dados: gerarJpeg(), aviso: "" };
+}
+function tdtRedimensionarImagem(img, fundoBranco){
+  const escala = Math.min(1, TDT_IMAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+  const ctx2d = canvas.getContext("2d");
+  if(fundoBranco){ ctx2d.fillStyle = "#ffffff"; ctx2d.fillRect(0, 0, canvas.width, canvas.height); }
+  ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
 function tdtCarregarImagem(input){
   const arquivo = input.files && input.files[0];
   input.value = "";
@@ -648,19 +668,17 @@ function tdtCarregarImagem(input){
   img.onload = () => {
     URL.revokeObjectURL(url);
     if(!img.naturalWidth || !img.naturalHeight) return tdtAvisoNaTela("Não foi possível ler esta imagem.");
-    const escala = Math.min(1, TDT_IMAGEM_LADO / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
-    canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
-    const ctx2d = canvas.getContext("2d");
-    ctx2d.fillStyle = "#ffffff";
-    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
-    ctx2d.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const dados = canvas.toDataURL("image/jpeg", 0.8);
+    const escolha = tdtEscolherFormatoImagem(
+      arquivo.type,
+      () => tdtRedimensionarImagem(img, false).toDataURL("image/png"),
+      () => tdtRedimensionarImagem(img, true).toDataURL("image/jpeg", 0.8)
+    );
+    const dados = escolha.dados;
     if(!tdtImagemValida(dados)) return tdtAvisoNaTela("Não foi possível guardar esta imagem.");
     state.personagem.imagem = dados;
     salvarEstado();
     tdtRender();
+    if(escolha.aviso) tdtAvisoNaTela(escolha.aviso, "aviso");
   };
   img.onerror = () => { URL.revokeObjectURL(url); tdtAvisoNaTela("Não foi possível ler esta imagem."); };
   img.src = url;
@@ -677,12 +695,12 @@ function tdtImportar(arquivo){
   }).catch(() => tdtAvisoNaTela("Não foi possível ler o arquivo."));
 }
 
-function tdtAvisoNaTela(msg){
+function tdtAvisoNaTela(msg, tipo="erro"){
   const app = tdtApp(), card = app && app.querySelector(".card");
   if(!card) return;
   card.querySelectorAll(".aviso-etapa").forEach(n => n.remove());
   const a = document.createElement("div");
-  a.className = "alert error aviso-etapa"; a.setAttribute("role", "alert"); a.textContent = msg;
+  a.className = `alert ${tipo === "aviso" ? "warning" : "error"} aviso-etapa`; a.setAttribute("role", tipo === "aviso" ? "note" : "alert"); a.textContent = msg;
   card.querySelector("h2").insertAdjacentElement("afterend", a);
   a.scrollIntoView({ block: "center" });
 }

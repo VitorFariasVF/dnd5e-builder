@@ -69,6 +69,33 @@ teste("backup com imagem inválida é recusado com mensagem, sem alterar a ficha
   assert.deepStrictEqual(atual, ["Aléxia Sá", JPEG_OK]);
 });
 
+const PNG_ALFA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR4nGP4zwAH/6HsBgAlcAN+++VAswAAAABJRU5ErkJggg==";
+const PNG_GRANDE = "data:image/png;base64," + "A".repeat(400001);
+
+teste("formato: PNG com transparência fica PNG (canal alfa, tipo de cor 6), sem aviso", () => {
+  const r = avaliar(ctx, `tdtEscolherFormatoImagem("image/png", () => ${JSON.stringify(PNG_ALFA)}, () => ${JSON.stringify(JPEG_OK)})`);
+  assert.strictEqual(r.dados, PNG_ALFA);
+  assert.strictEqual(r.aviso, "");
+  assert.strictEqual(Buffer.from(r.dados.split(",")[1], "base64")[25], 6);
+});
+
+teste("formato: PNG grande que estoura o limite cai para JPEG com aviso", () => {
+  const r = avaliar(ctx, `tdtEscolherFormatoImagem("image/png", () => ${JSON.stringify(PNG_GRANDE)}, () => ${JSON.stringify(JPEG_OK)})`);
+  assert.strictEqual(r.dados, JPEG_OK);
+  assert.match(r.aviso, /JPEG/);
+});
+
+teste("formato: JPEG continua JPEG, sem aviso e sem tentar PNG", () => {
+  const r = avaliar(ctx, `(() => {
+    let tentou = false;
+    const e = tdtEscolherFormatoImagem("image/jpeg", () => { tentou = true; return ${JSON.stringify(PNG_ALFA)}; }, () => ${JSON.stringify(JPEG_OK)});
+    return { dados: e.dados, aviso: e.aviso, tentou };
+  })()`);
+  assert.strictEqual(r.dados, JPEG_OK);
+  assert.strictEqual(r.aviso, "");
+  assert.strictEqual(r.tentou, false);
+});
+
 teste("PDF com imagem: retrato no cabeçalho da primeira página", () => {
   const html = avaliar(ctx, `(() => { ${comImagem(JPEG_OK)}; return tdtFichaHtml(); })()`);
   assert.ok(html.includes('<img class="retrato" src="' + JPEG_OK + '"'));
