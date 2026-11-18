@@ -378,4 +378,67 @@ teste("talentos que não têm efeito numérico (ex.: Aparar, sem prereq) não mu
   assert.deepStrictEqual([e.ca, e.ataqueDano, e.resistencias, e.liderancaSeguidores], [0, 0, 0, null]);
 });
 
+/* ---- Limites de uso por dia (usosPorDia), contas feitas à mão a partir do livro ---- */
+const usosDe = p => efeitosDe(p).usosPorDia;
+
+teste("Ataque Atordoante, Sab 13 (mod +1), uma escolha: 1 + 1 = 2 usos por dia (PDF p.97)", () => {
+  const p = fichaTal({ nivel: 4, atributos: Object.assign({}, fichaTal().atributos, comAtributo("sabedoria", 13)), talentos: "Ataque Atordoante\nAtaque Desarmado Aprimorado" });
+  assert.strictEqual(usosDe(p)["ataque-atordoante"], 2);
+});
+
+teste("Ataque Atordoante escolhido duas vezes, Sab 13: (1 + 1) + 2 = 4 usos por dia (PDF p.97)", () => {
+  const p = fichaTal({ nivel: 4, atributos: Object.assign({}, fichaTal().atributos, comAtributo("sabedoria", 13)), talentos: "Ataque Atordoante\nAtaque Atordoante\nAtaque Desarmado Aprimorado" });
+  assert.strictEqual(usosDe(p)["ataque-atordoante"], 4);
+});
+
+teste("Ataque Atordoante, Sab 16 (mod +3), uma escolha: 1 + 3 = 4 usos por dia (PDF p.97)", () => {
+  const p = fichaTal({ nivel: 4, atributos: Object.assign({}, fichaTal().atributos, comAtributo("sabedoria", 16)), talentos: "Ataque Atordoante\nAtaque Desarmado Aprimorado" });
+  assert.strictEqual(usosDe(p)["ataque-atordoante"], 4);
+});
+
+teste("Ataque Atordoante sem Ataque Desarmado Aprimorado na ficha: pré-requisito falta, sem limite de uso", () => {
+  const p = fichaTal({ nivel: 4, atributos: Object.assign({}, fichaTal().atributos, comAtributo("sabedoria", 13)), talentos: "Ataque Atordoante" });
+  assert.strictEqual(usosDe(p)["ataque-atordoante"], undefined);
+  assert.deepStrictEqual(notaDe(p, "ataque-atordoante").pre.faltando, ["Ataque Desarmado Aprimorado"]);
+});
+
+teste("Perito em Arma, Car 14 (mod +2): 2 usos por dia; Car 10 (mod 0): 0; Car 8 (mod -1): 0, mínimo zero (PDF p.102)", () => {
+  const base = { nivel: 4, atributos: Object.assign({}, fichaTal().atributos, { destreza: 13, inteligencia: 13 }), talentos: "Acuidade com Arma\nFoco em Arma\nPerito em Arma" };
+  const com = car => fichaTal(Object.assign({}, base, { atributos: Object.assign({}, base.atributos, comAtributo("carisma", car)) }));
+  assert.strictEqual(usosDe(com(14))["perito-em-arma"], 2);
+  assert.strictEqual(usosDe(com(10))["perito-em-arma"], 0);
+  assert.strictEqual(usosDe(com(8))["perito-em-arma"], 0);
+});
+
+teste("Perito em Arma sem Inteligência 13: pré-requisito falta, sem limite de uso", () => {
+  const p = fichaTal({ nivel: 4, atributos: Object.assign({}, fichaTal().atributos, { destreza: 13, carisma: 14 }), talentos: "Acuidade com Arma\nFoco em Arma\nPerito em Arma" });
+  assert.strictEqual(usosDe(p)["perito-em-arma"], undefined);
+  assert.deepStrictEqual(notaDe(p, "perito-em-arma").pre.faltando, ["Inteligência 13"]);
+});
+
+teste("Mestre em Arma com guerreiro de 16º nível e os quatro pré-requisitos de arma: 1 rolagem extra por dia (PDF p.101)", () => {
+  const p = fichaTal({ classe: "guerreiro", nivel: 16, talentos: "Especialização em Arma\nEspecialização em Arma Aprimorada\nFoco em Arma\nFoco em Arma Aprimorado\nMestre em Arma" });
+  assert.deepStrictEqual(notaDe(p, "mestre-em-arma").pre.faltando, []);
+  assert.strictEqual(usosDe(p)["mestre-em-arma"], 1);
+});
+
+teste("Mestre em Arma com guerreiro de 15º nível: pré-requisito de 16º nível falta, sem limite de uso", () => {
+  const p = fichaTal({ classe: "guerreiro", nivel: 15, talentos: "Especialização em Arma\nEspecialização em Arma Aprimorada\nFoco em Arma\nFoco em Arma Aprimorado\nMestre em Arma" });
+  assert.deepStrictEqual(notaDe(p, "mestre-em-arma").pre.faltando, ["Guerreiro 16º nível"]);
+  assert.strictEqual(usosDe(p)["mestre-em-arma"], undefined);
+});
+
+teste("Domínio da Morte: 1 uso por dia; o pré-requisito de devoto fica como não verificado, não como falta (PDF p.113)", () => {
+  const p = fichaTal({ nivel: 5, talentos: "Domínio da Morte" });
+  assert.strictEqual(usosDe(p)["dominio-morte"], 1);
+  assert.deepStrictEqual(notaDe(p, "dominio-morte").pre.faltando, []);
+});
+
+teste("talento de combate sem limite de uso (Ataque em Movimento, Des 13, Esquiva, Mobilidade, guerreiro 4º): nenhum efeito numérico", () => {
+  const p = fichaTal({ classe: "guerreiro", nivel: 4, atributos: Object.assign({}, fichaTal().atributos, { destreza: 13 }), talentos: "Ataque em Movimento\nEsquiva\nMobilidade" });
+  assert.deepStrictEqual(notaDe(p, "ataque-em-movimento").pre.faltando, []);
+  assert.deepStrictEqual(usosDe(p), {});
+  assert.strictEqual(efeitosDe(p).ca, 0);
+});
+
 sair("bônus de tamanho, CA, escolha racial e raças novas");

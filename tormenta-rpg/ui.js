@@ -246,6 +246,10 @@ function trpgTextoEfeitosTalentos(d){
   if(e.ataqueDano) partes.push("ataque e dano +" + e.ataqueDano + " (a ficha não tem ataques, então não é somado a nenhum)");
   if(e.resistencias) partes.push("testes de resistência +" + e.resistencias);
   if(e.liderancaSeguidores) partes.push("Liderança: " + e.liderancaSeguidores.niveisTotais + " níveis de seguidores no total, até " + e.liderancaSeguidores.porSeguidorMaximo + " por seguidor");
+  Object.keys(e.usosPorDia || {}).forEach(id => {
+    const n = e.usosPorDia[id], nome = (typeof TRPG_TALENTOS !== "undefined" && TRPG_TALENTOS[id]) ? TRPG_TALENTOS[id].nome : id;
+    partes.push(nome + ": " + n + (n === 1 ? " uso" : " usos") + " por dia");
+  });
   return partes.length ? "Pelo nível e pela ficha: " + partes.join("; ") + "." : "Nenhum efeito numérico de talento aplicado.";
 }
 

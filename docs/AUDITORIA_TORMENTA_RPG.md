@@ -44,7 +44,7 @@ Os valores de teste foram conferidos à mão: três personagens com Destreza, ar
 - **Método de atributos:** rolagem, compra de pontos ou matriz, e ajustes raciais. O builder só aceita digitação manual (inteiro de 1 a 30; o limite é do software, não da regra).
 - **Iniciativa:** a fórmula usada é a hipótese d20 (modificador de Destreza). O texto de iniciativa não foi obtido.
 - **Perícias:** lista, graduações máximas e pontos por nível de cada classe. Os pontos disponíveis são digitados à mão.
-- **Talentos e pré-requisitos, magias por dia e listas de magias, equipamento, preços e moeda.**
+- **Talentos e pré-requisitos, magias por dia e listas de magias, equipamento, preços e moeda.** (Os textos dos talentos da seção abaixo foram conferidos no livro; o restante desta linha continua NÃO VERIFICADO.)
 - **Tabela de tamanho:** o modificador de tamanho é digitado; a tabela não foi confirmada.
 - **Licença** do livro (seção 1).
 - **Cores das classes no PDF:** `TRPG_ACENTOS` está vazio, então todas as classes usam o destaque padrão.
@@ -88,3 +88,22 @@ Fluxo completo em 1100px e 360px, erros de console, rolagem lateral, alvos de 40
 > **Atualização (verificação independente):** o ano da edição d20 é conflitante (2003 ou 2005) e a base D&D 3.5 tem uma fonte só. Veja `VERIFICACAO_TORMENTA_RPG.md`.
 
 > **Atualização (frente de dados):** classes (13), perícias (19), talentos (13), círculos de magia e BBA foram preenchidos a partir do compêndio do VTT fvtt-trpg (GPL-3, licença dos dados não confirmada; só números, nomes e listas) e da wiki tsrd, cada item com `fonte`. Seguem vazios: bases de resistência, magias por dia, equipamento, raças (exceto o anão), custo de compra. Veja `COBERTURA.md`.
+
+> **Atualização (talentos com nota, 2026-11-18):** os 12 talentos com nota foram conferidos no livro do usuário (PDF p.97 a p.113; página PDF = índice do texto + 1). Aplicado no motor (`engine.js`, `trpgEfeitosTalentos`) só o que é número verificável: bônus de CA, ataque e dano, resistências, níveis de seguidores e limites de uso por dia. Mostrado em `ui.js` (`trpgTextoEfeitosTalentos`). Efeito de combate (rolagem, ação, dano por dado, movimento) fica de fora e está escrito na nota de cada talento em `rules-talentos-extra.js`.
+>
+> | Talento | PDF | Aplicado | Fora, e por quê |
+> |---|---|---|---|
+> | Mestre em Arma | p.101 | 1 rolagem extra por dia | +1 em ataque e dano e margem +1: a ficha não tem ataques por arma. A própria rolagem extra é combate. |
+> | Perito em Arma | p.102 | Usos por dia = bônus de Carisma (mínimo 0) | Trocar teste de perícia por jogada de ataque: o app não rola dados. |
+> | Aparar | p.97 | Nada | Jogada para aparar, uma vez por rodada: combate. |
+> | Investida Implacável | p.101 | Nada | Dano dobrado ou triplicado na investida: combate. |
+> | Investida Montada | p.101 | Nada | Movimento depois do ataque, até o dobro do deslocamento da montaria: a ficha não tem deslocamento de montaria. |
+> | Domínio da Morte | p.113 | 1 uso por dia | Toque da morte e 1d6 por nível contra os PV: combate. Pré-requisito de devoto não verificado. |
+> | Ataque Atordoante | p.97 | Usos por dia = 1 + bônus de Sabedoria, mais 2 por escolha extra | Declaração antes do ataque, teste de Fortitude (CD 10 + metade do nível + Sab) e atordoamento: combate. |
+> | Ataque Giratório | p.98 | Nada | Ataque contra cada adjacente e ação completa: combate. |
+> | Tiro em Movimento | p.103 | Nada | Mover-se antes e depois do disparo, sem armadura pesada: combate. |
+> | Ataque em Movimento | p.98 | Nada | Mover-se antes e depois do ataque corpo a corpo, sem armadura pesada: combate. |
+> | Liderança | p.110 e p.111 | Total de níveis de seguidores (nível × bônus de Carisma, mínimo 1), cada um no máximo na metade do nível | Escolha entre parceiro e seguidores, distribuição dos níveis e o parceiro: escolha do jogador. |
+> | Ao Sabor do Destino | p.109 e p.110 | CA, ataque e dano e resistências pela faixa mais alta atingida | **Decisão do usuário pendente:** confirmar a leitura de faixa mais alta (o livro só marca a habilidade como cumulativa). O código não foi mudado. +4 em perícia e +2 em habilidade: escolha do jogador. |
+>
+> Testes: `tormenta-rpg/tests/racas_tamanho.test.js`, 10 testes novos com os valores calculados à mão nos comentários. `node tormenta-rpg/tests/run-all.js`: todos passaram. `node tormenta-rpg/tests/e2e.js` (Chrome): sem erro de console e sem rolagem lateral em 1100px e 360px.

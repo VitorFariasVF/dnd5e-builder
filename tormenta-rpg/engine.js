@@ -310,21 +310,36 @@ const TRPG_AO_SABOR_FAIXAS = [
 ];
 
 /* Bônus numéricos vindos de talentos reconhecidos e com pré-requisitos atendidos. Zero quando não há talento.
-   Liderança (PDF p.110): níveis de seguidores = nível × bônus de Carisma (mínimo 1); cada seguidor no máximo metade do nível. */
+   Liderança (PDF p.110): níveis de seguidores = nível × bônus de Carisma (mínimo 1); cada seguidor no máximo metade do nível.
+   usosPorDia (limite de uso, só o que é número): Ataque Atordoante (PDF p.97) 1 + mod. Sab, mais 2 por escolha extra;
+   Perito em Arma (PDF p.102) mod. Car (mínimo 0); Mestre em Arma (PDF p.101) 1 rolagem extra; Domínio da Morte (PDF p.113) 1.
+   Os limites só valem com o talento e os pré-requisitos atendidos (ver ativos). */
 function trpgEfeitosTalentos(personagem){
-  const efeitos = { ca: 0, ataqueDano: 0, resistencias: 0, liderancaSeguidores: null };
+  const efeitos = { ca: 0, ataqueDano: 0, resistencias: 0, liderancaSeguidores: null, usosPorDia: {} };
   const nivel = Number(personagem && personagem.nivel);
   if(!trpgNivelValido(nivel)) return efeitos;
   const ativos = id => trpgTalentosDaFicha(personagem).some(t => t.id === id) && trpgPreRequisitosTalento(personagem, trpgTabelaTalentos()[id]).ok;
+  const vezesNaFicha = id => trpgTalentosDaFicha(personagem).filter(t => t.id === id).length;
+  const finais = trpgAtributosFinais(personagem).valores;
   if(ativos("ao-sabor-do-destino")){
     ["ca", "ataqueDano", "resistencias"].forEach(cat => {
       efeitos[cat] = TRPG_AO_SABOR_FAIXAS.reduce((v, f) => (f[cat] !== undefined && nivel >= f.nivel ? f[cat] : v), 0);
     });
   }
   if(ativos("lideranca")){
-    const mc = trpgModificador(trpgAtributosFinais(personagem).valores.carisma);
+    const mc = trpgModificador(finais.carisma);
     if(mc !== null) efeitos.liderancaSeguidores = { niveisTotais: Math.max(1, nivel * mc), porSeguidorMaximo: Math.floor(nivel / 2) };
   }
+  if(ativos("ataque-atordoante")){
+    const ms = trpgModificador(finais.sabedoria);
+    if(ms !== null) efeitos.usosPorDia["ataque-atordoante"] = (1 + ms) + 2 * (vezesNaFicha("ataque-atordoante") - 1);
+  }
+  if(ativos("perito-em-arma")){
+    const mc = trpgModificador(finais.carisma);
+    if(mc !== null) efeitos.usosPorDia["perito-em-arma"] = Math.max(0, mc);
+  }
+  if(ativos("mestre-em-arma")) efeitos.usosPorDia["mestre-em-arma"] = 1;
+  if(ativos("dominio-morte")) efeitos.usosPorDia["dominio-morte"] = 1;
   return efeitos;
 }
 
