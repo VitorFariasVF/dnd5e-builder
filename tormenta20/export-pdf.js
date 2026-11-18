@@ -108,7 +108,7 @@ function t20GerarHtmlFicha(st){
     });
     const linhas = Object.keys(porCirculo).sort().map(c => `<li><strong>${t20Esc(c)}º círculo:</strong> ${porCirculo[c].map(t20Esc).join(", ")}</li>`);
     const nota = algumPendente ? `<p class="pequeno">* Execução, alcance e duração NÃO VERIFICADOS (só o índice de uma fonte).</p>` : "";
-    magias = `<p class="pequeno">Círculo máximo no nível ${p.nivel}: ${d.circuloMaximo === null ? "NÃO VERIFICADO" : t20Esc(d.circuloMaximo)}. Magias conhecidas no 1º nível: ${cls.magiasNivel1}.</p>${t20PdfLista(linhas, "Nenhuma magia registrada.")}${nota}`;
+    magias = `<p class="pequeno">Círculo máximo no nível ${p.nivel}: ${d.circuloMaximo === null ? "NÃO VERIFICADO" : t20Esc(d.circuloMaximo)}. Magias conhecidas neste nível: ${d.magiasLimite}.</p>${t20PdfLista(linhas, "Nenhuma magia registrada.")}${nota}`;
   }
 
   const equip = (p.equipamento || []).length

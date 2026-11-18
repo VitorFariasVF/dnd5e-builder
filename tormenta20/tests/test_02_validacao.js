@@ -47,8 +47,8 @@ t.igual("etapa 4: dois benefícios válidos aceitos", contaErros(erros(4, "estri
 /* Etapa 5: classe */
 t.igual("etapa 5: sem classe recusada", contaErros(erros(5, "estrito", { classe: null })), 1);
 t.igual("etapa 5: classe válida aceita", contaErros(erros(5, "estrito")), 0);
-t.igual("etapa 5: atributo de magia inválido recusado no Arcanista", contaErros(erros(5, "estrito", { classe: "arcanista", atributoMagia: "forca" })), 1);
-t.igual("etapa 5: Arcanista com INT aceito", contaErros(erros(5, "estrito", { classe: "arcanista", atributoMagia: "inteligencia" })), 0);
+t.igual("etapa 5: atributo de magia inválido recusado no Arcanista (lista e caminho Bruxo)", contaErros(erros(5, "estrito", { classe: "arcanista", caminho: "bruxo", atributoMagia: "forca" })), 2);
+t.igual("etapa 5: Arcanista com INT aceito", contaErros(erros(5, "estrito", { classe: "arcanista", caminho: "bruxo", atributoMagia: "inteligencia" })), 0);
 
 /* Etapa 6: compra de atributos (10 pontos, valores de −1 a 4) */
 /* Compras: 10 pontos = FOR2+DES2+CON2+INT2+SAB2 (2+2+2+2+2); 11 = FOR3+DES2+CON2+INT1+SAB1+CAR1 (4+2+2+1+1+1); 9 = FOR2+DES2+CON2+INT2+SAB1 */

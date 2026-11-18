@@ -258,16 +258,39 @@ function t20PericiasDisponiveis(p, atributosFinais){
   if(!c) return null;
   const grupo = c.grupoFixo ? c.grupoFixo.qtd : 0;
   const intPos = Math.max(0, Number(atributosFinais.inteligencia) || 0);
-  const racial = (t20RacaInfo(p.raca) || {}).periciasExtras || 0;
+  const racialBruto = (t20RacaInfo(p.raca) || {}).periciasExtras || 0;
+  // Humano (p025): pode trocar uma das duas perícias treinadas por um poder geral.
+  const racial = Math.max(0, racialBruto - (p.raca === "humano" && p.racaTrocaPericia ? 1 : 0));
   const livres = c.periciasPorNivel + intPos + racial;
   return { fixas: c.fixas.slice(), grupoFixoQtd: grupo, livres, extraRacial: racial, intPos };
 }
 
 /* Conjuração ------------------------------------------------------- */
-function t20MagiasConhecidasLimite(classeId, nivel){
+/* Magias conhecidas (livro, p043 Arcanista, p050 Bardo, p063 Clérigo, p067 Druida):
+   Bardo e Druida: 2 no 1º nível e +1 a cada nível par. Clérigo: 3 no 1º e +1 a cada nível.
+   Arcanista, Bruxo: 3 no 1º e +1 a cada nível. Feiticeiro: 3 no 1º e +1 nos níveis ímpares (3º, 5º...).
+   Mago: 4 no 1º, +1 a cada nível, e +1 a cada novo círculo (5º, 9º, 13º, 17º).
+   Sem caminho escolhido no Arcanista, conta como Bruxo. */
+function t20MagiasConhecidasLimite(classeId, nivel, caminho){
   const c = T20_CLASSES[classeId];
   if(!c || !c.conjurador) return 0;
-  return (Number(nivel) || 1) === 1 ? c.magiasNivel1 : null;   // nível > 1: NÃO VERIFICADO
+  const n = Math.max(1, Math.min(T20_NIVEL_MAX, Number(nivel) || 1));
+  if(classeId === "arcanista"){
+    if(caminho === "feiticeiro") return 3 + Math.floor((n - 1) / 2);
+    if(caminho === "mago") return 4 + (n - 1) + Math.floor((n - 1) / 4);
+    return 3 + (n - 1);
+  }
+  if(classeId === "bardo" || classeId === "druida") return 2 + Math.floor(n / 2);
+  if(classeId === "clerigo") return 3 + (n - 1);
+  return c.magiasNivel1;
+}
+/* Atributo de magia efetivo: no Arcanista, o caminho define (Feiticeiro: Carisma; Bruxo e Mago: Inteligência; p043). */
+function t20AtributoMagiaEfetivo(p){
+  const c = T20_CLASSES[p.classe];
+  if(!c || !c.conjurador) return null;
+  if(p.classe === "arcanista" && p.caminho === "feiticeiro") return "carisma";
+  if(p.classe === "arcanista" && (p.caminho === "bruxo" || p.caminho === "mago")) return "inteligencia";
+  return p.atributoMagia || c.atributoMagiaPadrao;
 }
 
 /* Catálogo de magias (rules-magias.js). Retorna cópia com `pendente` (true = só o índice foi conferido). */
@@ -304,6 +327,7 @@ function t20ChecarPoder(p, entrada, finais, treinadas){
   const tomada = Number(entrada.nivel) || 0;
   const mec = msg => itens.push({ msg, mecanico: true });
   const aviso = msg => itens.push({ msg, mecanico: false });
+  if(pd.foraDoLivro){ aviso(`${pd.nome}: não consta do Livro Básico. Não é regra e o app não confere pré-requisito nem nível.`); return itens; }
   if(pd.classes.length && !pd.classes.includes(p.classe)){
     mec(`${pd.nome} é poder de ${pd.classes.map(id => (T20_CLASSES[id] || {}).nome || id).join(" ou ")}.`);
   }
@@ -344,7 +368,7 @@ function t20Derivados(p){
   const atr = t20AtributosFinais(p);
   const c = T20_CLASSES[p.classe] || null;
   const nivel = Number(p.nivel) || 1;
-  const attrMagia = c && c.conjurador ? (p.atributoMagia || c.atributoMagiaPadrao) : null;
+  const attrMagia = c && c.conjurador ? t20AtributoMagiaEfetivo(p) : null;
   const valorMagia = attrMagia ? atr[attrMagia] : 0;
   const treinadas = t20TreinadasLista(p);
 
@@ -388,7 +412,7 @@ function t20Derivados(p){
     atributoMagia: attrMagia,
     circuloMaximo: c && c.conjurador ? t20CirculoMaximoClasse(p.classe, nivel) : 0,
     circuloVerificado: c && c.conjurador ? t20CirculoVerificado(p.classe, nivel) : false,
-    magiasLimite: t20MagiasConhecidasLimite(p.classe, nivel),
+    magiasLimite: t20MagiasConhecidasLimite(p.classe, nivel, p.caminho),
     pericias,
     treinadas: Array.from(treinadas),
     niveis: c ? t20NiveisTabela(p.classe, nivel) : [],

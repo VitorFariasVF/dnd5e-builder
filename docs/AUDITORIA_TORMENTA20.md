@@ -144,17 +144,36 @@ Esta seção vale sobre as seções 3 e 4 acima, que descrevem a primeira entreg
 - Dinheiro inicial: T$ 4d6 (p146). Valor continua digitado; o app não rola. Texto corrigido em `rules.js`, `state.js` e no PDF.
 - Raças (ajustes, tamanho, deslocamento, habilidades): já conferidas contra p024-p036 e p112-p113 na rodada anterior.
 
-### 8.4 Itens que o livro NÃO resolve ou que ficaram pendentes
-- Poderes de classe (catálogo com 189 entradas sem verificação): ao procurar os nomes nas páginas de classe (p043-p090) e de poderes gerais (p120-p145), vários não aparecem no Livro Básico (ex.: Agrilhoar os Mortos, Familiar Elemental, Revide, Remise, Lorotas da Terra e do Mar; cerca de 90 nomes não encontrados). Esses nomes vêm de [E] e não devem ser tratados como regra do livro. Não foi feita a conferência de nível e pré-requisito dos 99 que aparecem; ficam NÃO VERIFICADO.
-- Tipo e subtipo de 26 poderes (Raio Arcano, Pele de Ferro, Frenesi, En Garde, Aparar etc.) continuam sem tipo confirmado, embora o livro os descreva em p045-p090; não conferido nesta rodada.
-- Magias conhecidas acima do 1º nível e progressão de PM por círculo: o livro dá a regra por classe (uma magia por nível, ou em níveis pares para Bardo e Druida), mas o app não a aplica; continua NÃO VERIFICADO.
-- Humano: trocar uma perícia por um poder geral (p025): não implementado; o jogador faz à mão.
-- Arcanista: caminhos Bruxo, Feiticeiro e Mago (p043), com o Mago começando com 4 magias: não modelado.
-- Armas (força mínima), armaduras (categoria), itens com espaço fracionário e Dinheiro: ver `rules-equipamento.js`; não reconferidos nesta rodada.
+### 8.4 Poderes de classe: nível e pré-requisito conferidos no livro (rodada de 2026-11-18, tarefa 1)
+- Conferência feita contra as listas de cada classe (p044 Arcanista; p048-p050 Bárbaro e Bardo; p053-p057 Bucaneiro e Caçador; p060-p061 Cavaleiro; p063-p064 Clérigo; p068 Druida; p072 Guerreiro; p074-p075 Inventor; p079-p083 Ladino e Lutador; p085-p086 Nobre; p088-p090 Paladino) e contra os poderes gerais e de destino (p132) e concedidos (p133).
+- Catálogo (`tormenta20/rules-poderes.js`): 353 poderes. Por tipo: 187 de classe, 90 gerais, 72 concedidos, 4 sem tipo verificado (todos fora do livro).
+- Poderes de classe que aparecem no Livro Básico: 101. Verificados (livro confirma nome, nível e pré-requisito): 65. Os outros 36 têm nome e pré-requisito conferidos, mas o livro não dá nível de acesso (marcados com `nota`, `verificado: false`); em 5 deles (Golpe Mágico, Balada Fascinante, Golpe Pessoal, Alquimista Iniciado e Orar) o nível vem só de [E] ou [R], e a nota diz isso.
+- Correções de nível e pré-requisito aplicadas: pré-requisitos que faltavam (ex.: Totem Espiritual, Bote, Escaramuça, Escaramuça Superior, Trocação Tumultuosa, Chave, Mestre Alquimista, Heranca Superior, Forma Selvagem Superior); pré-requisitos que estavam errados (Manipular em Massa, Golpe Elemental, Manipular, Danca das Lâminas; Ímpeto estava como poder geral e é de Bárbaro, Caçador e Guerreiro, p048, p057, p072); níveis confirmados no livro (Aura de Cura, Aura Ardente, Trocação, Mestre em Arma etc.).
+- Novo poder no catálogo: Esgrima Mágica (Bardo, p050), pré-requisito de Golpe Mágico (p051) e de Dança das Lâminas.
+- Poderes fora do Livro Básico: 90 (86 de classe e 4 sem tipo: Camaleão, Truque de Palco, Chefe de Gangue, Dança Marcial). Não aparecem no livro, então não foram inventados: ficam com `foraDoLivro: true`. O app mostra "fora do Livro Básico (não é regra)" na lista e no aviso, e não confere nível nem pré-requisito. Continuam selecionáveis para não quebrar fichas antigas. Lista completa (busca no nome e na lista de classe do livro, p044-p090, e no texto do livro): Agrilhoar os Mortos, Familiar Aprimorado, Ingrediente Especial, Raio Dividido, Familiar Elemental, Contramágica Superior, Trama Célere, Apoteose, Sifão de Mana, Magia Suspensa, Espiritualista, Manifestar Totem, Instinto Indomável, Fúria Elemental, Invocar os Ancestrais, Revide, Instinto Furioso, Enigma do Aço, Regeneração Sobrenatural, Sede Sanguinária, Cicatrizes Ritualísticas, Música: Marcha Vitoriosa, Performance: Crescendo, Artista Versátil, Inspiração Espirituosa, Celebridade Artoniana, Ressoar, Pegou no Chapéu, Remise, Lorotas da Terra e do Mar, Amigo do Passado, Lobo do Mar, Sequência do Predador, Avanço do Predador, Sequência Dilaceradora, Sede de Sangue, Tempestade de Lâminas, Mestre Armadilheiro, Mestre das Posturas, Grão-Mestre, Resiliência Marcial, Inércia do Aço, Investida Ricochete, Mente Disciplinada, Determinação Inabalável, Ordens de Engajamento, Operações Combinadas, Velho de Guerra, Força da Devoção, Arma Divina, Canalizar Poderoso, Presente dos Deuses, Canalizar Abençoado, Canalizar Concentrado, Canalizar Profanado, Missa: Compartilhar Milagre, Representante Divino, Poder Tumular, Arma Tradicional, Companheiro Aberrante, Confluência Elemental, Metamorfose Instantânea, Oráculo da Natureza, Força da Natureza (poder de DB), Golpe de Gênio, Traje de Batalha, Gênio Inovador, Camaleão, Mestre Impostor, Mestre Assassino, Mestre Envenenador, Truque de Palco, Truque Mágico Aprimorado, Assassino em Série, Chefe de Gangue, Rei do Crime, Senhor do Submundo, Ameaça Brutal, Onda de Choque, Dança Marcial, Gingado Elusivo, Invencível, Manto de Batalha, Aura de Arrependimento, Escudo Sagrado, Aura Vingadora, Investida Sagrada, Convicção Heroica, Arma Sacramentada, Hoste Celestial.
+- Pendências de nível e tipo que o livro não resolve: Raio Arcano, Pele de Ferro, Força Indomável, Frenesi, Esgrimista, Aparar, En Garde, Ambidestria, Armadilheiro, Bater e Correr, Golpe Pessoal, Missa: Escudo Divino, Abençoar Arma, Canalizar Amplo, Sarado, Inspirar Confiança, Língua de Prata, Montaria Sagrada, Orar e os poderes de Bardo sem nível (Golpe Mágico, Balada Fascinante, Inspiração Marcial, Aumentar Repertório, Paródia). Nível null: o app avisa "nível de acesso NÃO VERIFICADO".
+- Tipo de 26 poderes (seção 3.3): o livro descreve a maioria; a conferência de tipo não foi refeita nesta rodada.
 
-### 8.5 Lacunas da seção 4 desta auditoria
-- Níveis 6 a 20, tabelas de armas, armaduras e equipamento, listas de magias e de poderes: já cobertos em rodadas anteriores (`TRABALHO_T20_*.md`).
-- Escolha de três atributos da raça: feito (8.2). Aumento de Atributo: feito (8.1).
-- Trocar perícia de Humano por poder geral: pendente (8.4).
-- Subclasses do Arcanista: pendente (8.4).
-- Descrição completa das habilidades de classe: pendente.
+### 8.5 Magias conhecidas acima do 1º nível (tarefa 2)
+- Regra do livro, por classe: Bardo (p050) e Druida (p067): 2 magias no 1º nível e +1 nos níveis pares. Clérigo (p063): 3 no 1º e +1 a cada nível. Arcanista (p043): 3 no 1º e +1 a cada nível para Bruxo; Feiticeiro +1 só nos níveis ímpares (3º, 5º...); Mago começa com 4 e ganha +1 por nível e +1 a cada novo círculo (5º, 9º, 13º, 17º).
+- Implementado: `t20MagiasConhecidasLimite(classe, nivel, caminho)` em `engine.js`; validação na etapa 9 em todos os níveis (`validator.js`); texto da tela e do PDF com o número do nível. Testes: `tests/test_15_livro_poderes_magias.js` (fórmula de 1º a 20º para cada classe e caminho) e `tests/test_01_calculos.js`.
+- Ambiguidade do livro: para o Mago, o texto diz que ele aprende "uma magia adicional daquele círculo" ao ganhar um novo círculo, além da magia por nível. O app soma as duas. Se o livro quiser dizer que o novo círculo substitui a magia do nível, a fórmula muda (conferir p043).
+- Não coberto: PM por círculo e tabela de magias por nível (`T20_MAGIAS_PROGRESSAO` segue NÃO VERIFICADO). Magias do Paladino (só pelo poder Orar, p089) não são contadas como magia de classe.
+
+### 8.6 Humano: troca de perícia por poder geral (tarefa 3, p025)
+- Regra do livro: Versátil, treinado em duas perícias à escolha; "você pode trocar uma dessas perícias por um poder geral a sua escolha".
+- Implementado: campo `racaTrocaPericia` (state.js). Na etapa Poderes, caixa "Humano: trocar uma das duas perícias..." (`ui.js`). Com a caixa marcada, a etapa Perícias tem uma perícia livre a menos (`engine.js`, `t20PericiasDisponiveis`). O validador exige um poder geral na etapa 8 e recusa a troca para outra raça (etapa 7). O poder geral passa pelos mesmos pré-requisitos dos demais poderes.
+- Testes: `tests/test_15_livro_poderes_magias.js`.
+
+### 8.7 Caminhos do Arcanista (tarefa 4, p043)
+- Implementado: escolha do caminho (Bruxo, Feiticeiro ou Mago) na etapa 5, campo `caminho` (state.js). O caminho define o atributo de magia (Feiticeiro: Carisma; Bruxo e Mago: Inteligência; p043) e a quantidade de magias conhecidas (8.5). O validador exige o caminho e acusa atributo de magia que não bate com ele.
+- Pendências (mecânica nova, não implementada), todas em p043 e p044-p045:
+  - Bruxo: foco (RD 10, PV iguais à metade dos seus, lançar com a mão ou teste de Misticismo CD 20; recuperar com uma semana e T$ 100). Sem modelagem do foco.
+  - Feiticeiro: linhagem sobrenatural (Dracônica, Feérica, Rubra; herança básica, aprimorada e superior, p044-p045) e poderes de Feiticeiro. O app não aplica a herança nem os efeitos da linhagem; os poderes "Herança Aprimorada" e "Herança Superior" conferem só o nível e o pré-requisito de poder ou de texto; a herança em si não é aplicada.
+  - Mago: grimório (memorização diária, troca só com estudo de uma hora, p043). O app não controla magias memorizadas.
+  - Mago: custo de aprender magia por escrita (Escriba Arcano, p044) não modelado.
+
+### 8.8 Resultado dos testes (rodada de 2026-11-18)
+- `node tormenta20/tests/run_all.js`: 15 arquivos, todos passaram (14 anteriores, com 5 expectativas em 3 arquivos atualizadas para a regra do livro, e 1 arquivo novo).
+- `node tormenta20/tests/e2e_chrome.js`: todas as checagens de navegador passaram.
+- Fontes: as páginas citadas são do PDF `T20_-_Livro_Básico_-_Jogo_do_Ano.pdf`; o índice do livro bate com `t.split('\f')` + 1.

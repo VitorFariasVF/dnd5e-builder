@@ -81,7 +81,7 @@ t.igual("círculo: Bardo nível 6 libera 2º", ctx.t20CirculoMaximo(6, "bardo"),
 t.igual("círculo: Bardo nível 10 libera 3º", ctx.t20CirculoMaximo(10, "bardo"), 3);
 t.igual("círculo: Clérigo nível 5 libera 2º (p063)", ctx.t20CirculoMaximo(5, "clerigo"), 2);
 t.igual("magias do 1º nível do Clérigo = 3", ctx.t20MagiasConhecidasLimite("clerigo", 1), 3);
-t.igual("magias acima do 1º nível = null (NÃO VERIFICADO)", ctx.t20MagiasConhecidasLimite("clerigo", 2), null);
+t.igual("magias do Clérigo no 2º nível = 4 (3 + 1 por nível, p063)", ctx.t20MagiasConhecidasLimite("clerigo", 2), 4);
 /* PV do Bardo: 12 + CON no 1º nível (p050). Antes o app não calculava (fontes divergiam). */
 t.igual("PV do Bardo nível 1 com CON 2 = 14 (p050)", ctx.t20PVTotal("bardo", 1, 2), 14);
 t.igual("PV do Guerreiro nível 2 com CON 0 = 25", ctx.t20PVTotal("guerreiro", 2, 0), 25);

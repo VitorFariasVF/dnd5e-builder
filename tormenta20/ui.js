@@ -214,6 +214,11 @@ function t20PassoClasse(){
     extra = `<div class="field"><label for="atributo-magia">Atributo de magia</label>
       <select id="atributo-magia" data-campo="personagem.atributoMagia" data-recarregar="1">${t20Opcoes(c.atributoMagiaOpcoes.map(a => ({ valor: a, rotulo: T20_ATRIBUTO_NOME[a] })), p.atributoMagia || c.atributoMagiaPadrao, undefined)}</select></div>`;
   }
+  if(p.classe === "arcanista"){
+    extra += `<div class="field"><label for="caminho">Caminho do Arcanista</label>
+      <select id="caminho" data-campo="personagem.caminho" data-recarregar="1">${t20Opcoes([{ valor: "bruxo", rotulo: "Bruxo (Inteligência)" }, { valor: "feiticeiro", rotulo: "Feiticeiro (Carisma)" }, { valor: "mago", rotulo: "Mago (Inteligência)" }], p.caminho, "Escolha o caminho")}</select></div>
+      <p class="hint">Livro p043. Feiticeiro aprende magia só nos níveis ímpares; Mago começa com 4 magias e ganha uma a cada novo círculo. Os efeitos de linhagem, foco e grimório não são aplicados pelo app.</p>`;
+  }
   let resumo = `<p class="muted">Escolha uma classe para ver os dados.</p>`;
   if(c){
     const pv = c.pvInicial === null ? "NÃO CALCULADO (fontes divergem)" : `${c.pvInicial} + CON no 1º nível; +${c.pvNivel} + CON por nível`;
@@ -223,7 +228,7 @@ function t20PassoClasse(){
       <p><b>PM por nível:</b> ${t20Esc(c.pmNivel)}${c.conjurador ? " (conjurador: soma o atributo de magia)" : ""}</p>
       <p><b>Perícias fixas:</b> ${t20Esc([...c.fixas, ...(c.grupoFixo ? [c.grupoFixo.opcoes.join(" ou ") + " (uma)"] : [])].join(", ") || "NÃO VERIFICADO")}</p>
       <p><b>Perícias livres por nível:</b> ${t20Esc(c.periciasPorNivel)}</p>
-      <p><b>Conjuração:</b> ${c.conjurador ? `sim, ${t20Esc(c.magiasNivel1)} magias de 1º círculo no início` : "não neste app"}</p>
+      <p><b>Conjuração:</b> ${c.conjurador ? `sim, ${t20Esc(t20MagiasConhecidasLimite(p.classe, 1, p.caminho))} magias no 1º nível` : "não neste app"}</p>
       <p><b>Resistência forte:</b> ${t20Esc(c.forte || "NÃO VERIFICADO")}</p>
       <p class="hint">PV: ${t20Esc(c.fontePv)}. Perícias: ${t20Esc(c.fontePericias)}.</p></div>`;
   }
@@ -311,6 +316,7 @@ function t20PassoPericias(){
 
 /* ---- etapa 8: poderes (catálogo de T20_PODERES) ---- */
 function t20RotuloPoder(x){
+  if(x.foraDoLivro) return `${x.nome} · fora do Livro Básico (não é regra)`;
   return `${x.nome}${x.nivel !== null ? ` · nível ${x.nivel}` : " · nível NÃO VERIFICADO"}`;
 }
 function t20HtmlDetalhePoder(cat){
@@ -353,7 +359,10 @@ function t20PassoPoderes(){
       ${checagens.length ? `<ul class="clean">${checagens.map(x => `<li${x.mecanico ? ' class="chip-no"' : ""}>${t20Esc(x.msg)}</li>`).join("")}</ul>` : ""}
       <button type="button" class="small danger" data-acao="poder-del" data-i="${i}">Remover poder</button></div>`;
   }).join("");
-  return `<p class="hint">Escolha os poderes do catálogo (de classe, gerais e concedidos) ou digite um que não esteja na lista. Pré-requisitos de atributo, perícia e de outro poder são conferidos: erro no modo estrito, aviso no livre.</p>
+  const humano = p.raca === "humano"
+    ? `<div class="info-box"><label class="checkbox-row"><input type="checkbox" id="humano-troca" data-acao="humano-troca" ${p.racaTrocaPericia ? "checked" : ""}> <span><b>Humano</b>: trocar uma das duas perícias treinadas por um poder geral (p025, Versátil). Marque e escolha o poder geral abaixo; a etapa Perícias passa a ter uma perícia a menos.</span></label></div>`
+    : "";
+  return `${humano}<p class="hint">Escolha os poderes do catálogo (de classe, gerais e concedidos) ou digite um que não esteja na lista. Pré-requisitos de atributo, perícia e de outro poder são conferidos: erro no modo estrito, aviso no livre.</p>
     ${linhas || `<p class="muted">Nenhum poder registrado.</p>`}
     <button type="button" class="secondary" data-acao="poder-add">Adicionar poder</button>
     <p class="hint">O catálogo ainda não traz todos os poderes de cada classe. Quantidade de poderes por nível: NÃO VERIFICADO.</p>`;
@@ -375,7 +384,7 @@ function t20PassoMagias(){
   if(!c.conjurador) return `<p class="muted">${t20Esc(c.nome)} não conjura neste app. Pule esta etapa.</p>`;
   const max = t20CirculoMaximoClasse(p.classe, p.nivel);
   const teto = max === null ? T20_CIRCULO_TELA : max;
-  const limite = t20MagiasConhecidasLimite(p.classe, p.nivel);
+  const limite = t20MagiasConhecidasLimite(p.classe, p.nivel, p.caminho);
   const linhas = p.magias.map((m, i) => {
     const circulos = Array.from({ length: Math.max(1, teto, m.circulo || 1) }, (_, k) => ({ valor: k + 1, rotulo: `${k + 1}º` }));
     const cat = !m.livre && m.nome ? t20MagiaCatalogo(m.nome) : null;
@@ -392,7 +401,7 @@ function t20PassoMagias(){
       ${cat ? t20HtmlDetalheMagia(cat) : ""}
       <button type="button" class="small danger" data-acao="magia-del" data-i="${i}">Remover</button></div>`;
   }).join("");
-  return `<p><b>Círculo máximo no nível ${t20Esc(p.nivel)}:</b> ${max === null ? "NÃO VERIFICADO" : t20Esc(max)}. ${limite === null ? "Magias conhecidas acima do 1º nível: NÃO VERIFICADO." : `Magias conhecidas no 1º nível: <b>${t20Esc(limite)}</b>.`}</p>
+  return `<p><b>Círculo máximo no nível ${t20Esc(p.nivel)}:</b> ${max === null ? "NÃO VERIFICADO" : t20Esc(max)}. Magias conhecidas neste nível: <b>${t20Esc(limite)}</b>.</p>
     <p class="hint">Escolha o círculo e depois a magia. As de 1º círculo têm o detalhe completo; as de 2º a 5º aparecem só com o nome, até a página de cada uma ser conferida.</p>
     ${linhas || `<p class="muted">Nenhuma magia registrada.</p>`}
     <button type="button" class="secondary" data-acao="magia-add">Adicionar magia</button>`;
@@ -591,6 +600,7 @@ function t20Acao(el){
       break;
     }
     case "pericia": break;   // tratado em change
+    case "humano-troca": break;   // tratado em change
     case "modo": break;      // tratado em change
     case "poder-add": state.personagem.poderes.push({ id: null, nome: "", tipo: "classe", nivel: 1, nota: "", livre: false }); t20Salvar(); render(); break;
     case "poder-del": state.personagem.poderes.splice(Number(el.dataset.i), 1); t20Salvar(); render(); break;
@@ -666,6 +676,7 @@ function t20AoMudarCampo(el){
     if(!el.checked && i >= 0) lista.splice(i, 1);
     t20Salvar(); render(); return;
   }
+  if(el.dataset.acao === "humano-troca"){ state.personagem.racaTrocaPericia = el.checked; t20Salvar(); render(); return; }
   if(el.dataset.acao === "poder-escolha"){ t20EscolherPoder(Number(el.dataset.i), el.value); t20Salvar(); render(); return; }
   if(el.dataset.acao === "magia-escolha"){ t20EscolherMagia(Number(el.dataset.i), el.value); t20Salvar(); render(); return; }
   if(el.dataset.acao === "magia-circ"){ t20MudarCirculoMagia(Number(el.dataset.i), el.value); t20Salvar(); render(); return; }

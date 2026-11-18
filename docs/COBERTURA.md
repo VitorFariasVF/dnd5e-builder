@@ -19,7 +19,7 @@ O percentual de regras conferidas do D&D caiu em relação à rodada anterior (9
 
 **Call of Cthulhu:** ocupações fora das 19 (faltam as que dependem de Contabilidade e Operar Maquinário Pesado, e nove sem fórmula em fonte); Sanidade máxima só de fórum; Dano e Corpo acima de 204; ordem do MOV e idade a partir dos 40; exportação para VTT.
 
-**Tormenta20:** aplicados nesta rodada: Aumento de Atributo (poder de classe, uma vez por patamar) e escolha de três atributos da raça. Faltam: cerca de 90 poderes de classe que o Livro Básico não traz (vindos de [E]) e 99 a conferir em nível e pré-requisito; tipo de 26 poderes; magias conhecidas acima do 1º nível; troca de perícia de Humano por poder geral; caminhos do Arcanista; equipamento fora da ficha (48 itens com espaço fracionário); perda de Carisma dos poderes da Tormenta; Foundry real.
+**Tormenta20:** aplicados nesta rodada: Aumento de Atributo; escolha de três atributos da raça; magias conhecidas acima do 1º nível por classe e caminho do Arcanista (p043, p050, p063, p067); troca de perícia de Humano por poder geral (p025); escolha do caminho do Arcanista (atributo de magia e contagem); pré-requisitos e níveis de 101 poderes de classe conferidos no livro (65 verificados); 90 poderes que o livro não traz marcados como fora do livro, sem valer como regra. Faltam: herança, foco e grimório dos caminhos do Arcanista (p043-p045); PM por círculo; tipo de 26 poderes; equipamento fora da ficha (48 itens com espaço fracionário); perda de Carisma dos poderes da Tormenta; Foundry real.
 
 **Tormenta RPG:** bases de resistência por classe, magias por dia e listas, equipamento, traços das raças (exceto o Anão), custo da compra de pontos, licença e ano da edição.
 

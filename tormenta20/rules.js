@@ -176,7 +176,7 @@ const T20_CLASSES = {
     proficiencias: ["Nenhuma"],
     verificadoPv: true, fontePv: "Tormenta20 Jogo do Ano, p043 (livro do usuário): 8 PV + CON, 2 PV + CON por nível; 6 PM por nível",
     verificadoPericias: true, fontePericias: "Tormenta20 Jogo do Ano, p038 e p043: Misticismo e Vontade, mais 2 a escolher; Inteligência positiva também treina",
-    fonteMagias: "Tormenta20 Jogo do Ano, p043: três magias de 1º círculo (Bruxo e Feiticeiro). Mago começa com 4: caminho não modelado",
+    fonteMagias: "Tormenta20 Jogo do Ano, p043: três magias de 1º círculo (Bruxo e Feiticeiro). Mago começa com 4 (caminho escolhido na etapa 5; contagem em engine.js)",
     verificadoMagias: false
   },
   barbaro: {

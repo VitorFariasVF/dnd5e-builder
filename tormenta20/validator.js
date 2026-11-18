@@ -59,6 +59,13 @@ function t20ValidarEtapa(etapa, p, modo){
     if(c && c.conjurador && c.atributoMagiaOpcoes.length > 1){
       reportar(c.atributoMagiaOpcoes.includes(p.atributoMagia || c.atributoMagiaPadrao), "Escolha o atributo de magia da classe.", "atributo-magia");
     }
+    if(p.classe === "arcanista"){
+      reportar(["bruxo", "feiticeiro", "mago"].includes(p.caminho), "Escolha o caminho do Arcanista (Bruxo, Feiticeiro ou Mago).", "caminho");
+      if(p.caminho){
+        const esperado = t20AtributoMagiaEfetivo(p);
+        reportar(!p.atributoMagia || p.atributoMagia === esperado, `Caminho ${p.caminho}: o atributo de magia é ${T20_ATRIBUTO_NOME[esperado]} (livro p043).`, "atributo-magia");
+      }
+    }
     if(c && !c.verificadoPv) aviso(`PV e PM de ${c.nome}: ${c.fontePv}.`);
   }
 
@@ -86,6 +93,9 @@ function t20ValidarEtapa(etapa, p, modo){
 
   if(etapa === 7){
     const c = T20_CLASSES[p.classe];
+    if(p.racaTrocaPericia){
+      reportar(p.raca === "humano", "A troca de perícia por poder geral é do Humano (p025).", "pericias");
+    }
     const disp = c ? t20PericiasDisponiveis(p, atr || {}) : null;
     const escolhidas = p.periciasEscolhidas || [];
     reportar(escolhidas.every(n => T20_PERICIA_NOMES.includes(n)), "Há uma perícia inválida na lista.", "pericias");
@@ -101,6 +111,10 @@ function t20ValidarEtapa(etapa, p, modo){
   }
 
   if(etapa === 8){
+    if(p.racaTrocaPericia){
+      const temGeral = (p.poderes || []).some(pd => pd.id && T20_PODERES[pd.id] && T20_PODERES[pd.id].tipo === "geral");
+      reportar(p.raca === "humano" && temGeral, "Troca de perícia (Humano, p025): escolha um poder geral para o lugar da perícia.", "poderes");
+    }
     const treinadas = t20TreinadasLista(p);
     const ids = [];
     const aumentosContados = new Set(t20AumentosAplicados(p).map(a => a.i));
@@ -154,9 +168,8 @@ function t20ValidarEtapa(etapa, p, modo){
     const nomes = (p.magias || []).map(m => String(m.nome || "").trim()).filter(Boolean);
     [...new Set(nomes.filter((n, k) => nomes.indexOf(n) !== k))].forEach(n => aviso(`${n} aparece mais de uma vez: repetição NÃO VERIFICADA.`));
     if(c && c.conjurador){
-      const limite = t20MagiasConhecidasLimite(p.classe, p.nivel);
-      if(limite !== null) reportar(p.magias.length === limite, `Escolha ${limite} magias de 1º círculo (escolheu ${p.magias.length}).`, "magias");
-      else aviso("Número de magias conhecidas acima do 1º nível: NÃO VERIFICADO. Confira no livro.");
+      const limite = t20MagiasConhecidasLimite(p.classe, p.nivel, p.caminho);
+      reportar(p.magias.length === limite, `Escolha ${limite} magias conhecidas no nível ${p.nivel} (escolheu ${p.magias.length}).`, "magias");
     } else if(p.magias.length){
       aviso(`${c ? c.nome : "Esta classe"} não tem magias listadas neste app: as magias ficam só como anotação.`);
     }

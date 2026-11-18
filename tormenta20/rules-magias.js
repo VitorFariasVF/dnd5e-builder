@@ -90,5 +90,6 @@ const T20_MAGIAS_PENDENTES = [
 const T20_MAGIAS_PROGRESSAO = {
   verificado: false,
   tabela: null,
-  fonte: "NÃO VERIFICADO: nenhuma tabela de magias conhecidas ou PM por círculo foi acessível. Ver rules.js (magiasNivel1) para o 1º nível"
+  regraMagiasConhecidas: "Tormenta20 Jogo do Ano, p043 (Arcanista e caminhos), p050 (Bardo), p063 (Clérigo), p067 (Druida): contagem por classe, aplicada em engine.js (t20MagiasConhecidasLimite).",
+  fonte: "NÃO VERIFICADO: PM por círculo e tabela de magias por nível não foram conferidos. A contagem de magias conhecidas segue a regra por classe do livro (ver regraMagiasConhecidas)."
 };

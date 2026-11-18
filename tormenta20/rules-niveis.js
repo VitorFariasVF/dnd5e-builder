@@ -37,7 +37,7 @@ const T20_NIVEIS_ESPEC = {
       20: [{ nome: "Alta Arcana", frase: "Custo em PM das magias arcanas cai pela metade." }]
     },
     poderes: { 6: ["heranca-aprimorada"], 8: ["mestre-em-escola"], 10: ["fluxo-de-mana"], 11: ["heranca-superior"] },
-    notas: "PV e PM confirmados (p043). Círculos: 2º no 5º, 3º no 9º, 4º no 13º, 5º no 17º (p043). Magia nova a cada nível, de qualquer círculo (p043). Mago começa com 4 magias (p043): caminho não modelado. Poderes sem nível no livro (ex.: Contramágica Aprimorada, Dissipar Magia) não entram."
+    notas: "PV e PM confirmados (p043). Círculos: 2º no 5º, 3º no 9º, 4º no 13º, 5º no 17º (p043). Magia nova a cada nível, de qualquer círculo (p043). Mago começa com 4 magias (p043): caminho escolhido na etapa 5 e contado em engine.js (t20MagiasConhecidasLimite). Poderes sem nível no livro (ex.: Contramágica Aprimorada, Dissipar Magia) não entram."
   },
   barbaro: {
     nome: "Bárbaro", fonte: `${T20_NIVEIS_FONTE}: p047`, pv: 6, pm: 3, poderDeClasseDe: 2, magia: null,

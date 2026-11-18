@@ -123,7 +123,7 @@ t.igual("Manipular em Massa no 9º (exige 10º): erro no estrito", erros(8, "est
 
 pp = poderes("barbaro", 6, [{ id: "espiritualista", nivel: 6 }], { atributosBase: comAtr({ sabedoria: 0 }) });
 const esp = erros(8, "estrito", pp).map(e => e.msg);
-t.igual("Espiritualista sem SAB 2 e sem Totem Espiritual: dois erros mecânicos", esp.length, 2);
+t.igual("Espiritualista (fora do Livro Básico): não é conferido, sem erro mecânico", esp.length, 0);
 pp = poderes("barbaro", 6, [{ id: "totem-espiritual", nivel: 4 }, { id: "espiritualista", nivel: 6 }], { atributosBase: comAtr({ sabedoria: 2 }) });
 t.igual("Espiritualista com SAB 2 e Totem tomado antes: sem erro", erros(8, "estrito", pp).length, 0);
 
@@ -136,7 +136,7 @@ pp = poderes("guerreiro", 10, [{ id: "planejamento-marcial", nivel: 10 }], { per
 t.igual("Planejamento Marcial com Guerra treinada: sem erro mecânico", erros(8, "estrito", pp).some(e => /treinar em Guerra/.test(e.msg)), false);
 
 pp = poderes("nobre", 10, [{ id: "autoridade-feudal", nivel: 6 }, { id: "titulo", nivel: 10 }]);
-t.igual("Título com Autoridade Feudal tomada: sem erro; o texto do pré-requisito vira aviso", [erros(8, "estrito", pp).length, avisos(8, "estrito", pp).some(a => /Terras conquistadas/.test(a.msg))], [0, true]);
+t.igual("Título com Autoridade Feudal tomada: sem erro; o texto do pré-requisito vira aviso", [erros(8, "estrito", pp).length, avisos(8, "estrito", pp).some(a => /conquistado terras/.test(a.msg))], [0, true]);
 
 pp = poderes("ladino", 6, [{ nome: "Golpe de Sorte", tipo: "origem", nivel: 2, livre: true }]);
 t.igual("poder digitado (fora do catálogo): sem checagem mecânica, aceito", erros(8, "estrito", pp).length, 0);
