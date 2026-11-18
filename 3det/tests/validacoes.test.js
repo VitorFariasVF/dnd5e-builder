@@ -68,9 +68,9 @@ teste("desvantagens somando −2 são aceitas", () => {
   assert.ok(!temMsg(valida(6, p), "o limite é −2"));
 });
 
-teste("Ágil com Lento (incompatíveis) é recusado no modo estrito", () => {
-  const p = base(); p.desvantagens = [{ id: "lento", valor: -1 }];
-  assert.ok(temMsg(erros(valida(6, p)), "Ágil é incompatível com Lento"));
+teste("Aceleração com Lento (incompatíveis, PDF p57) é recusado no modo estrito", () => {
+  const p = base(); p.vantagens.push({ id: "aceleracao", qtd: 1, custo: 1, nota: "" }); p.desvantagens = [{ id: "lento", valor: -1 }];
+  assert.ok(temMsg(erros(valida(6, p)), "Aceleração é incompatível com Lento"));
 });
 
 teste("Ágil com Tapado (compatíveis) é aceito", () => {
@@ -148,10 +148,10 @@ teste("arquétipo fora da lista é recusado", () => {
   assert.ok(temMsg(erros(valida(2, p)), "Arquétipo fora da lista"));
 });
 
-teste("arquétipo com custo NÃO VERIFICADO (Anão) gera aviso, sem erro", () => {
+teste("arquétipo Anão (custo 1 pt, PDF p67) não gera aviso de custo", () => {
   const p = base(); p.arquetipo = "anao";
   assert.deepStrictEqual(erros(valida(2, p)), []);
-  assert.ok(temMsg(avisos(valida(2, p)), "Custo do arquétipo Anão não verificado"));
+  assert.ok(!temMsg(avisos(valida(2, p)), "não verificado"));
 });
 
 teste("desvantagem só para NPC (Dependência) é recusada para o jogador", () => {
@@ -198,10 +198,10 @@ teste("nome vazio: erro no estrito, só aviso no livre", () => {
 });
 
 teste("Revisão (etapa 7) junta as pendências de todas as etapas", () => {
-  const p = base(); p.nome = ""; p.desvantagens = [{ id: "tapado", valor: -1 }, { id: "lento", valor: -1 }];
+  const p = base(); p.nome = ""; p.vantagens.push({ id: "aceleracao", qtd: 1, custo: 1, nota: "" }); p.desvantagens = [{ id: "tapado", valor: -1 }, { id: "lento", valor: -1 }];
   const itens = valida(7, p);
   assert.ok(temMsg(itens, "Informe o nome"));
-  assert.ok(temMsg(itens, "Ágil é incompatível com Lento") || temMsg(itens, "Lento é incompatível com Ágil"));
+  assert.ok(temMsg(itens, "Aceleração é incompatível com Lento"));
 });
 
 sair("validacoes");

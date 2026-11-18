@@ -37,8 +37,7 @@ const D = { nome: "D", nivelPoder: "heroi", pontosTotal: 20, atributos: { P: 3, 
   ],
   desvantagens: [{ id: "tapado", valor: -1, nota: "" }] };
 
-/* Personagem E (Iniciante, 10 pts): P1 H1 R1, arquétipo Anão. O custo do Anão é NÃO VERIFICADO (null).
-   Gastos e saldo ficam null (a definir), nunca um palpite. */
+/* Personagem E (Iniciante, 10 pts): P1 H1 R1, arquétipo Anão (custo 1 pt, 3DeT Victory PDF p67). */
 const E = { nome: "E", nivelPoder: "iniciante", pontosTotal: 10, atributos: { P: 1, H: 1, R: 1 }, arquetipo: "anao",
   pericias: [], vantagens: [], desvantagens: [] };
 
@@ -98,11 +97,11 @@ teste("arquétipo sem escolha custa 0; Elfo custa 1; Humano custa 0", () => {
   assert.strictEqual(calc("tdtCustoArquetipo({ arquetipo: 'humano' })", {}), 0);
 });
 
-teste("personagem E (Anão, custo NÃO VERIFICADO): gastos e saldo ficam null, arquétipo null", () => {
+teste("personagem E (Anão, custo 1 pt): gastos 4, saldo 6", () => {
   const r = calc("tdtResumoPontos(p)", E);
-  assert.strictEqual(r.custoArquetipo, null);
-  assert.strictEqual(r.gastos, null);
-  assert.strictEqual(r.saldo, null);
+  assert.strictEqual(r.custoArquetipo, 1);
+  assert.strictEqual(r.gastos, 4);
+  assert.strictEqual(r.saldo, 6);
   assert.strictEqual(r.disponiveis, 10);
 });
 
@@ -110,10 +109,10 @@ teste("pontos disponíveis ficam null com atributo vazio", () => {
   assert.strictEqual(calc("tdtSaldo({ pontosTotal: 10, atributos: { P: null, H: 1, R: 1 }, pericias: [], vantagens: [], desvantagens: [], arquetipo: '' })", {}), null);
 });
 
-teste("incompatibilidade vantagem×desvantagem é detectada nos dois sentidos", () => {
-  const P = { vantagens: [{ id: "agil", qtd: 1, custo: 1, nota: "" }], desvantagens: [{ id: "lento", valor: -1, nota: "" }] };
+teste("incompatibilidade vantagem×desvantagem: Aceleração e Lento (PDF p57)", () => {
+  const P = { vantagens: [{ id: "aceleracao", qtd: 1, custo: 1, nota: "" }], desvantagens: [{ id: "lento", valor: -1, nota: "" }] };
   const pares = calc("tdtIncompatibilidades(p).map(x => [x.a.id, x.b.id])", P);
-  assert.deepStrictEqual(pares, [["agil", "lento"]]);
+  assert.deepStrictEqual(pares, [["aceleracao", "lento"]]);
   const Q = { vantagens: [{ id: "agil", qtd: 1, custo: 1, nota: "" }], desvantagens: [{ id: "tapado", valor: -1, nota: "" }] };
   assert.deepStrictEqual(calc("tdtIncompatibilidades(p).length", Q), 0);
 });

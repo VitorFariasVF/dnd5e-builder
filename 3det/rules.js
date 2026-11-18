@@ -45,7 +45,7 @@ window.TDT_RULES = {
     minimoComAtributoZero: 1, fonteMinimo: "PT (somente o Playtest)"
   },
 
-  // Perícias: 1 ponto cada [PT][KI]. O PT lista "Saber"; o KI lista "Conhecimento" no lugar. Divergência registrada.
+  // Perícias: 1 ponto cada. O Victory final usa "Saber" (PDF p30); "Conhecimento" é o nome do Kit/Playtest, mantido como alias.
   pericias: [
     { id: "animais",    nome: "Animais",    fonte: "PT; KI" },
     { id: "arte",       nome: "Arte",       fonte: "PT; KI" },
@@ -57,7 +57,7 @@ window.TDT_RULES = {
     { id: "medicina",   nome: "Medicina",   fonte: "PT; KI" },
     { id: "mistica",    nome: "Mística",    fonte: "PT; KI" },
     { id: "percepcao",  nome: "Percepção",  fonte: "PT; KI" },
-    { id: "saber",      nome: "Saber",      alias: "Conhecimento", fonte: "PT (Saber); KI (Conhecimento) — nome divergente entre documentos" },
+    { id: "saber",      nome: "Saber",      alias: "Conhecimento", fonte: "3DeT Victory, PDF p30 (livro do usuário): perícia Saber; o Victory não usa o nome Conhecimento" },
     { id: "sustento",   nome: "Sustento",   fonte: "PT; KI" }
   ],
   periciaCusto: 1,
@@ -68,7 +68,7 @@ window.TDT_RULES = {
     { id: "aceleracao", nome: "Aceleração", custo: 1, desc: null, fonte: "PT" },
     { id: "mais_acao", nome: "+Ação", custo: 1, multiplo: true, desc: null, fonte: "PT" },
     { id: "acumulador", nome: "Acumulador", custo: 1, desc: null, fonte: "PT" },
-    { id: "agil", nome: "Ágil", custo: 1, desc: "+2 em testes de Habilidade de agilidade, coordenação ou equilíbrio; 2 PM para crítico com 5 ou 6.", incompativel: ["lento", "atrapalhado"], fonte: "PT; KI" },
+    { id: "agil", nome: "Ágil", custo: 1, desc: "+2 em testes de Habilidade de agilidade, coordenação ou equilíbrio; 2 PM para crítico com 5 ou 6.", incompativel: ["atrapalhado"], fonte: "PT; KI" },
     { id: "ajudante", nome: "Ajudante", custo: 1, multiplo: true, desc: null, fonte: "PT" },
     { id: "anulacao", nome: "Anulação", custo: 1, desc: "Impede o alvo de usar uma vantagem (3 PM).", fonte: "PT; KI" },
     { id: "arena", nome: "Arena", custo: 1, multiplo: true, desc: null, fonte: "PT" },
@@ -143,7 +143,7 @@ window.TDT_RULES = {
     { id: "indeciso", nome: "Indeciso", valor: -1, desc: "Perda em Resistência de força de vontade.", incompativel: ["resoluto"], fonte: "PT; KI" },
     { id: "infame", nome: "Infame", valor: -1, desc: "Perda em testes sociais com quem reconhece o personagem.", fonte: "PT; KI" },
     { id: "insano", nome: "Insano", valor: -1, multiplo: true, fonte: "PT" },
-    { id: "lento", nome: "Lento", valor: -1, incompativel: ["agil"], fonte: "PT; regras do efeito NÃO VERIFICADO (o KI cita e não define)" },
+    { id: "lento", nome: "Lento", valor: -1, desc: "Em testes de iniciativa, sempre em Perda; gasta um movimento a mais para cruzar cada distância.", incompativel: ["aceleracao"], fonte: "3DeT Victory, PDF p57 (livro do usuário): –1 pt, efeito e incompatibilidade só com Aceleração" },
     { id: "monstruoso", nome: "Monstruoso", valor: -1, fonte: "PT" },
     { id: "municao", nome: "Munição", valor: -1, fonte: "PT" },
     { id: "pobreza", nome: "Pobreza", valor: -1, fonte: "PT" },
@@ -169,7 +169,7 @@ window.TDT_RULES = {
     { id: "aberrante", nome: "Aberrante", custo: 1, poderes: [], fonte: "PT (efeitos não lidos)" },
     { id: "abissal", nome: "Abissal", custo: 1, poderes: [], fonte: "PT (efeitos não lidos)" },
     { id: "alien", nome: "Alien", custo: 1, poderes: [], fonte: "PT (efeitos não lidos)" },
-    { id: "anao", nome: "Anão", custo: null, poderes: ["+1 em Máquinas", "Sentido (Infravisão)"], desvantagens: ["Lento"], fonte: "PT; custo NÃO VERIFICADO (cabeçalho cortado no trecho lido)" },
+    { id: "anao", nome: "Anão", custo: 1, poderes: ["+1 em Máquinas", "Sentido (Infravisão)"], desvantagens: ["Lento"], fonte: "3DeT Victory, PDF p67 (livro do usuário): custo 1 pt" },
     { id: "anfibio", nome: "Anfíbio", custo: 1, poderes: ["Imune (Anfíbio)", "Vigoroso"], desvantagens: ["Ambiente"], fonte: "PT" },
     { id: "celestial", nome: "Celestial", custo: 1, poderes: ["Carismático", "Inspirar (3 PM dá Ganho a um aliado)"], desvantagens: ["Código"], fonte: "PT" },
     { id: "centauro", nome: "Centauro", custo: 2, poderes: ["Corpo Táurico (3 PM para crítico em testes físicos)", "Vigoroso"], desvantagens: ["Diferente"], fonte: "PT" },
@@ -194,10 +194,8 @@ window.TDT_RULES = {
 
   lacunas: [
     "Efeito da maioria das vantagens e desvantagens (só as do Kit Introdutório estão descritas).",
-    "Arquétipos Aberrante, Abissal e Alien: efeitos não lidos; custo do Anão não visível.",
+    "Arquétipos Abissal e Alien: efeitos não lidos (Aberrante custa 1 pt, PDF p64).",
     "Kits e regras de veículos/artefatos completas.",
-    "Playtest e Kit divergem em Saber/Conhecimento; o livro final pode diferir de ambos.",
-    "3D&T Alpha (5 características) não está implementado; só o Victory (3 atributos).",
-    "Efeito mecânico de Lento (citado, não definido nos textos lidos)."
+    "3D&T Alpha (5 características) não está implementado; só o Victory (3 atributos)."
   ]
 };
