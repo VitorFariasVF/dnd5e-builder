@@ -256,6 +256,7 @@ function t20PassoAtributos(){
   const restante = T20_PONTOS_COMPRA.total - (gastos === null ? 0 : gastos);
   return `<p id="pontos" tabindex="-1"><b>Pontos gastos:</b> ${gastos === null ? "valor inválido" : `${gastos} de ${T20_PONTOS_COMPRA.total}`} · <span class="muted">${restante >= 0 ? `restam ${restante}` : `passou ${-restante}`}</span></p>
   <p class="hint">Todos os atributos começam em 0. Valores entre ${T20_PONTOS_COMPRA.minimo} e ${T20_PONTOS_COMPRA.maximo} antes da raça. O modificador é o próprio valor. ${t20Esc(T20_PONTOS_COMPRA.fonte)}.</p>
+  ${(() => { const sug = t20SugestaoAtributos(p.classe); return sug ? `<p><button type="button" class="secondary" data-acao="t20-sugerir-atributos">Sugerir distribuição</button> <span class="muted">${t20Esc(sug.texto)}</span></p>` : `<p class="muted">Escolha a classe antes para receber a sugestão.</p>`; })()}
   <div class="table-wrap"><table class="table-like t20-atributos" aria-describedby="pontos"><thead><tr><th scope="col">Atributo</th><th scope="col">Compra</th><th scope="col">Custo</th><th scope="col">Raça</th><th scope="col">Ajuste manual</th><th scope="col">Final</th></tr></thead><tbody>${linhas}</tbody></table></div>
   <p class="hint">Ajuste manual: use se a raça não tiver o ajuste verificado ou se a sua mesa usa outra regra. Fica em 0 por padrão.</p>`;
 }
@@ -529,6 +530,11 @@ function t20Acao(el){
         t20Salvar(); render();
         const btn = document.getElementById("atr-" + id); if(btn) btn.focus({ preventScroll: true });
       }
+      break;
+    }
+    case "t20-sugerir-atributos": {
+      const sug = t20SugestaoAtributos(state.personagem.classe);
+      if(sug){ state.personagem.atributosBase = { ...sug.valores }; t20Salvar(); render(); }
       break;
     }
     case "pericia": break;   // tratado em change

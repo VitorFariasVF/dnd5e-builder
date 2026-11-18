@@ -357,3 +357,21 @@ function t20TreinadasLista(p){
   (p.origemBeneficios || []).forEach(b => { if(b && b.tipo === "pericia" && b.valor) set.add(b.valor); });
   return set;
 }
+
+/* Criação orientada: distribuição sugerida dos 10 pontos de compra (antes da raça).
+   Conjuradores (Arcanista, Bardo, Clérigo, Druida): atributo de magia = 4 (7 pts), Constituição = 2 (2 pts), Destreza = 1 (1 pt).
+   Demais classes: o livro não traz atributo-chave por classe (NÃO VERIFICADO), então sugere-se distribuição equilibrada 2,2,2,2,1,1 (10 pts). */
+function t20SugestaoAtributos(classe){
+  const c = T20_CLASSES[classe];
+  if(!c) return null;
+  const valores = { forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0 };
+  if(c.conjurador && c.atributoMagiaPadrao){
+    valores[c.atributoMagiaPadrao] = 4;
+    valores.constituicao = 2;
+    valores.destreza = 1;
+    return { valores, texto: "Sugestão: 4 no atributo de magia da classe, 2 em Constituição e 1 em Destreza. Gasta os 10 pontos." };
+  }
+  ["forca", "destreza", "constituicao", "sabedoria"].forEach(a => valores[a] = 2);
+  ["inteligencia", "carisma"].forEach(a => valores[a] = 1);
+  return { valores, texto: "O livro não traz o atributo-chave desta classe (NÃO VERIFICADO). Sugestão: distribuição equilibrada, 2 em quatro atributos e 1 em dois." };
+}
