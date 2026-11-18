@@ -19,10 +19,10 @@ function trpgFormatarBonus(n){
    Confirmado no manual Tormenta RPG, PDF p224 (exemplo: nível 5, Des 14 = CA 13 sem armadura).
    O bônus de tamanho (default 0) vem só da raça Pequena: +1 de CA (goblin, halfling; PDF p.32). O campo derivados.tamanho
    (modificador digitado) não entra na conta. */
-function trpgClasseArmadura({ armadura = 0, escudo = 0, destreza = 10, nivel, bonusTamanho = 0 }){
+function trpgClasseArmadura({ armadura = 0, escudo = 0, destreza = 10, nivel, bonusTamanho = 0, bonusTalentos = 0 }){
   const md = trpgModificador(destreza);
   if(md === null || !trpgNivelValido(nivel)) return null;
-  return 10 + Math.floor(Number(nivel) / 2) + md + Number(armadura || 0) + Number(escudo || 0) + Number(bonusTamanho || 0);
+  return 10 + Math.floor(Number(nivel) / 2) + md + Number(armadura || 0) + Number(escudo || 0) + Number(bonusTamanho || 0) + Number(bonusTalentos || 0);
 }
 
 /* Iniciativa exibida = só o modificador de Destreza. O livro (PDF p.82) lista Iniciativa na tabela de perícias, com
@@ -71,9 +71,10 @@ function trpgEscolhasRaciais(personagem){
   return e && Array.isArray(e.ajustesEscolha) ? e.ajustesEscolha : [];
 }
 
-/* Ajuste da escolha racial (PDF p.31, p.37 e p.38). Só humano e lefou têm `escolha` em rules-racas.js.
-   Humano: +2 em duas habilidades diferentes. Lefou: +2 em duas diferentes, exceto Carisma, e Carisma –4 (ajuste fixo).
-   Escolha incompleta, repetida ou proibida: nada é aplicado (ajustes vazio) e `motivo` diz o que falta. */
+/* Escolha racial (PDF p.31, p.37, p.38 e p.42). Raças com `escolha` em rules-racas.js: humano (+2 em duas diferentes),
+   lefou (+2 em duas, exceto Carisma) e meio-elfo (+2 em uma, exceto Constituição e Destreza).
+   Devolve só a parte escolhida; o ajuste fixo da raça fica em trpgAjustesRaciais.
+   Escolha incompleta, repetida ou proibida: a escolha não é aplicada (ajustes vazio) e `motivo` diz o que falta. */
 function trpgEscolhaRacial(personagem){
   const r = trpgRacaPorValor(personagem && personagem.raca);
   if(!r || !r.escolha) return { aplicavel: false, ok: true, motivo: "", ajustes: {} };
@@ -82,21 +83,33 @@ function trpgEscolhaRacial(personagem){
   const usadas = [];
   for(let i = 0; i < e.quantidade; i++) usadas.push(trpgEscolhasRaciais(personagem)[i] || null);
   const ids = TRPG_ATRIBUTOS.map(a => a.id);
-  if(usadas.some(x => !x)) return falha("Escolha as " + e.quantidade + " habilidades do ajuste racial de " + r.nome + " (+" + e.valor + " em cada). Nada foi aplicado.");
-  if(usadas.some(x => !ids.includes(x) || e.excluir.includes(x))) return falha("Habilidade inválida para o ajuste racial de " + r.nome + ". Nada foi aplicado.");
-  if(new Set(usadas).size !== usadas.length) return falha("As habilidades do ajuste racial de " + r.nome + " precisam ser diferentes. Nada foi aplicado.");
-  const ajustes = Object.assign({}, r.ajustes || {});
+  if(usadas.some(x => !x)) return falha("Escolha as " + e.quantidade + " habilidade(s) do ajuste racial de " + r.nome + " (+" + e.valor + " em cada). Nada da escolha foi aplicado.");
+  if(usadas.some(x => !ids.includes(x) || e.excluir.includes(x))) return falha("Habilidade inválida para o ajuste racial de " + r.nome + ". Nada da escolha foi aplicado.");
+  if(new Set(usadas).size !== usadas.length) return falha("As habilidades do ajuste racial de " + r.nome + " precisam ser diferentes. Nada da escolha foi aplicado.");
+  const ajustes = {};
   usadas.forEach(x => { ajustes[x] = (ajustes[x] || 0) + e.valor; });
   return { aplicavel: true, ok: true, motivo: "", ajustes };
 }
 
-/* Atributos finais para os cálculos: os valores digitados mais o ajuste racial de escolha (quando completo e válido).
-   Valor vazio continua vazio. Ajustes fixos das demais raças não entram (como antes; ver rules-racas.js). */
+/* Ajustes raciais por habilidade (PDF p.31): o ajuste fixo de toda raça que o tem (anão, elfo, goblin, halfling, minotauro,
+   qareen, gnomo, meio-elfo e lefou) é sempre aplicado; a escolha, só quando completa e válida (humano, lefou, meio-elfo).
+   Devolve { fixos, escolha, total }. */
+function trpgAjustesRaciais(personagem){
+  const r = trpgRacaPorValor(personagem && personagem.raca);
+  const fixos = r && r.ajustes ? Object.assign({}, r.ajustes) : {};
+  const escolha = trpgEscolhaRacial(personagem);
+  const total = Object.assign({}, fixos);
+  Object.keys(escolha.ajustes).forEach(k => { total[k] = (total[k] || 0) + escolha.ajustes[k]; });
+  return { fixos, escolha, total };
+}
+
+/* Atributos finais para os cálculos: os valores digitados mais os ajustes raciais (fixos e escolha).
+   Valor vazio (null) continua vazio. Os valores digitados não mudam. */
 function trpgAtributosFinais(personagem){
   const valores = Object.assign({}, personagem.atributos || {});
-  const esc = trpgEscolhaRacial(personagem);
-  Object.keys(esc.ajustes).forEach(k => { if(typeof valores[k] === "number") valores[k] = valores[k] + esc.ajustes[k]; });
-  return { valores, escolha: esc };
+  const aj = trpgAjustesRaciais(personagem);
+  Object.keys(aj.total).forEach(k => { if(typeof valores[k] === "number") valores[k] = valores[k] + aj.total[k]; });
+  return { valores, escolha: aj.escolha, ajustes: aj.total };
 }
 
 /* Método alternativo de pontos de perícia (PDF p.80): 4 vezes o número de perícias treinadas no 1º nível e, depois,
@@ -193,9 +206,9 @@ function trpgBBA(classe, nivel){
 
 /* Teste de resistência = metade do nível (arredondada para baixo) + modificador de habilidade + 2 por talento de resistência.
    Confirmado no manual Tormenta RPG, PDF p225. Sem base (nível ou habilidade vazios) devolve null. */
-function trpgResistencia({ base, talentos = 0 }){
+function trpgResistencia({ base, talentos = 0, bonus = 0 }){
   if(base === null || base === undefined || !Number.isFinite(Number(base))) return null;
-  return Number(base) + 2 * Number(talentos || 0);
+  return Number(base) + 2 * Number(talentos || 0) + Number(bonus || 0);
 }
 
 /* Círculos de magia liberados no nível n (ex.: [0, 1, 2] para o nível 3 do mago). Null se a classe não conjura. */
@@ -208,16 +221,121 @@ function trpgCirculosDisponiveis(classe, nivel){
 }
 
 /* Resistências: Fortitude = Constituição, Reflexos = Destreza, Vontade = Sabedoria, cada uma com metade do nível.
-   Os talentos de resistência ainda não são somados aqui (bônus de talento: 0). */
-function trpgResistenciasDerivadas(personagem){
+   Os talentos de resistência (Fortitude Maior etc.) não são somados aqui. `bonusTalentos` é o bônus de efeito de talento
+   (ex.: Ao Sabor do Destino), somado a cada uma. */
+function trpgResistenciasDerivadas(personagem, bonusTalentos = 0){
   const at = personagem.atributos || {};
   const meio = trpgNivelValido(personagem.nivel) ? Math.floor(Number(personagem.nivel) / 2) : null;
   const base = (attr) => { const m = trpgModificador(at[attr]); return meio === null || m === null ? null : meio + m; };
   return {
-    fortitude: trpgResistencia({ base: base("constituicao") }),
-    reflexos: trpgResistencia({ base: base("destreza") }),
-    vontade: trpgResistencia({ base: base("sabedoria") })
+    fortitude: trpgResistencia({ base: base("constituicao"), bonus: bonusTalentos }),
+    reflexos: trpgResistencia({ base: base("destreza"), bonus: bonusTalentos }),
+    vontade: trpgResistencia({ base: base("sabedoria"), bonus: bonusTalentos })
   };
+}
+
+/* ---- Talentos: efeitos numéricos e pré-requisitos verificáveis ----
+   Só entram aqui o que é número ou pré-requisito verificável. Efeitos de combate (ação, teste de ataque, dano extra,
+   uso por dia) não são automatizados: ficam na `nota` de cada talento (rules-talentos-extra.js).
+   Talento reconhecido: a linha do campo Talentos bate com o nome do talento (sem acento, sem maiúsculas, sem parênteses). */
+
+/* Chave de comparação de nome de talento ou pré-requisito. */
+function trpgChaveTalento(texto){
+  return String(texto || "").normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/\([^)]*\)|\[[^\]]*\]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function trpgTabelaTalentos(){
+  return typeof TRPG_TALENTOS !== "undefined" && TRPG_TALENTOS ? TRPG_TALENTOS : {};
+}
+
+/* Talentos reconhecidos na ficha: [{ id, linha, dados }], na ordem em que foram digitados. */
+function trpgTalentosDaFicha(personagem){
+  const tabela = trpgTabelaTalentos();
+  const porNome = {};
+  Object.keys(tabela).forEach(id => { porNome[trpgChaveTalento(tabela[id].nome)] = id; });
+  return String((personagem && personagem.talentos) || "").split(/\r?\n/)
+    .map(x => x.trim()).filter(Boolean)
+    .reduce((lista, linha) => {
+      const id = porNome[trpgChaveTalento(linha)];
+      if(id) lista.push({ id, linha, dados: tabela[id] });
+      return lista;
+    }, []);
+}
+
+/* Pré-requisitos de um talento (campo pre em texto). Verifica: habilidade mínima (valor final), nível mínimo,
+   nível de classe mínimo, BBA mínimo e talento exigido (se estiver na tabela). O resto (devoto, treinado em perícia,
+   "ou") fica em `naoVerificados`. Devolve { ok, faltando, naoVerificados }; ok = nada faltando. */
+function trpgPreRequisitosTalento(personagem, dados){
+  const faltando = [], naoVerificados = [];
+  const finais = trpgAtributosFinais(personagem).valores;
+  const atributos = { "Força": "forca", "Destreza": "destreza", "Constituição": "constituicao", "Inteligência": "inteligencia", "Sabedoria": "sabedoria", "Carisma": "carisma" };
+  const tabela = trpgTabelaTalentos();
+  const naFicha = new Set(trpgTalentosDaFicha(personagem).map(t => trpgChaveTalento(t.dados.nome)));
+  const classe = trpgClasseDados(personagem && personagem.classe);
+  const nivelValido = trpgNivelValido(personagem && personagem.nivel);
+  const nivel = Number(personagem && personagem.nivel);
+  ((dados && dados.pre) || []).forEach(pre => {
+    let m;
+    if((m = pre.match(/^(Força|Destreza|Constituição|Inteligência|Sabedoria|Carisma) (\d+)$/))){
+      const v = finais[atributos[m[1]]];
+      if(typeof v !== "number") naoVerificados.push(pre + " (valor vazio)");
+      else if(v < Number(m[2])) faltando.push(pre);
+    } else if((m = pre.match(/^Personagem de (\d+)º nível$/))){
+      if(!nivelValido) naoVerificados.push(pre + " (nível vazio)");
+      else if(nivel < Number(m[1])) faltando.push(pre);
+    } else if((m = pre.match(/^Bônus base de ataque \+(\d+)$/))){
+      const bba = trpgBBA(classe, personagem.nivel);
+      if(bba === null) naoVerificados.push(pre + " (classe ou nível vazio)");
+      else if(bba < Number(m[1])) faltando.push(pre);
+    } else if((m = pre.match(/^([^\s\d(]+) (\d+)º nível$/))){
+      if(!classe || !nivelValido) naoVerificados.push(pre + " (classe ou nível vazio)");
+      else if(trpgChaveTalento(classe.nome) !== trpgChaveTalento(m[1]) || nivel < Number(m[2])) faltando.push(pre);
+    } else {
+      const chave = trpgChaveTalento(pre);
+      const existe = Object.keys(tabela).some(id => trpgChaveTalento(tabela[id].nome) === chave);
+      if(!existe || / ou |Devoto|Treinado/.test(pre)) naoVerificados.push(pre);
+      else if(!naFicha.has(chave)) faltando.push(pre);
+    }
+  });
+  return { ok: faltando.length === 0, faltando, naoVerificados };
+}
+
+/* Ao Sabor do Destino (PDF p.109): tabela por nível de personagem. Ataque e dano, CA e resistências: a faixa mais alta
+   atingida vale (o livro marca só a habilidade como cumulativa, PDF p.109). Perícia e habilidade são escolhas: não aplicadas. */
+const TRPG_AO_SABOR_FAIXAS = [
+  { nivel: 5, ataqueDano: 1 }, { nivel: 7, ca: 1 }, { nivel: 9, resistencias: 1 }, { nivel: 10, ataqueDano: 2 },
+  { nivel: 12, ca: 2 }, { nivel: 14, resistencias: 2 }, { nivel: 15, ataqueDano: 3 }, { nivel: 17, ca: 3 },
+  { nivel: 19, resistencias: 3 }, { nivel: 20, ataqueDano: 4 }
+];
+
+/* Bônus numéricos vindos de talentos reconhecidos e com pré-requisitos atendidos. Zero quando não há talento.
+   Liderança (PDF p.110): níveis de seguidores = nível × bônus de Carisma (mínimo 1); cada seguidor no máximo metade do nível. */
+function trpgEfeitosTalentos(personagem){
+  const efeitos = { ca: 0, ataqueDano: 0, resistencias: 0, liderancaSeguidores: null };
+  const nivel = Number(personagem && personagem.nivel);
+  if(!trpgNivelValido(nivel)) return efeitos;
+  const ativos = id => trpgTalentosDaFicha(personagem).some(t => t.id === id) && trpgPreRequisitosTalento(personagem, trpgTabelaTalentos()[id]).ok;
+  if(ativos("ao-sabor-do-destino")){
+    ["ca", "ataqueDano", "resistencias"].forEach(cat => {
+      efeitos[cat] = TRPG_AO_SABOR_FAIXAS.reduce((v, f) => (f[cat] !== undefined && nivel >= f.nivel ? f[cat] : v), 0);
+    });
+  }
+  if(ativos("lideranca")){
+    const mc = trpgModificador(trpgAtributosFinais(personagem).valores.carisma);
+    if(mc !== null) efeitos.liderancaSeguidores = { niveisTotais: Math.max(1, nivel * mc), porSeguidorMaximo: Math.floor(nivel / 2) };
+  }
+  return efeitos;
+}
+
+/* Notas de talentos para a interface: cada talento reconhecido, com a nota do que não é aplicado e o estado dos pré-requisitos. */
+function trpgNotasTalentos(personagem){
+  return trpgTalentosDaFicha(personagem).map(t => ({
+    id: t.id,
+    nome: t.dados.nome,
+    nota: t.dados.nota || "",
+    pre: trpgPreRequisitosTalento(personagem, t.dados)
+  }));
 }
 
 /* Derivados de uma ficha. Itens sem dado verificado voltam null. */
@@ -230,16 +348,19 @@ function trpgDerivados(personagem){
   const classe = trpgClasseDados(personagem.classe);
   const base = classe ? classe.pericias.treinadasBase : null;
   const treinadas = trpgPericiasTreinadas({ base, inteligencia: at.inteligencia, bonusRacial: trpgBonusRacialPericias(personagem.raca) });
+  const efeitos = trpgEfeitosTalentos(personagem);
   return {
     modificadores: mods,
-    ca: trpgClasseArmadura({ armadura: d.armadura, escudo: d.escudo, destreza: at.destreza, nivel: personagem.nivel, bonusTamanho: trpgBonusTamanhoCA(personagem.raca) }),
+    atributosFinais: at,
+    ca: trpgClasseArmadura({ armadura: d.armadura, escudo: d.escudo, destreza: at.destreza, nivel: personagem.nivel, bonusTamanho: trpgBonusTamanhoCA(personagem.raca), bonusTalentos: efeitos.ca }),
     iniciativa: trpgIniciativa(at.destreza),
     periciasTreinadas: treinadas,
     pontosPericiaAlternativo: trpgPontosPericiaAlternativo(treinadas),
     pvMaximo: d.pvMaximo === null || d.pvMaximo === undefined || d.pvMaximo === "" ? null : Number(d.pvMaximo),
     pvSugerido: trpgPVTotal({ classe, nivel: personagem.nivel, constituicao: at.constituicao }),
     bba: trpgBBA(classe, personagem.nivel),
-    resistencias: trpgResistenciasDerivadas(pf),
-    circulos: trpgCirculosDisponiveis(classe, personagem.nivel)
+    resistencias: trpgResistenciasDerivadas(pf, efeitos.resistencias),
+    circulos: trpgCirculosDisponiveis(classe, personagem.nivel),
+    efeitosTalentos: efeitos
   };
 }

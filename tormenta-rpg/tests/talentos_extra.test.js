@@ -118,10 +118,11 @@ teste("domínios trazem o texto do devoto e não criam o talento Devoto", () => 
   assert.ok(todos["devoto"] && todos["devoto"].nome === "Devoto", "talento Devoto deve estar no arquivo (PDF p109-110)");
 });
 
-/* Os 13 talentos que tinham nota passam a ter o efeito escrito por completo; por isso não têm mais nota. */
-teste("os 13 talentos antes com nota agora têm o efeito escrito e sem nota", () => {
+/* Os 13 talentos ficam com o benefício escrito por completo. Os que têm efeito de combate (não automatizado) levam uma
+   nota dizendo o que não é aplicado; os efeitos numéricos (Ao Sabor do Destino, Liderança) são aplicados nos derivados. */
+teste("os 13 talentos têm o benefício escrito e uma nota dizendo o que não é aplicado", () => {
   const antigos = ["ataque-atordoante", "aparar", "ataque-em-movimento", "ataque-giratorio", "mestre-em-arma", "perito-em-arma", "tiro-em-movimento", "investida-implacavel", "investida-montada", "ao-sabor-do-destino", "lideranca", "dominio-magia", "dominio-morte"];
-  const semNota = antigos.filter(id => extras[id] && extras[id].nota !== undefined);
+  const semNota = antigos.filter(id => !extras[id] || !/^(Não aplicado|Aplicado)/.test(extras[id].nota || ""));
   assert.deepStrictEqual(semNota, []);
   assert.ok(extras["ataque-atordoante"].beneficio.includes("CD 10 + metade do nível + Sab"), "ataque-atordoante sem a CD");
   assert.ok(extras["ao-sabor-do-destino"].beneficio.includes("20º +4 em ataque e dano"), "ao-sabor sem a tabela de níveis");

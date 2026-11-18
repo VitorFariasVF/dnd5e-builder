@@ -3,12 +3,15 @@
    Fonte: livro Tormenta RPG, capítulo 2 (Raças), PDF p.31 a p.42. Páginas PDF citadas em cada campo.
    Tamanho, deslocamento e traços foram conferidos no livro e resumidos aqui (não é transcrição).
    Itens que o livro não fecha de forma inequívoca ficam NÃO VERIFICADO, com o motivo.
-   Campo `escolha` (humano e lefou): o motor (engine.js, trpgEscolhaRacial) aplica o +valor nas habilidades escolhidas,
-   e os ajustes fixos de `ajustes` só nas raças com `escolha` (lefou: Carisma –4). Os ajustes fixos das demais raças
-   são só texto, como antes.
+   Campo `ajustes` (ajuste fixo, PDF p.31 e raças de p.32 a p.42): o motor (engine.js, trpgAjustesRaciais) aplica
+   SEMPRE, a todas as raças que o têm, nos atributos finais (modificadores, CA, perícias e resistências). Os valores
+   digitados não mudam; a ficha mostra o valor final.
+   Campo `escolha` (humano, lefou e meio-elfo): o motor aplica o +valor nas habilidades escolhidas, só quando a escolha
+   está completa e válida. Escolha incompleta não aplica a escolha, mas o ajuste fixo continua valendo.
    Só o bônus de tamanho (campo bonusTamanho: CA e ataque) é aplicado pelo motor. Não modelados, só texto:
    traços condicionais (CA do anão e do gnomo contra Grande), CA do minotauro e do lefou, ataques naturais
-   do minotauro, resistências do qareen, deformidade do lefou e segunda escolha do meio-elfo. */
+   do minotauro, resistências do qareen, deformidade do lefou e o "Medo de altura" do minotauro (só penalidade em
+   escalada e concentração, sem situação automática). */
 
 const TRPG_RACAS = {
   humano: {
@@ -119,7 +122,8 @@ const TRPG_RACAS = {
       "CA +1 por causa do couro rígido (PDF p.39). Não modelado: ver nota no topo do arquivo.",
       "Ataque natural de chifres: 1d6, crítico x2, dano perfurante. Pode fazer um ataque extra com os chifres por rodada, com –4 em todos os ataques da rodada, incluindo este (PDF p.39). Não modelado.",
       "Faro: +4 em Sobrevivência para rastrear pelo faro, e percebe criaturas a até 9 m automaticamente (PDF p.39).",
-      "Lógica labiríntica: +8 em Sobrevivência para não se perder (PDF p.39)."
+      "Lógica labiríntica: +8 em Sobrevivência para não se perder (PDF p.39).",
+      "Medo de altura: ao subir qualquer altura acima de 3 m (ou estando a até 3 m de uma queda desta altura), sofre –4 em suas jogadas e testes, e não pode fazer ação que dependa de concentração, como conjurar magias (PDF p.39). Não aplicado automaticamente: a penalidade depende de a situação ocorrer."
     ]
   },
   lefou: {
@@ -127,7 +131,7 @@ const TRPG_RACAS = {
     fonte: "Livro Tormenta RPG, PDF p.31, p.32 e p.38",
     ajustes: { carisma: -4 },
     escolha: { quantidade: 2, valor: 2, excluir: ["carisma"] },
-    ajustesFonte: "Tormenta RPG, PDF p.31 e p.38: +2 em duas habilidades à escolha, exceto Carisma, habilidades diferentes; e Carisma –4. O app aplica a escolha e o –4 na etapa 2.",
+    ajustesFonte: "Tormenta RPG, PDF p.31 e p.38: +2 em duas habilidades à escolha, exceto Carisma, habilidades diferentes; e Carisma –4 (fixo). O –4 é aplicado sempre; a escolha, quando completa.",
     bonusTamanho: { ca: 0, ataque: 0 },
     tamanho: "Médio (PDF p.32: lefou está na lista de criaturas Médias)",
     deslocamento: "9 m (PDF p.31 e p.32: deslocamento de criatura Média)",
@@ -154,7 +158,7 @@ const TRPG_RACAS = {
       "+4 em testes de Intuição e de Ofício (alquimia) (PDF p.41).",
       "Classe de armadura +4 contra adversários de tamanho Grande ou maior (PDF p.41). Não modelado: condicional.",
       "Comunicação com animais livre, como a magia falar com animais (PDF p.41).",
-      "Com Carisma 10 ou mais, lança livremente globos de luz, som fantasma e prestidigitação (PDF p.41). NÃO VERIFICADO: o livro diz 'livremente' e não fixa custo em PM nem frequência.",
+      "Com Carisma 10 ou mais, lança livremente globos de luz, som fantasma e prestidigitação (PDF p.41). NÃO VERIFICADO: o livro diz 'livremente' e não fixa custo em PM nem frequência; o trecho sobre sprites (também 'livremente') não define o termo. Sem dado para preencher custo ou frequência.",
       "Ajuste de nível +2 em comparação ao D20 padrão (PDF p.41: vale para as raças de Outras Raças)."
     ]
   },
@@ -162,12 +166,13 @@ const TRPG_RACAS = {
     nome: "Meio-Elfo",
     fonte: "Livro Tormenta RPG, PDF p.41 e p.42. Regra OPCIONAL no livro: 'Se quiser, use as seguintes regras para meio-elfos' (PDF p.42)",
     ajustes: { destreza: 2 },
-    ajustesFonte: "Tormenta RPG, PDF p.42: +2 em Destreza e +2 em outra habilidade à escolha, exceto Constituição. A segunda escolha NÃO é aplicada pelo app.",
+    escolha: { quantidade: 1, valor: 2, excluir: ["constituicao", "destreza"] },
+    ajustesFonte: "Tormenta RPG, PDF p.42: +2 em Destreza (fixo) e +2 em outra habilidade à escolha, exceto Constituição. 'Outra' exclui Destreza, que já recebe o +2 fixo. O app aplica a escolha feita na etapa 2.",
     bonusTamanho: { ca: 0, ataque: 0 },
     tamanho: "Médio (PDF p.32: tamanho não citado entre os traços, logo Médio)",
     deslocamento: "9 m (PDF p.32: deslocamento de criatura Média)",
     tracos: [
-      "+2 em outra habilidade à escolha do jogador, exceto Constituição (PDF p.42). Não modelado: escolha.",
+      "+2 em Destreza (PDF p.42) e +2 em outra habilidade à escolha, exceto Constituição e Destreza (PDF p.42). A escolha é feita na etapa 2.",
       "Visão na penumbra: ignora camuflagem por escuridão, exceto a total, e vê duas vezes mais longe que humanos com pouca luz (PDF p.42).",
       "1 talento bônus à escolha do jogador (PDF p.42).",
       "1 perícia treinada extra, que não precisa ser escolhida entre as perícias de classe (PDF p.42).",

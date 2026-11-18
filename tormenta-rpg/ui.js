@@ -103,7 +103,8 @@ function trpgCorpoEtapa(n){
       <p class="muted">Talentos principais verificados (fonte de comunidade):</p>
       <ul class="trpg-lista-simples">${Object.values(TRPG_TALENTOS).map(t => `<li><b>${trpgEsc(t.nome)}</b>${t.pre.length ? " (pré-requisito: " + trpgEsc(t.pre.join("; ")) + ")" : ""}: ${trpgEsc(t.beneficio)}</li>`).join("")}</ul>
       <p class="muted trpg-detalhe" data-saida="detalhe:talentos-classe"></p>
-      <label for="talentos">Talentos (um por linha)</label><textarea id="talentos" data-campo="talentos">${v(p.talentos)}</textarea>`;
+      <label for="talentos">Talentos (um por linha)</label><textarea id="talentos" data-campo="talentos">${v(p.talentos)}</textarea>
+      <div class="trpg-notas-talentos" data-saida="talentos-notas" role="status"></div>`;
     case 7: return `${trpgNaoVerificado(TRPG_PENDENTES.magias)}
       <p class="muted trpg-detalhe" data-saida="detalhe:magias"></p>
       <label for="magias">Magias (uma por linha)</label><textarea id="magias" data-campo="magias">${v(p.magias)}</textarea>`;
@@ -166,7 +167,7 @@ function trpgRacaDados(valor){
 function trpgTextoAjustes(r){
   if(!r) return "NÃO VERIFICADO";
   const partes = r.ajustes ? Object.keys(r.ajustes).map(k => `${trpgAbrevAtr(k)} ${r.ajustes[k] > 0 ? "+" : ""}${r.ajustes[k]}`) : [];
-  if(r.escolha) partes.push("+" + r.escolha.valor + " em " + r.escolha.quantidade + " habilidades à escolha" + (r.escolha.excluir.length ? " (exceto " + r.escolha.excluir.map(trpgAbrevAtr).join(", ") + ")" : ""));
+  if(r.escolha) partes.push("+" + r.escolha.valor + " em " + r.escolha.quantidade + (r.escolha.quantidade > 1 ? " habilidades à escolha" : " habilidade à escolha") + (r.escolha.excluir.length ? " (exceto " + r.escolha.excluir.map(trpgAbrevAtr).join(", ") + ")" : ""));
   return partes.length ? partes.join(", ") : "escolha de atributo (não modelada no app)";
 }
 
@@ -179,7 +180,8 @@ function trpgAtualizarEscolhaRacial(el){
   if(!r || !r.escolha){ el.innerHTML = ""; return; }
   const e = r.escolha, escolhas = trpgEscolhasRaciais(state.personagem);
   const excl = e.excluir.length ? " (exceto " + e.excluir.map(trpgNomeAtr).join(", ") + ")" : "";
-  let html = `<fieldset class="trpg-escolha"><legend>Escolha de habilidades de ${trpgEsc(r.nome)}: +${e.valor} em ${e.quantidade} habilidades diferentes${excl}</legend>`;
+  const plural = e.quantidade > 1 ? " habilidades diferentes" : " habilidade";
+  let html = `<fieldset class="trpg-escolha"><legend>Escolha de habilidades de ${trpgEsc(r.nome)}: +${e.valor} em ${e.quantidade}${plural}${excl}</legend>`;
   for(let i = 0; i < e.quantidade; i++){
     const ops = TRPG_ATRIBUTOS.filter(a => !e.excluir.includes(a.id))
       .map(a => `<option value="${a.id}"${escolhas[i] === a.id ? " selected" : ""}>${trpgEsc(a.nome)}</option>`).join("");
@@ -223,13 +225,42 @@ function trpgDetalheMagias(valor){
   return `Atributo de conjuração: ${trpgNomeAtr(c.conjuracao.atributo)}. Círculos: ${lista}. No nível ${nivel}: círculos ${agora.join(", ") || "nenhum"}. Magias por dia: NÃO VERIFICADO. Fonte: ${c.fonte}.`;
 }
 
+/* Notas dos talentos reconhecidos na ficha: o que não é aplicado pelo app, e o estado dos pré-requisitos. */
+function trpgHtmlNotasTalentos(p){
+  const notas = trpgNotasTalentos(p);
+  if(!notas.length) return "";
+  const itens = notas.map(t => {
+    let pre;
+    const naoVer = t.pre.naoVerificados.length ? " Não verificados pelo app: " + t.pre.naoVerificados.join("; ") + "." : "";
+    if(t.pre.faltando.length) pre = "Pré-requisitos faltando: " + t.pre.faltando.join("; ") + "." + naoVer;
+    else pre = t.pre.naoVerificados.length ? "Pré-requisitos verificáveis atendidos." + naoVer : "Pré-requisitos atendidos.";
+    return `<li><b>${trpgEsc(t.nome)}</b>. ${trpgEsc(pre)}${t.nota ? " <span class=\"aviso-talento\">" + trpgEsc(t.nota) + "</span>" : ""}</li>`;
+  }).join("");
+  return `<p class="muted">Talentos reconhecidos na ficha (efeitos e pré-requisitos):</p><ul class="trpg-lista-simples">${itens}</ul>`;
+}
+
+/* Efeitos numéricos de talentos já aplicados aos derivados (ver engine.js, trpgEfeitosTalentos). */
+function trpgTextoEfeitosTalentos(d){
+  const e = d.efeitosTalentos || {}, partes = [];
+  if(e.ca) partes.push("CA +" + e.ca);
+  if(e.ataqueDano) partes.push("ataque e dano +" + e.ataqueDano + " (a ficha não tem ataques, então não é somado a nenhum)");
+  if(e.resistencias) partes.push("testes de resistência +" + e.resistencias);
+  if(e.liderancaSeguidores) partes.push("Liderança: " + e.liderancaSeguidores.niveisTotais + " níveis de seguidores no total, até " + e.liderancaSeguidores.porSeguidorMaximo + " por seguidor");
+  return partes.length ? "Pelo nível e pela ficha: " + partes.join("; ") + "." : "Nenhum efeito numérico de talento aplicado.";
+}
+
 function trpgHtmlResumo(){
   const p = state.personagem, d = trpgDerivados(p);
-  const atr = TRPG_ATRIBUTOS.map(a => `${a.abrev} ${p.atributos[a.id] ?? "—"} (${trpgFormatarBonus(d.modificadores[a.id])})`).join(" · ");
+  const atr = TRPG_ATRIBUTOS.map(a => {
+    const fin = d.atributosFinais[a.id];
+    const mudou = typeof p.atributos[a.id] === "number" && fin !== p.atributos[a.id];
+    return `${a.abrev} ${p.atributos[a.id] ?? "—"}${mudou ? " (final " + fin + ")" : ""} (${trpgFormatarBonus(d.modificadores[a.id])})`;
+  }).join(" · ");
   const linhas = [
     ["Personagem", `${p.nome || "sem nome"}${p.jogador ? " · jogador " + p.jogador : ""}`],
     ["Raça e classe", `${p.raca || "a definir"} · ${p.classe || "a definir"} · nível ${p.nivel}`],
     ["Atributos", atr],
+    ["Efeitos de talentos", trpgTextoEfeitosTalentos(d)],
     ["CA", d.ca === null ? "—" : String(d.ca)],
     ["Iniciativa (modificador de Destreza)", trpgFormatarBonus(d.iniciativa)],
     ["Perícias treinadas no 1º nível", d.periciasTreinadas === null ? "a definir (classe, Inteligência e raça)" : String(d.periciasTreinadas)],
@@ -241,7 +272,8 @@ function trpgHtmlResumo(){
     ["Dinheiro", String(p.dinheiro) + " " + TRPG_DINHEIRO_INICIAL.moeda + " (inicial sugerido: " + TRPG_DINHEIRO_INICIAL.valor + ")"]
   ];
   return `<dl class="trpg-resumo">${linhas.map(([k, val]) => `<dt>${trpgEsc(k)}</dt><dd>${trpgEsc(val)}</dd>`).join("")}</dl>
-    <p class="muted">Edição: ${trpgEsc(TRPG_META.edicao)}. Fontes: ${trpgEsc(TRPG_META.fonteEdicao)}</p>
+    ${trpgHtmlNotasTalentos(p)}
+    <p class="muted">Edição:${trpgEsc(TRPG_META.edicao)}. Fontes: ${trpgEsc(TRPG_META.fonteEdicao)}</p>
     ${trpgNaoVerificado(TRPG_PENDENTES.vtt)}
     <div class="actions"><button type="button" data-acao="salvar">Salvar no histórico</button>
       <button type="button" class="secondary" data-acao="backup">Baixar backup JSON</button>
@@ -280,6 +312,7 @@ function trpgAtualizarSaidas(){
     else if(k === "detalhe:classe") el.textContent = trpgDetalheClasse(p.classe);
     else if(k === "detalhe:magias") el.textContent = trpgDetalheMagias(p.classe);
     else if(k === "detalhe:talentos-classe") el.textContent = classe ? "Talentos adicionais da classe (fonte de comunidade): " + classe.talentosAdicionais.join("; ") + "." : "Talentos adicionais: escolha uma classe verificada para vê-los.";
+    else if(k === "talentos-notas") el.innerHTML = trpgHtmlNotasTalentos(p);
     else if(k === "escolha-racial") trpgAtualizarEscolhaRacial(el);
     else if(k === "aviso-escolha") el.textContent = trpgTextoAvisoEscolha(p);
     else if(k === "detalhe:raca-ajuste"){
@@ -287,7 +320,7 @@ function trpgAtualizarSaidas(){
       if(!r) el.textContent = "Ajuste racial: escolha a raça na etapa 2.";
       else if(r.escolha) el.textContent = "Ajuste racial de " + r.nome + ": " + trpgTextoAjustes(r) + " (" + r.ajustesFonte + "). " + trpgTextoAvisoEscolha(p);
       else if(!r.ajustes) el.textContent = "Ajuste racial de " + r.nome + ": " + r.ajustesFonte + ".";
-      else el.textContent = "Ajuste racial de " + r.nome + ": " + trpgTextoAjustes(r) + " (" + r.ajustesFonte + "). Não é aplicado automaticamente: some-o aos valores digitados.";
+      else el.textContent = "Ajuste racial de " + r.nome + ": " + trpgTextoAjustes(r) + " (" + r.ajustesFonte + "). Aplicado automaticamente aos atributos finais (modificadores, CA, perícias e resistências); os valores digitados não mudam.";
     }
   });
 }

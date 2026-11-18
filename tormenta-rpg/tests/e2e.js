@@ -121,7 +121,9 @@ async function rodar(browser, largura, altura){
     await page.fill("#pv-max", "20");
     await page.fill("#pv-atual", "20");
     const ca = await page.textContent("[data-saida=ca]");
-    console.log("  CA exibida (esperada 19 com Des 14, armadura 5, escudo 2, tamanho 0): " + ca);
+    // Raça livre ("Raça de teste"): sem ajuste racial. Nível 4 (metade 2) + Des 14 (+2) + armadura 5 + escudo 2 = 21.
+    console.log("  CA exibida (esperada 21: nível 4, Des 14 sem ajuste racial, armadura 5, escudo 2): " + ca);
+    if(ca !== "21") throw new Error("CA esperada 21, exibida " + ca);
     await page.click("[data-acao=avancar]");
   });
   await passo(page, "medir 9", () => medir(9));
