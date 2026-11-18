@@ -690,7 +690,7 @@ const TRPG_CLASSES = {
     },
     "talentosAdicionais": [
       "Usar Armas Simples",
-      "Usar Armas Exóticas",
+      "Usar Arma Exótica",
       "Fortitude Maior",
       "Reflexos Rápidos",
       "Vontade de Ferro",

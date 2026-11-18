@@ -9,7 +9,7 @@ const ctx = criarAmbiente();
 const livro = {
   "usar-armas-simples": ["Usar Armas Simples", [], 104],
   "usar-armas-marciais": ["Usar Armas Marciais", ["Usar Armas Simples"], 104],
-  "usar-armas-exoticas": ["Usar Armas Exóticas", ["Usar Armas Simples"], 104],
+  "usar-armas-exoticas": ["Usar Arma Exótica", ["Usar Armas Simples"], 104],
   "usar-armaduras-leves": ["Usar Armaduras Leves", [], 104],
   "usar-armaduras-medias": ["Usar Armaduras Médias", ["Usar Armaduras Leves"], 104],
   "usar-armaduras-pesadas": ["Usar Armaduras Pesadas", ["Usar Armaduras Leves", "Usar Armaduras Médias"], 104],

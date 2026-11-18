@@ -31,13 +31,13 @@ const TRPG_PERICIAS = [
 
 /* Talentos principais: os 13 que aparecem nas classes e no compêndio de talentos. Benefício em palavras próprias.
    Conferidos no livro (Jambô) em 18/11: nome, pré-requisito, benefício e repetibilidade, com página PDF em `fonte`.
-   Divergências em aberto (não alteradas): "Usar Armas Exóticas" no app; o livro chama "Usar Arma Exótica" (PDF p104).
+   Nome conferido: "Usar Arma Exótica" (PDF p104), igual ao livro.
    Renomear exige ajustar talentosAdicionais em rules-classes.js, que está fora do escopo desta correção.
    Rastrear: o livro traz mais regras (+1 a cada 3 criaturas, penalidades por dia e visibilidade); o app cita só as CDs. */
 const TRPG_TALENTOS = {
   "usar-armas-simples": { nome: "Usar Armas Simples", pre: [], beneficio: "Usa armas simples sem a penalidade de –4 nas jogadas de ataque.", fonte: "Tormenta RPG, PDF p104 (livro do usuário)" },
   "usar-armas-marciais": { nome: "Usar Armas Marciais", pre: ["Usar Armas Simples"], beneficio: "Usa armas marciais sem a penalidade de –4 nas jogadas de ataque.", fonte: "Tormenta RPG, PDF p104 (livro do usuário)" },
-  "usar-armas-exoticas": { nome: "Usar Armas Exóticas", pre: ["Usar Armas Simples"], beneficio: "Usa uma arma exótica escolhida sem a penalidade de –4 nas jogadas de ataque.", fonte: "Tormenta RPG, PDF p104 (livro do usuário)" },
+  "usar-armas-exoticas": { nome: "Usar Arma Exótica", pre: ["Usar Armas Simples"], beneficio: "Usa uma arma exótica escolhida sem a penalidade de –4 nas jogadas de ataque.", fonte: "Tormenta RPG, PDF p104 (livro do usuário)" },
   "usar-armaduras-leves": { nome: "Usar Armaduras Leves", pre: [], beneficio: "Usa armaduras leves sem a penalidade de armadura.", fonte: "Tormenta RPG, PDF p104 (livro do usuário)" },
   "usar-armaduras-medias": { nome: "Usar Armaduras Médias", pre: ["Usar Armaduras Leves"], beneficio: "Usa armaduras médias sem a penalidade de armadura.", fonte: "Tormenta RPG, PDF p104 (livro do usuário)" },
   "usar-armaduras-pesadas": { nome: "Usar Armaduras Pesadas", pre: ["Usar Armaduras Leves", "Usar Armaduras Médias"], beneficio: "Usa armaduras pesadas sem a penalidade de armadura.", fonte: "Tormenta RPG, PDF p104 (livro do usuário)" },
