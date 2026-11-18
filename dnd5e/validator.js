@@ -132,7 +132,7 @@ function validarInventarioPeso(){
 function validarOpcoesClasse(){
   if(typeof getClassOptionGroups !== "function") return null;
   const personagem = state.personagem;
-  const groups = getClassOptionGroups(personagem.classe, personagem.nivel||1, personagem.subclasse);
+  const groups = getClassOptionGroups(personagem.classe, personagem.nivel||1, personagem.subclasse, personagem.opcoesClasse);
   const escolhas = personagem.opcoesClasse || {};
   for(const group of groups){
     const valor = escolhas[group.id];

@@ -265,7 +265,7 @@ const RULE_SUBCLASS_PROFICIENCY_GRANTS = {
   "ladino:scout": { level: 3, proficiencies: { armor: [], weapons: [], tools: [], skills: ["Natureza", "Sobrevivência"], savingThrows: [], languages: [] } },
   "monge:drunken_master": { level: 3, proficiencies: { armor: [], weapons: [], tools: ["Suprimentos de cervejeiro"], skills: ["Atuação"], savingThrows: [], languages: [] } },
   "monge:kensei": { level: 3, proficiencies: { armor: [], weapons: [], tools: [], skills: [], savingThrows: [], languages: [] } },
-  "ladino:mastermind": { level: 3, proficiencies: { armor: [], weapons: [], tools: ["Kit de disfarce", "Kit de falsificação"], skills: [], savingThrows: [], languages: [] } },
+  "ladino:mastermind": { level: 3, proficiencies: { armor: [], weapons: [], tools: ["Kit de disfarce", "Kit de falsificação", "Jogo"], skills: [], savingThrows: [], languages: [] } },
   "guerreiro:samurai": { level: 7, proficiencies: { armor: [], weapons: [], tools: [], skills: [], savingThrows: ["Sabedoria"], languages: [] } },
   "patrulheiro:gloom_stalker": { level: 7, proficiencies: { armor: [], weapons: [], tools: [], skills: [], savingThrows: ["Sabedoria"], languages: [] } }
 };
@@ -473,7 +473,7 @@ const RULE_XANATHAR_RACIAL_FEATS = {
     source: "Xanathar",
     allowedRaces: ["elfo"],
     prerequisites: [{ type: "race", allowedRaces: ["elfo"], allowedSubraces: ["alto"] }],
-    grants: { attributes: { chooseOne: ["inteligencia", "carisma"], amount: 1 }, proficiencies: {}, features: ["fey_teleportation"] }
+    grants: { attributes: { chooseOne: ["inteligencia", "carisma"], amount: 1 }, proficiencies: { languages: ["Silvestre"] }, features: ["fey_teleportation"] }
   },
   desvanecer: {
     name: "Desvanecer",
@@ -665,9 +665,20 @@ function resolveSubclassGrants(context) {
     if (skill) out.skills.push(skill);
   }
 
+  // Samurai, Bônus de Proficiência (Guia de Xanathar, PDF p40): perícia OU um idioma à escolha.
   if (context.subclassCompositeKey === "guerreiro:samurai" && context.level >= 3) {
-    const skill = (context.selectedOptions || {}).samurai_bonus_skill;
-    if (skill) out.skills.push(skill);
+    const opcoes = context.selectedOptions || {};
+    if (opcoes.samurai_bonus_skill === "idioma") {
+      if (opcoes.samurai_bonus_language) out.languages.push(opcoes.samurai_bonus_language);
+    } else if (opcoes.samurai_bonus_skill) {
+      out.skills.push(opcoes.samurai_bonus_skill);
+    }
+  }
+
+  // Mentor, Mestre da Intriga (Guia de Xanathar, PDF p43): dois idiomas à escolha.
+  // O jogo à escolha entra em RULE_SUBCLASS_PROFICIENCY_GRANTS como "Jogo", como nos antecedentes do app. Não há seleção do conjunto específico: a lista não está no material disponível.
+  if (context.subclassCompositeKey === "ladino:mastermind" && context.level >= 3) {
+    [].concat((context.selectedOptions || {}).mastermind_languages || []).filter(Boolean).slice(0, 2).forEach(idioma => out.languages.push(idioma));
   }
 
   if (context.subclassCompositeKey === "monge:kensei" && context.level >= 3) {
@@ -726,7 +737,7 @@ function getRuleFeatChoiceConfig(featId) {
 // ETAPA 15 - ESCOLHAS DETALHADAS DOS TALENTOS
 // ===============================
 // Mantém talentos dentro de opcoesClasse.asi[].featOptions e não altera exportação.
-const RULE_STAGE15_LANGUAGES = ["Anão","Élfico","Gigante","Gnômico","Goblin","Halfling","Orc","Abissal","Celestial","Dracônico","Dialeto Subterrâneo","Infernal","Primordial","Silvestre","Subcomum"];
+const RULE_STAGE15_LANGUAGES = IDIOMAS_ESCOLHA; // lista única em rules.js
 const RULE_STAGE15_TOOLS = ["Ferramentas de ladrão","Kit de herbalismo","Kit de disfarce","Kit de falsificação","Ferramentas de artesão","Instrumento musical","Jogo","Veículos terrestres","Veículos aquáticos","Ferramentas de navegador","Suprimentos de cervejeiro","Suprimentos de caligrafia"];
 const RULE_STAGE15_MAGIC_INITIATE_CLASSES = ["bardo","bruxo","clerigo","druida","feiticeiro","mago"];
 

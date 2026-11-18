@@ -23,7 +23,7 @@ Data: 2026-11-17. Branch `multi-sistema`. Arquivos tocados: `dnd5e/rules-racas.j
 - **Talentos com escolha de atributo** (por exemplo, Atleta) não são oferecidos ao Humano Variante.
 - **Material do escudo:** o app não tem essa informação, então a restrição do Druida não recusa escudo de metal.
 - **Edição 2024:** não alterada. Espécies de 2024 não têm tamanho nem fonte preenchidos; a ficha mostra "não modelado para esta edição".
-- **Lacunas pré-existentes em `ui.js`:** `renderResumo` e `confirmarClasse` estão definidas duas vezes. Não mexi, mas o teste de release não pega isso.
+- **Lacunas pré-existentes em `ui.js`:** resolvido em 2026-11-18 (ver seção abaixo). A nota anterior dizia `renderResumo` e `confirmarClasse`; essas duas não estavam duplicadas (`renderResumo` é embrulhada de propósito no fim do arquivo). As duplicatas eram `mostrarPreviewClasse`, `atualizarProgressao` e `renderMagia`.
 
 ## Fontes e status
 
@@ -56,7 +56,19 @@ cd dnd5e && node tests/test_racas.js
 cd dnd5e && for f in tests/*.js; do node $f; done
 ```
 
-`test_racas.js`: 98 verificações. Inclui três personagens completos conferidos à mão (Elfo da Floresta, Meio-Elfo com Força e Destreza, Draconato Preto) e um Humano Variante, com os atributos finais calculados no motor de regras.
+`test_racas.js`: 109 verificações (2026-11-18).
+
+## Atualização 2026-11-18: conferência no Guia de Xanathar (PDF p72-74)
+O Guia traz talentos raciais (p72 tabela, p73-74 textos), não as características base das sub-raças. Conferido aqui:
+- **Talentos raciais, 15 nomes e efeitos conferidos com o texto:** Agachamento Ágil, Fortitude Anã, Couro de Dragão, Temor Dracônico, Alta Magia Drow, Magia do Elfo da Floresta, Teleporte das Fadas, Desvanecer, Boa Sorte, Chamas de Phlegethos, Constituição Infernal, Fúria Orc, Precisão Élfica, Prodígio, Segunda Chance. Pré-requisitos, atributos (incluindo as opções de escolha), perícias e magias batem com `RULE_XANATHAR_RACIAL_FEATS` em `rules-engine.js`.
+- **Correção:** Teleporte das Fadas concede o idioma Silvestre (o texto do Guia diz "Sylvan" na p74; a p27 usa "Silvestre", e o app usa "Silvestre"). Concessão adicionada em `grants.proficiencies.languages`.
+- **Pré-requisitos confirmam os nomes:** Elfo (alto), Elfo (drow), Elfo (floresta), Gnomo, Halfling, Draconato, Meio-Elfo, Meio-Orc, Tiefling, Humano. Os números dessas sub-raças não estão no Guia.
+- **Traços de Draconato:** o nome "Arma de Sopro" aparece na p74 (Temor Dracônico). A progressão de dano e a CD da arma não estão no Guia.
+- **Traço "Resistência Implacável"** do Meio-Orc aparece na p73.
+
+Continua NÃO VERIFICADO (não está no Guia): Anão da Montanha, Elfo Alto (bônus e traços), Elfo da Floresta (Sabedoria +1 e deslocamento 35), Drow (Carisma +1 e visão), Halfling Pés-Leves e Robusto, Gnomo da Floresta e das Rochas, Humano Variante, "Ancestral Dracônico" e a progressão da arma de sopro. O idioma extra do Elfo Alto (`idiomas: ["Extra"]`) continua sem escolha no app.
+
+**Correção de código (2026-11-18):** `ui.js` tinha três definições duplicadas de funções (`mostrarPreviewClasse`, `atualizarProgressao`, `renderMagia`). Ficou só a última de cada uma, que é a que o navegador já usava. Nenhuma mudança de comportamento. Testes: todos os de `dnd5e/tests` passam. Inclui três personagens completos conferidos à mão (Elfo da Floresta, Meio-Elfo com Força e Destreza, Draconato Preto) e um Humano Variante, com os atributos finais calculados no motor de regras.
 
 Verificação no navegador (fora do repositório, em `/tmp`): Chrome headless em 1100 px e 360 px, fluxo de Meio-Elfo, Elfo, Draconato e Humano Variante, com erro de console e de página contados. Resultado: sem erro. Um fluxo de 2024 também passou: lista de espécies de 2024, sem sub-raça, bônus do antecedente preservado.
 

@@ -1,7 +1,26 @@
 # Trabalho D&D 5e: subclasses do PHB (2014)
 
 Arquivos desta frente: `dnd5e/rules-subclasses.js`, `dnd5e/tests/test_subclasses.js`, este documento.
-Teste: `cd dnd5e && node tests/test_subclasses.js` (66 verificações, código != 0 se falhar).
+Teste: `cd dnd5e && node tests/test_subclasses.js` (72 verificações, código != 0 se falhar).
+Escolhas do Guia de Xanathar: `cd dnd5e && node tests/test_xanathar_escolhas.js` (21 verificações).
+
+## Atualização 2026-11-18: escolhas do Guia de Xanathar (Samurai e Mentor)
+- **Samurai, Bônus de Proficiência (nível 3)**, PDF p40: perícia (História, Intuição, Atuação ou Persuasão) ou um idioma à escolha. A opção "Um idioma à escolha" abre um segundo campo com a lista de idiomas. A validação do modo A exige o idioma quando a opção está marcada.
+- **Samurai, Cortesão Elegante (nível 7)**, PDF p40: a alternativa de salvaguarda (Inteligência ou Carisma, se já houver Sabedoria) não entrou. O app é de classe única e o Guerreiro não tem Sabedoria em salvaguarda, então a alternativa não ocorre. O motor concede Sabedoria, como antes.
+- **Mentor, Mestre da Intriga (nível 3)**, PDF p43: dois idiomas à escolha (validação exige os dois; não há checagem de idioma repetido com o antecedente ou a raça) e proficiência com kit de disfarce, kit de falsificação e "Jogo". Não há seleção do conjunto de jogo: a lista de conjuntos não está no material disponível, então a proficiência entra como "Jogo", como nos antecedentes do app.
+- **Mentor, Manipulador Perspicaz (nível 9)** (PDF p43): é um teste feito pelo Mestre durante a cena, não uma escolha de ficha. Não entrou.
+- **Pendência de nome corrigida neste trabalho:** o documento de Xanathar anterior dizia que o Mentor está na PDF p25 e p50 e que não tinha escolha de idioma. O Mentor está nas PDF p42 (lista de arquétipos) e p43 (características), e tem a escolha de idiomas e de jogo.
+- Item "Cortesão: Patrono ou pesquisa" da lista de pendências: não existe no Guia de Xanathar. O Cortesão Elegante é característica do Samurai (acima). Não há escolha de "Patrono" nem de "pesquisa" nesse trecho.
+
+## NÃO VERIFICADO: conferência no Guia de Xanathar (2026-11-18)
+O Guia de Xanathar traz só Samurai, Mentor, Cavaleiro, Arqueiro Arcano e outras subclasses próprias. As subclasses do Livro do Jogador não estão nele. Resultado dos itens desta lista:
+- Surto de Magia Selvagem (Feiticeiro): não está no Guia. Continua NÃO VERIFICADO.
+- Buscador de Espíritos (Totem do Urso): não está no Guia. Continua NÃO VERIFICADO.
+- Domínios do Clérigo (Conhecimento, Luz, Natureza, Tempestade, Trapaça): não estão no Guia. O Guia só traz Forja e Sepultura (PDF p22-24). Continuam NÃO VERIFICADO.
+- Escola de Ilusão: não está no Guia. "Ilusionista" aparece só como nome de um PNJ (PDF p45). Continua NÃO VERIFICADO.
+- Nomes em português das características novas do Livro do Jogador: não estão no Guia, então não foram conferidos aqui.
+- Patrono ínfero "O Corruptor": não está no Guia. O Guia traz o Patrono Transcendental (PDF p17-18).
+- Caminho dos Quatro Elementos, Juramento dos Anciões, Cavaleiro Místico, Trapaceiro Arcano e Grande Antigo: não estão no Guia.
 
 ## Entrou
 - **Cavaleiro Místico** (Guerreiro, chave `eldritch_knight`): 3, 3, 7, 10, 15, 18. Duas fontes.
