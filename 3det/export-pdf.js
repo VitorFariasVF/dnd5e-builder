@@ -86,6 +86,30 @@ function tdtPdfDesvantagens(p){
   }), "Nenhuma desvantagem escolhida.");
 }
 
+/* Veículos (PDF p140-142): nome, tipo, escala, pontuação e custo; depois atributos, recursos, vantagens e desvantagens do veículo. */
+function tdtPdfVeiculos(p){
+  return tdtPdfLinhas((p.veiculos || []).map(v => {
+    const custo = tdtCustoVeiculo(v);
+    const custoTxt = v.gratuito === true ? "gratuito" : custo === null ? "custo a definir" : custo + " pt (" + (custo * 10) + " XP)";
+    const escala = tdtInteiro(v.escala) ? v.escala + (v.escala === 1 ? " escala" : " escalas") + " acima do piloto" : "escala a definir";
+    const pontos = tdtInteiro(v.pontos) ? v.pontos + " pontos" : "pontuação a definir";
+    const atr = TDT_RULES.atributos.map(a => a.id + " " + (tdtInteiro((v.atributos || {})[a.id]) ? v.atributos[a.id] : "—")).join(" · ");
+    const rec = tdtRecursos(v);
+    const recTxt = "PA " + nRecPdf(rec.PA) + " · PM " + nRecPdf(rec.PM) + " · PV " + nRecPdf(rec.PV);
+    const vants = (v.vantagens || []).map(x => {
+      const r = tdtVantagemRegra(x.id);
+      return r ? r.nome + (r.multiplo && x.qtd > 1 ? " × " + x.qtd : "") + (x.nota ? " (" + x.nota + ")" : "") : x.id + " (fora da lista)";
+    }).join("; ") || "nenhuma";
+    const desvs = (v.desvantagens || []).map(d => {
+      const r = tdtDesvantagemRegra(d.id);
+      return r ? r.nome + " (" + d.valor + ")" + (d.nota ? " · " + d.nota : "") : d.id + " (fora da lista)";
+    }).join("; ") || "nenhuma";
+    return `<strong>${tdtEsc(v.nome || "Veículo sem nome")}</strong>${v.tipo ? " · " + tdtEsc(v.tipo) : ""} (${tdtEsc(escala)}; ${tdtEsc(pontos)}; ${tdtEsc(custoTxt)}). Atributos: ${tdtEsc(atr)} · ${tdtEsc(recTxt)}. Vantagens: ${tdtEsc(vants)}. Desvantagens: ${tdtEsc(desvs)}.`;
+  }), "Nenhum veículo.");
+}
+
+function nRecPdf(v){ return v === null || v === undefined ? "a definir" : String(v); }
+
 function tdtFichaHtml(){
   ensureStateShape();
   const p = state.personagem;
@@ -119,6 +143,7 @@ function tdtFichaHtml(){
     <section class="secao"><h2>Perícias</h2>${tdtPdfPericias(p)}</section>
     <section class="secao"><h2>Vantagens</h2>${tdtPdfVantagens(p)}</section>
     <section class="secao"><h2>Desvantagens</h2>${tdtPdfDesvantagens(p)}</section>
+    <section class="secao"><h2>Veículos</h2>${tdtPdfVeiculos(p)}</section>
     <section class="secao"><h2>História</h2><p>${tdtEsc(p.historia || "—")}</p></section>
     <section class="secao"><h2>Anotações</h2><p>${tdtEsc(p.anotacoes || "—")}</p></section>
     <section class="secao"><h2>Lacunas</h2>${tdtPdfLinhas(TDT_RULES.lacunas.map(tdtEsc), "Nenhuma.")}</section>

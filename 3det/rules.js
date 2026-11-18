@@ -171,6 +171,11 @@ window.TDT_RULES = {
     { id: "mitomania", nome: "Mitomania" }, { id: "paranoia", nome: "Paranoia" }
   ],
 
+  // Veículos (PDF p140-142). Ficha própria (atributos, vantagens, desvantagens). Pontuação mínima 10, em passos de 5
+  // (cada 10 XP extras = 5 pontos, p142). Custo ao personagem: 1 escala acima do piloto = 2 XP por ponto de pontuação
+  // (10 pontos = 20 XP, p142); cada escala a mais dobra o custo (Kiodai 40 XP, Kami 80 XP, p142).
+  veiculos: { pontosMin: 10, pontosPasso: 5, escalaMin: 1, xpPorPontoEscala1: 2 },
+
   // Tipos de Artefato e limite por personagem (PDF p139: "no máximo uma arma, uma armadura e dois acessórios").
   artefatoTipos: [
     { id: "arma", nome: "Arma", max: 1 },
@@ -236,6 +241,7 @@ window.TDT_RULES = {
   lacunas: [
     "Efeitos das vantagens e desvantagens: o app tem um resumo curto de cada uma (em rules-efeitos-*.js), com a página do livro em fonte. O resumo não substitui o texto completo do livro (PDF p45-75).",
     "Poderes de arquétipo (Deformidade, Teratismo, Desfavor, Xenobiologia, Talento e Abascanto): o texto confere com o livro (PDF p79-82), mas o app não aplica o efeito nas contas; não há vantagem equivalente.",
+    "Veículos (PDF p140-142): ficha própria com atributos, vantagens e desvantagens, custo em XP pela pontuação e pela escala acima do piloto. Ficam fora: perícias do veículo, Habilidade 1 ou mais (pilotagem automática), Maestria, Transtorno e Artefato dentro do veículo, limite de veículos por personagem (o livro não fixa), escala do piloto (o app não guarda a escala do personagem).",
     "Artefatos: o limite por tipo (1 arma, 1 armadura, 2 acessórios) está aplicado (PDF p139). As 18 Qualidades de Artefatos estão no catálogo (PDF p139-141) e mudam o custo em XP, com mínimo de 10 XP. Auspicioso não é calculada: o custo depende da vantagem concedida (ver auditoria). Veículos (PDF p140-141) têm ficha própria, com atributos, vantagens e escala; não são criados aqui (pendência). O Victory não traz kits.",
     "Fora do escopo: 3D&T Alpha (5 características) é outro sistema e não é implementado. Este app cria fichas só do 3D&T Victory (3 atributos)."
   ]

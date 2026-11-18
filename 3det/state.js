@@ -28,6 +28,7 @@ function estadoPadrao(){
       pericias: [],              // ids de rules.pericias
       vantagens: [],             // [{ id, qtd, custo, nota, tipo, qualidades }]; tipo e qualidades só em Artefato (arma|armadura|acessorio; qualidades = [{ id, escolha }])
       desvantagens: [],          // [{ id, valor, nota, subtipo }]; subtipo só em Transtorno (id de rules.transtornosOpcoes)
+      veiculos: [],              // [{ nome, tipo, escala, pontos, gratuito, atributos{P,H,R}, vantagens, desvantagens }] (PDF p140-142)
       historia: "",
       anotacoes: ""
     }
@@ -51,6 +52,14 @@ function ensureStateShape(){
   if(!Array.isArray(p.pericias)) p.pericias = [];
   if(!Array.isArray(p.vantagens)) p.vantagens = [];
   if(!Array.isArray(p.desvantagens)) p.desvantagens = [];
+  /* Veículos (PDF p140-142): cada um tem ficha própria. Dado antigo ou importado completa os campos. */
+  if(!Array.isArray(p.veiculos)) p.veiculos = [];
+  p.veiculos = p.veiculos.filter(v => v && typeof v === "object");
+  p.veiculos.forEach(v => {
+    v.atributos = Object.assign({ P: null, H: 0, R: null }, v.atributos || {});
+    if(!Array.isArray(v.vantagens)) v.vantagens = [];
+    if(!Array.isArray(v.desvantagens)) v.desvantagens = [];
+  });
   /* Ids renomeados: Cópia virou Clone e Insano virou Transtorno (livro 3DeT Victory). */
   p.vantagens.forEach(v => { if(v && v.id === "copia") v.id = "clone"; });
   /* Artefato: lista de qualidades (PDF p139-141). Dado antigo não tinha o campo. */

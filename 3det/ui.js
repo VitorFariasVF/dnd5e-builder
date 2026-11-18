@@ -127,7 +127,8 @@ function tdtCorpoEtapa(n){
       <label for="busca-vantagem">Buscar vantagem</label>
       <input id="busca-vantagem" type="search" data-busca="vantagem" autocomplete="off">
       <ul class="tdt-lista" id="catalogo-vantagens">${TDT_RULES.vantagens.map(r => tdtCatalogoVantagem(r)).join("")}</ul>
-      <p class="muted">Custos em pontos. Vantagens sem descrição mostram só o nome e o custo.</p>`;
+      <p class="muted">Custos em pontos. Vantagens sem descrição mostram só o nome e o custo.</p>
+      ${tdtBlocoVeiculos()}`;
     case 6: return `
       <p>Pontos ganhos com desvantagens: <output data-saida="desv-resumo">0</output></p>
       <h3 class="tdt-sub">Escolhidas</h3>
@@ -240,6 +241,89 @@ function tdtBlocoQualidades(v, i){
     <button type="button" class="small" data-acao="arte-qual-add" data-i="${i}">Adicionar</button></div></div>`;
 }
 
+/* Veículos (PDF p140-142). Cada veículo tem ficha própria. Vantagens e desvantagens dele vêm do mesmo catálogo,
+   sem Artefato (item com tipo), Maestria (o veículo não tem perícia) e Transtorno (escolha à parte). */
+function tdtVantagensDoVeiculo(){ return TDT_RULES.vantagens.filter(r => !r.itens && r.id !== "maestria"); }
+function tdtDesvantagensDoVeiculo(){ return TDT_RULES.desvantagens.filter(r => !(r.obs && /NPC/i.test(r.obs)) && r.id !== "transtorno"); }
+
+function tdtTextoCustoVeiculo(v){
+  const c = tdtCustoVeiculo(v);
+  if(v.gratuito === true) return "gratuito (campanha de veículos, p.142)";
+  return c === null ? "custo a definir" : c + " pt (" + (c * 10) + " XP)";
+}
+
+function tdtBlocoVeiculos(){
+  const lista = (state.personagem.veiculos || []).map((v, k) => tdtItemVeiculo(v, k)).join("");
+  return `<h3 class="tdt-sub" id="veiculos">Veículos (livro, p.140-142)</h3>
+    <p class="muted">Veículo tem ficha própria: atributos, vantagens e desvantagens. Custa em XP pela pontuação e pela escala acima do piloto. Ajudante (montaria, skate) não é veículo.</p>
+    <ul class="tdt-lista" id="lista-veiculos">${lista || '<li class="muted">Nenhum veículo.</li>'}</ul>
+    <div class="actions"><button type="button" class="secondary" data-acao="veic-add">Adicionar veículo</button></div>`;
+}
+
+function tdtItemVeiculo(v, k){
+  const e = x => tdtEsc(x === null || x === undefined ? "" : x);
+  const at = v.atributos || {};
+  const escalas = [1, 2, 3].map(n => `<option value="${n}"${v.escala === n ? " selected" : ""}>${n} ${n === 1 ? "escala" : "escalas"} acima do piloto</option>`).join("");
+  const atr = TDT_RULES.atributos.map(a => `<div class="tdt-atr"><label for="veic-${k}-atr-${a.id}">${tdtEsc(a.nome)} (${a.id})</label>
+    <input id="veic-${k}-atr-${a.id}" type="number" inputmode="numeric" min="${TDT_RULES.criacao.atributoMin}" max="${TDT_RULES.criacao.atributoMax}" step="1" data-campo="veic-atr:${a.id}" data-k="${k}" value="${e(at[a.id])}"></div>`).join("");
+  const opsV = tdtVantagensDoVeiculo().map(r => `<option value="${r.id}">${tdtEsc(r.nome)} (${tdtEsc(tdtTextoCusto(r))})</option>`).join("");
+  const opsD = tdtDesvantagensDoVeiculo().map(r => `<option value="${r.id}">${tdtEsc(r.nome)} (${tdtEsc(tdtTextoValor(r))})</option>`).join("");
+  const vants = (v.vantagens || []).map((x, i) => tdtItemVeicVantagem(x, i, k)).join("") || '<li class="muted">Nenhuma vantagem.</li>';
+  const desvs = (v.desvantagens || []).map((x, i) => tdtItemVeicDesvantagem(x, i, k)).join("") || '<li class="muted">Nenhuma desvantagem.</li>';
+  return `<li class="card-nested tdt-veiculo" id="veic-${k}" tabindex="-1">
+    <div class="tdt-controles">
+      <label for="veic-${k}-nome">Nome do veículo</label><input id="veic-${k}-nome" data-campo="veic-nome" data-k="${k}" value="${e(v.nome)}" autocomplete="off">
+      <label for="veic-${k}-tipo">Tipo (livre, ex.: mecha, avião, tanque)</label><input id="veic-${k}-tipo" data-campo="veic-tipo" data-k="${k}" value="${e(v.tipo)}" autocomplete="off">
+      <label for="veic-${k}-escala">Escala acima do piloto</label><select id="veic-${k}-escala" data-campo="veic-escala" data-k="${k}"><option value="">Escolha</option>${escalas}</select>
+      <label for="veic-${k}-pontos">Pontuação do veículo (10 ou mais, de 5 em 5)</label><input id="veic-${k}-pontos" type="number" inputmode="numeric" min="${TDT_RULES.veiculos.pontosMin}" step="${TDT_RULES.veiculos.pontosPasso}" data-campo="veic-pontos" data-k="${k}" value="${e(v.pontos)}">
+      <label class="tdt-check"><input type="checkbox" id="veic-${k}-gratis" data-campo="veic-gratis" data-k="${k}"${v.gratuito ? " checked" : ""}><span>Veículo gratuito (campanha de veículos, p.142)</span></label>
+    </div>
+    <p><small class="muted">Custo ao personagem: </small><output data-saida="veic:${k}">${tdtEsc(tdtTextoCustoVeiculo(v))}</output></p>
+    <fieldset class="tdt-fieldset"><legend>Atributos do veículo (Habilidade nula é o normal, p.142)</legend><div class="tdt-atributos">${atr}</div></fieldset>
+    <h4 class="tdt-sub">Vantagens do veículo</h4>
+    <ul class="tdt-lista" id="veic-${k}-vantagens">${vants}</ul>
+    <div class="tdt-controles"><label for="veic-${k}-vant-sel">Adicionar vantagem</label><select id="veic-${k}-vant-sel"><option value="">Escolha uma vantagem</option>${opsV}</select>
+      <button type="button" class="small" data-acao="veic-vant-add" data-k="${k}">Adicionar</button></div>
+    <h4 class="tdt-sub">Desvantagens do veículo</h4>
+    <ul class="tdt-lista" id="veic-${k}-desvantagens">${desvs}</ul>
+    <div class="tdt-controles"><label for="veic-${k}-desv-sel">Adicionar desvantagem</label><select id="veic-${k}-desv-sel"><option value="">Escolha uma desvantagem</option>${opsD}</select>
+      <button type="button" class="small" data-acao="veic-desv-add" data-k="${k}">Adicionar</button></div>
+    <div class="actions"><button type="button" class="small danger" data-acao="veic-remover" data-k="${k}">Remover veículo</button></div></li>`;
+}
+
+function tdtItemVeicVantagem(x, i, k){
+  const r = tdtVantagemRegra(x.id);
+  if(!r) return `<li class="card-nested" id="veic-${k}-vant-item-${i}" tabindex="-1">${tdtEsc(x.id)} (fora da lista)</li>`;
+  const custo = tdtCustoVantagem(x);
+  const controles = [];
+  if(r.multiplo) controles.push(`<label for="veic-${k}-vant-qtd-${i}">Quantidade</label><input id="veic-${k}-vant-qtd-${i}" type="number" inputmode="numeric" min="1" step="1" data-campo="veic-vant-qtd" data-k="${k}" data-i="${i}" value="${tdtEsc(x.qtd === undefined || x.qtd === null ? "" : x.qtd)}">`);
+  if(r.custo === undefined){
+    const opcoes = Array.isArray(r.custoOpcoes) ? r.custoOpcoes : Array.from({ length: r.custoMax - r.custoMin + 1 }, (_, n) => r.custoMin + n);
+    if(r.custoAberto) controles.push(`<label for="veic-${k}-vant-custo-${i}">Custo escolhido (1 ou mais)</label><input id="veic-${k}-vant-custo-${i}" type="number" inputmode="numeric" min="1" step="1" data-campo="veic-vant-custo" data-k="${k}" data-i="${i}" value="${tdtEsc(x.custo === undefined || x.custo === null ? "" : x.custo)}">`);
+    else controles.push(`<label for="veic-${k}-vant-custo-${i}">Custo escolhido</label><select id="veic-${k}-vant-custo-${i}" data-campo="veic-vant-custo" data-k="${k}" data-i="${i}">${opcoes.map(o => `<option value="${o}"${o === x.custo ? " selected" : ""}>${o}</option>`).join("")}</select>`);
+  }
+  controles.push(`<label for="veic-${k}-vant-nota-${i}">Nota (opcional)</label><input id="veic-${k}-vant-nota-${i}" data-campo="veic-vant-nota" data-k="${k}" data-i="${i}" value="${tdtEsc(x.nota || "")}" autocomplete="off">`);
+  return `<li class="card-nested" id="veic-${k}-vant-item-${i}" tabindex="-1">
+    <div><strong>${tdtEsc(r.nome)}</strong> <small class="muted">${tdtEsc(custo === null ? "custo a definir" : "custo " + custo + " pt")}</small><br><small class="muted">${tdtNotaEfeito(r)}</small></div>
+    <div class="tdt-controles">${controles.join("")}</div>
+    <div class="actions"><button type="button" class="small danger" data-acao="veic-vant-remover" data-k="${k}" data-i="${i}">Remover</button></div></li>`;
+}
+
+function tdtItemVeicDesvantagem(x, i, k){
+  const r = tdtDesvantagemRegra(x.id);
+  if(!r) return `<li class="card-nested" id="veic-${k}-desv-item-${i}" tabindex="-1">${tdtEsc(x.id)} (fora da lista)</li>`;
+  const controles = [];
+  if(r.valor === undefined){
+    const ops = Array.from({ length: r.valorMax - r.valorMin + 1 }, (_, n) => r.valorMin + n);
+    controles.push(`<label for="veic-${k}-desv-valor-${i}">Valor</label><select id="veic-${k}-desv-valor-${i}" data-campo="veic-desv-valor" data-k="${k}" data-i="${i}">${ops.map(o => `<option value="${o}"${o === x.valor ? " selected" : ""}>${o}</option>`).join("")}</select>`);
+  }
+  controles.push(`<label for="veic-${k}-desv-nota-${i}">Nota (opcional)</label><input id="veic-${k}-desv-nota-${i}" data-campo="veic-desv-nota" data-k="${k}" data-i="${i}" value="${tdtEsc(x.nota || "")}" autocomplete="off">`);
+  return `<li class="card-nested" id="veic-${k}-desv-item-${i}" tabindex="-1">
+    <div><strong>${tdtEsc(r.nome)}</strong> <small class="muted">${tdtEsc("valor " + (x.valor === undefined || x.valor === null ? "a definir" : x.valor))}</small><br><small class="muted">${tdtNotaEfeito(r)}</small></div>
+    <div class="tdt-controles">${controles.join("")}</div>
+    <div class="actions"><button type="button" class="small danger" data-acao="veic-desv-remover" data-k="${k}" data-i="${i}">Remover</button></div></li>`;
+}
+
 function tdtItemDesvantagem(d, i){
   const r = tdtDesvantagemRegra(d.id);
   if(!r) return `<li class="card-nested" id="desv-item-${i}" tabindex="-1">${tdtEsc(d.id)} (fora da lista)</li>`;
@@ -277,7 +361,8 @@ function tdtHtmlRevisao(){
     ["Recursos", `PA ${nRec(rec.PA)} · PM ${nRec(rec.PM)} · PV ${nRec(rec.PV)}`],
     ["Perícias", String((p.pericias || []).length)],
     ["Vantagens", String((p.vantagens || []).length)],
-    ["Desvantagens", String((p.desvantagens || []).length)]
+    ["Desvantagens", String((p.desvantagens || []).length)],
+    ["Veículos", String((p.veiculos || []).length)]
   ];
   const itens = pend.length
     ? pend.map(x => `<li class="alert ${x.nivel === "erro" ? "error" : "warning"}">${x.nivel === "erro" ? "Erro: " : "Aviso: "}${tdtEsc(x.msg)}</li>`).join("")
@@ -354,6 +439,7 @@ function tdtAtualizarSaidas(){
     else if(k === "qtd-pericias") el.textContent = String(pericias);
     else if(k === "desv-resumo") el.textContent = (res.valorDesvantagens === null ? "a definir" : res.valorDesvantagens) + " (ganho de " + fmt(res.pontosDeDesvantagens) + " pontos, limite −" + TDT_RULES.criacao.desvantagensMax + ")";
     else if(k === "detalhe:arquetipo") el.textContent = tdtDetalheArquetipo(tdtArquetipoId(p));
+    else if(k.startsWith("veic:")){ const v = (p.veiculos || [])[Number(k.slice(5))]; if(v) el.textContent = tdtTextoCustoVeiculo(v); }
   });
   tdtAtualizarAvisos();
 }
@@ -365,7 +451,29 @@ function tdtAtualizarAvisos(){
 }
 
 /* Campo de texto/número/seleção -> estado. Vazio vira null (o validador decide). */
+function tdtAplicarCampoVeiculo(campo, el){
+  const v = (state.personagem.veiculos || [])[Number(el.dataset.k)];
+  if(!v) return;
+  const texto = el.value, i = Number(el.dataset.i);
+  const numero = () => texto.trim() === "" ? null : Number(texto);
+  if(campo.startsWith("veic-atr:")){ v.atributos[campo.slice(9)] = numero(); return; }
+  switch(campo){
+    case "veic-nome": v.nome = texto; break;
+    case "veic-tipo": v.tipo = texto; break;
+    case "veic-escala": v.escala = texto === "" ? null : Number(texto); break;
+    case "veic-pontos": v.pontos = numero(); break;
+    case "veic-gratis": v.gratuito = el.checked === true; break;
+    case "veic-vant-qtd": if(v.vantagens[i]) v.vantagens[i].qtd = numero(); break;
+    case "veic-vant-custo": if(v.vantagens[i]) v.vantagens[i].custo = numero(); break;
+    case "veic-vant-nota": if(v.vantagens[i]) v.vantagens[i].nota = texto; break;
+    case "veic-desv-valor": if(v.desvantagens[i]) v.desvantagens[i].valor = numero(); break;
+    case "veic-desv-nota": if(v.desvantagens[i]) v.desvantagens[i].nota = texto; break;
+    default: return;
+  }
+}
+
 function tdtAplicarCampo(campo, el){
+  if(campo.startsWith("veic-")){ tdtAplicarCampoVeiculo(campo, el); return; }
   const p = state.personagem, texto = el.value;
   const numero = () => texto.trim() === "" ? null : Number(texto);
   const i = Number(el.dataset.i);
@@ -478,6 +586,26 @@ function tdtAdicionarQualidade(i){
   v.qualidades.push({ id, escolha: null });
 }
 
+function tdtAdicionarVeiculo(){
+  state.personagem.veiculos.push({ nome: "", tipo: "", escala: 1, pontos: TDT_RULES.veiculos.pontosMin, gratuito: false, atributos: { P: null, H: 0, R: null }, vantagens: [], desvantagens: [] });
+}
+
+/* Vantagem e desvantagem do veículo k, com o mesmo padrão de custo e valor do personagem. */
+function tdtAdicionarVeicVantagem(k){
+  const v = state.personagem.veiculos[k], sel = document.getElementById("veic-" + k + "-vant-sel");
+  const r = sel && tdtVantagemRegra(sel.value);
+  if(!v || !r || r.itens || r.id === "maestria") return;
+  const custo = r.custo !== undefined ? r.custo : Array.isArray(r.custoOpcoes) ? r.custoOpcoes[0] : r.custoMin;
+  v.vantagens.push({ id: r.id, qtd: 1, custo, nota: "" });
+}
+
+function tdtAdicionarVeicDesvantagem(k){
+  const v = state.personagem.veiculos[k], sel = document.getElementById("veic-" + k + "-desv-sel");
+  const r = sel && tdtDesvantagemRegra(sel.value);
+  if(!v || !r || r.id === "transtorno") return;
+  v.desvantagens.push({ id: r.id, valor: r.valor !== undefined ? r.valor : r.valorMax, nota: "" });
+}
+
 function tdtAdicionarDesvantagem(id){
   const r = tdtDesvantagemRegra(id);
   if(!r) return;
@@ -575,7 +703,7 @@ function tdtLigarEventos(){
   app.addEventListener("click", ev => {
     const b = ev.target.closest("[data-acao]");
     if(!b || b.disabled) return;
-    const acao = b.dataset.acao, id = b.dataset.id, i = Number(b.dataset.i);
+    const acao = b.dataset.acao, id = b.dataset.id, i = Number(b.dataset.i), k = Number(b.dataset.k);
     if(acao === "novo") tdtNovaFicha();
     else if(acao === "avancar") tdtAvancar();
     else if(acao === "voltar") tdtVoltar();
@@ -592,6 +720,12 @@ function tdtLigarEventos(){
     else if(acao === "arte-qual-add"){ tdtAdicionarQualidade(i); salvarEstado(); tdtRender(); }
     else if(acao === "arte-qual-remover"){ const q = state.personagem.vantagens[i]; if(q && q.qualidades) q.qualidades.splice(Number(b.dataset.k), 1); salvarEstado(); tdtRender(); }
     else if(acao === "desv-add"){ tdtAdicionarDesvantagem(id); salvarEstado(); tdtRender(); }
+    else if(acao === "veic-add"){ tdtAdicionarVeiculo(); salvarEstado(); tdtRender(); }
+    else if(acao === "veic-remover"){ state.personagem.veiculos.splice(k, 1); salvarEstado(); tdtRender(); }
+    else if(acao === "veic-vant-add"){ tdtAdicionarVeicVantagem(k); salvarEstado(); tdtRender(); }
+    else if(acao === "veic-vant-remover"){ const v = state.personagem.veiculos[k]; if(v) v.vantagens.splice(i, 1); salvarEstado(); tdtRender(); }
+    else if(acao === "veic-desv-add"){ tdtAdicionarVeicDesvantagem(k); salvarEstado(); tdtRender(); }
+    else if(acao === "veic-desv-remover"){ const v = state.personagem.veiculos[k]; if(v) v.desvantagens.splice(i, 1); salvarEstado(); tdtRender(); }
     else if(acao === "desv-remover"){ state.personagem.desvantagens.splice(i, 1); salvarEstado(); tdtRender(); }
     else if(acao === "limpar"){ if(window.confirm("Apagar a ficha atual e as fichas salvas deste navegador?")){ limparDadosSalvos(); substituirEstado(estadoPadrao()); tdtRender(); } }
     else if(acao === "imagem-remover"){ state.personagem.imagem = ""; salvarEstado(); tdtRender(); }

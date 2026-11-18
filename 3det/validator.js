@@ -120,6 +120,37 @@ function tdtChecarDesvantagens(p, reg, add){
   });
 }
 
+/* Veículos (PDF p140-142). Formato (escala, pontuação, atributo) bloqueia nos dois modos.
+   Ficha do veículo acima da pontuação é regra de jogo (reg); abaixo, só aviso. Vantagens e desvantagens do veículo
+   usam as mesmas regras do personagem, com o campo prefixado por "veic-K-" (o campo da tela). */
+function tdtChecarVeiculos(p, reg, add){
+  const r = TDT_RULES.veiculos, min = TDT_RULES.criacao.atributoMin, max = TDT_RULES.criacao.atributoMax;
+  (p.veiculos || []).forEach((v, k) => {
+    const pre = "veic-" + k + "-";
+    const addV = (nivel, msg, campo) => add(nivel, msg, pre + campo);
+    if(!String(v.nome || "").trim()) addV(reg, "Informe o nome do veículo.", "nome");
+    if(!tdtInteiro(v.escala) || v.escala < r.escalaMin) addV("erro", "Escolha quantas escalas o veículo está acima do piloto (1 ou mais, p.141).", "escala");
+    if(!tdtInteiro(v.pontos) || v.pontos < r.pontosMin || v.pontos % r.pontosPasso !== 0)
+      addV("erro", "Pontuação do veículo: " + r.pontosMin + " ou mais, em passos de " + r.pontosPasso + " (p.142).", "pontos");
+    TDT_RULES.atributos.forEach(a => {
+      const val = (v.atributos || {})[a.id];
+      if(!tdtInteiro(val) || val < min || val > max) addV("erro", "Veículo: " + a.nome + " deve ser um inteiro de " + min + " a " + max + ".", "atr-" + a.id);
+    });
+    const soma = tdtValorDesvantagens(v);
+    if(soma !== null && soma < -TDT_RULES.criacao.desvantagensMax) addV("aviso", "As desvantagens do veículo somam " + soma + ". Além de −" + TDT_RULES.criacao.desvantagensMax + " não geram pontos (livro, p.65).", "pontos");
+    const ficha = tdtCustoFichaVeiculo(v);
+    if(ficha === null) addV("aviso", "Pontos da ficha do veículo a definir.", "pontos");
+    else if(tdtInteiro(v.pontos) && ficha > v.pontos) addV(reg, "A ficha do veículo gasta " + ficha + " pontos, acima da pontuação " + v.pontos + ".", "pontos");
+    else if(tdtInteiro(v.pontos) && ficha < v.pontos) addV("aviso", "Sobram " + (v.pontos - ficha) + " pontos na ficha do veículo.", "pontos");
+    tdtChecarVantagens(v, reg, addV);
+    tdtChecarDesvantagens(v, reg, addV);
+    tdtIncompatibilidades(v).forEach(par => {
+      const campo = par.a.tipo === "vant" ? "vant-item-" + par.a.i : "desv-item-" + par.a.i;
+      addV(reg, par.a.regra.nome + " é incompatível com " + par.b.regra.nome + " no veículo.", campo);
+    });
+  });
+}
+
 /* Regras que valem a partir da etapa 3: saldo, desvantagens além de −2 e incompatibilidades.
    Desvantagens além de −2 são permitidas pelo livro (p.65): só não dão pontos extras. Por isso é só aviso. */
 function tdtChecarGlobal(p, reg, add){
@@ -142,7 +173,7 @@ function tdtValidarEtapa(n, p, modo){
   else if(n === 2) tdtChecarArquetipo(p, add);
   else if(n === 3){ tdtChecarAtributos(p, add); tdtChecarGlobal(p, reg, add); }
   else if(n === 4){ tdtChecarPericias(p, add); tdtChecarGlobal(p, reg, add); }
-  else if(n === 5){ tdtChecarVantagens(p, reg, add); tdtChecarGlobal(p, reg, add); }
+  else if(n === 5){ tdtChecarVantagens(p, reg, add); tdtChecarVeiculos(p, reg, add); tdtChecarGlobal(p, reg, add); }
   else if(n === 6){ tdtChecarDesvantagens(p, reg, add); tdtChecarGlobal(p, reg, add); }
   else if(n === 7) return tdtValidarTudo(p, modo);
   return itens;
@@ -157,6 +188,7 @@ function tdtValidarTudo(p, modo){
   tdtChecarAtributos(p, add);
   tdtChecarPericias(p, add);
   tdtChecarVantagens(p, reg, add);
+  tdtChecarVeiculos(p, reg, add);
   tdtChecarDesvantagens(p, reg, add);
   tdtChecarGlobal(p, reg, add);
   return itens;

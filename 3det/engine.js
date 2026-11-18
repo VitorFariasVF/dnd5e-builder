@@ -82,6 +82,37 @@ function tdtCustoVantagem(v){
   return unitario * qtd;
 }
 
+/* Veículo (PDF p140-142). Custo em XP = pontuação × 2 × 2^(escala−1); em pontos, divide-se por 10.
+   Escala 1 com 10 pontos = 20 XP (2 pontos); escala 2 = 40 XP; escala 3 = 80 XP (p142). Gratuito (campanha de veículos, p142): 0.
+   Pontuação abaixo de 10 ou fora de múltiplos de 5 não tem custo verificado: null. */
+function tdtCustoVeiculo(v){
+  if(v.gratuito === true) return 0;
+  const r = TDT_RULES.veiculos;
+  if(!tdtInteiro(v.escala) || v.escala < r.escalaMin || !tdtInteiro(v.pontos)) return null;
+  if(v.pontos < r.pontosMin || v.pontos % r.pontosPasso !== 0) return null;
+  const xp = v.pontos * r.xpPorPontoEscala1 * Math.pow(2, v.escala - 1);
+  return xp / 10;
+}
+
+/* Soma do custo de todos os veículos da ficha (em pontos). Null se algum estiver pendente. */
+function tdtCustoVeiculos(p){
+  let total = 0;
+  for(const v of (p.veiculos || [])){
+    const c = tdtCustoVeiculo(v);
+    if(c === null) return null;
+    total += c;
+  }
+  return total;
+}
+
+/* Quanto a ficha do próprio veículo gasta: atributos + vantagens − desvantagens (limite de −2, como no personagem).
+   Não entra no custo ao personagem; só confere com a pontuação do veículo. Null se algo estiver pendente. */
+function tdtCustoFichaVeiculo(v){
+  const at = tdtCustoAtributos(v), vt = tdtCustoVantagens(v), dv = tdtPontosDeDesvantagens(v);
+  if(at === null || vt === null || dv === null) return null;
+  return at + vt - dv;
+}
+
 function tdtCustoVantagens(p){
   let total = 0;
   for(const v of (p.vantagens || [])){
@@ -120,7 +151,7 @@ function tdtCustoArquetipo(p){
 
 /* Soma de tudo o que foi gasto. Null se algum custo estiver pendente. */
 function tdtPontosGastos(p){
-  const partes = [tdtCustoAtributos(p), tdtCustoPericias(p), tdtCustoVantagens(p), tdtCustoArquetipo(p)];
+  const partes = [tdtCustoAtributos(p), tdtCustoPericias(p), tdtCustoVantagens(p), tdtCustoArquetipo(p), tdtCustoVeiculos(p)];
   if(partes.some(x => x === null)) return null;
   return partes.reduce((a, b) => a + b, 0);
 }
@@ -148,7 +179,8 @@ function tdtResumoPontos(p){
     saldo: tdtSaldo(p),
     valorDesvantagens: tdtValorDesvantagens(p),
     pontosDeDesvantagens: tdtPontosDeDesvantagens(p),
-    custoArquetipo: tdtCustoArquetipo(p)
+    custoArquetipo: tdtCustoArquetipo(p),
+    custoVeiculos: tdtCustoVeiculos(p)
   };
 }
 
